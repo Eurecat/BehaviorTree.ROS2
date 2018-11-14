@@ -1,0 +1,6 @@
+<launch>
+    <node pkg="behavior_tree_ros" name="behavior_tree_ros_node" type="behavior_tree_ros_node" output="screen" />
+
+    <param name="plugins_folder" type="string" value="$(find behavior_tree_ros)/resources/plugins" />
+    <param name="trees_folder"   type="string" value="$(find behavior_tree_ros)/resources/trees"   />
+</launch>
