@@ -20,6 +20,7 @@ find_package(catkin REQUIRED
 add_service_files(
     FILES
         GetLoadedPlugins.srv
+        LoadTree.srv
 )
 
 generate_messages(DEPENDENCIES)
@@ -44,7 +45,7 @@ target_link_libraries(${PROJECT_NAME} INTERFACE ${behavior_tree_core_LIBRARIES})
 target_compile_options(${PROJECT_NAME} INTERFACE -Wl,--no-undefined)
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME})
 
-add_executable(${PROJECT_NAME}_node src/behavior_tree_node.cpp src/BehaviorTreeNode.cpp)
+add_executable(${PROJECT_NAME}_node src/behavior_tree_node.cpp src/BehaviorTreeNode.cpp src/ROSTree.cpp)
 target_link_libraries(${PROJECT_NAME}_node PRIVATE ${catkin_LIBRARIES} ${behavior_tree_core_LIBRARIES})
 target_include_directories(${PROJECT_NAME}_node PRIVATE ${catkin_INCLUDE_DIRS} include)
 target_compile_options(${PROJECT_NAME}_node PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)

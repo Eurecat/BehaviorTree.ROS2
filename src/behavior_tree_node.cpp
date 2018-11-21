@@ -5,7 +5,11 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "behavior_tree_node");
     UPO::BehaviorTreeNode behavior_tree_node {};
 
-    ros::spin();
+    while(ros::ok())
+    {
+        behavior_tree_node.Loop();
+        ros::spinOnce();
+    }
 
     return 0;
 }
