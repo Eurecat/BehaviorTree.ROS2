@@ -7,7 +7,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-find_package(behavior_tree_core 1.0 REQUIRED)
+find_package(behaviortree_cpp 1.0 REQUIRED)
 
 find_package(catkin REQUIRED
     COMPONENTS
@@ -34,19 +34,19 @@ catkin_package(
     INCLUDE_DIRS
         include
     DEPENDS
-        behavior_tree_core
+        behaviortree_cpp
     LIBRARIES
         ${PROJECT_NAME}
 )
 
 add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME} INTERFACE ${CATKIN_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} INTERFACE ${behavior_tree_core_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} INTERFACE ${behaviortree_cpp_LIBRARIES})
 target_compile_options(${PROJECT_NAME} INTERFACE -Wl,--no-undefined)
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME})
 
 add_executable(${PROJECT_NAME}_node src/behavior_tree_node.cpp src/BehaviorTreeNode.cpp src/ROSTree.cpp)
-target_link_libraries(${PROJECT_NAME}_node PRIVATE ${catkin_LIBRARIES} ${behavior_tree_core_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_node PRIVATE ${catkin_LIBRARIES} ${behaviortree_cpp_LIBRARIES})
 target_include_directories(${PROJECT_NAME}_node PRIVATE ${catkin_INCLUDE_DIRS} include)
 target_compile_options(${PROJECT_NAME}_node PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS})

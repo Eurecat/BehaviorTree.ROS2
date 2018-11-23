@@ -4,10 +4,10 @@
     <param name="plugins_folder" type="string" value="$(find behavior_tree_ros)/resources/plugins" />
     <param name="trees_folder"   type="string" value="$(find behavior_tree_ros)/resources/trees"   />
 
-    <param name="enable_cout_log"      type="bool" value="true"  />
-    <param name="enable_minitrace_log" type="bool" value="true" />
-    <param name="enable_file_log"      type="bool" value="true" />
-    <param name="enable_zmq_log"       type="bool" value="true" />
+    <param name="enable_cout_log"      type="bool" value="false" />
+    <param name="enable_minitrace_log" type="bool" value="false" />
+    <param name="enable_file_log"      type="bool" value="false" />
+    <param name="enable_zmq_log"       type="bool" value="false" />
 
     <param name="log_folder" type="string" value="/tmp/" />
 </launch>

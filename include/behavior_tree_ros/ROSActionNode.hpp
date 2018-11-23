@@ -4,7 +4,7 @@
 #include <string>
 #include <ros/ros.h>
 
-#include "behavior_tree_core/action_node.h"
+#include <behaviortree_cpp/action_node.h>
 
 namespace BT_ROS
 {
