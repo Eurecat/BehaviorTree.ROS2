@@ -6,40 +6,37 @@
 namespace BT_ROS
 {
 template <class MessageType>
-std::vector<std::string> messageRequiredParameters();
-
-template <class MessageType>
 class ServiceClientNode final : public ROSActionNode
 {
     public:
-        ServiceClientNode(const std::string& _name, const BT::NodeParameters& _params) : ROSActionNode(_name, _params)
+        ServiceClientNode(const std::string& _name, const NodeParameters& _params) : ROSActionNode(_name, _params)
         {}
         ~ServiceClientNode() = default;
 
-        static const BT::NodeParameters& requiredNodeParameters()
+        static const NodeParameters& requiredNodeParameters()
         {
             static BT::NodeParameters params { {"service", ""} };
 
-            const auto& message_parameters = messageRequiredParameters<MessageType>();
-            for(const auto& param : message_parameters) { params.emplace(param, ""); }
+            const auto& message_parameters = requiredMessageParameters<MessageType>();
+            params.insert(message_parameters.cbegin(), message_parameters.cend());
 
             return params;
         }
 
         virtual BT::NodeStatus tick() override
         {
-            setStatus(BT::NodeStatus::RUNNING);
+            setStatus(NodeStatus::RUNNING);
 
             try
             {
                 connectToService();
                 auto message = buildMessage<MessageType>(*this);
-                if(!client_->call(message)) { return BT::NodeStatus::FAILURE; }
+                if(!client_->call(message)) { return NodeStatus::FAILURE; }
             }
-            catch(const std::runtime_error&)      { return BT::NodeStatus::FAILURE; }
-            catch(const BT::bad_optional_access&) { return BT::NodeStatus::FAILURE; }
+            catch(const std::runtime_error&)      { return NodeStatus::FAILURE; }
+            catch(const BT::bad_optional_access&) { return NodeStatus::FAILURE; }
 
-            return BT::NodeStatus::SUCCESS;
+            return NodeStatus::SUCCESS;
         }
 
         virtual void halt() override {}

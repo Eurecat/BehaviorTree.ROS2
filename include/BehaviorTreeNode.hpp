@@ -12,8 +12,15 @@
 #include <behavior_tree_ros/LoadTree.h>
 
 #include <behaviortree_cpp/bt_factory.h>
+#include <behaviortree_cpp/xml_parsing.h>
 
-#include "ROSTree.hpp"
+#include <behaviortree_cpp/loggers/bt_cout_logger.h>
+#include <behaviortree_cpp/loggers/bt_file_logger.h>
+#include <behaviortree_cpp/loggers/bt_minitrace_logger.h>
+
+#ifdef ZMQ_FOUND
+#include <behaviortree_cpp/loggers/bt_zmq_logger.h>
+#endif
 
 namespace UPO
 {
@@ -39,6 +46,9 @@ namespace UPO
             void BuildTree(const std::string& _xml_file);
             void RemoveTree();
 
+            void InitializeLoggers();
+            void ResetLoggers();
+
             std::string GetFullPath(const std::string& _file) const;
 
         private:
@@ -49,8 +59,15 @@ namespace UPO
             ros::ServiceServer load_tree_srv_;
             ros::ServiceServer stop_tree_srv_;
 
-            std::unique_ptr<ROSTree> tree_;
+            std::unique_ptr<BT::Tree> tree_;
             BT::BehaviorTreeFactory bt_factory_;
+
+            std::unique_ptr<BT::StdCoutLogger>   bt_logger_cout_;
+            std::unique_ptr<BT::FileLogger>      bt_logger_file_;
+            std::unique_ptr<BT::MinitraceLogger> bt_logger_trace_;
+            #ifdef ZMQ_FOUND
+            std::unique_ptr<BT::PublisherZMQ>    bt_logger_zmq_;
+            #endif
 
             std::set<std::string> loaded_plugins_;
             std::string trees_folder_;

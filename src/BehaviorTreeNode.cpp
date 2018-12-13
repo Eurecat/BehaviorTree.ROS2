@@ -1,4 +1,10 @@
+#include <chrono>
+#include <sstream>
+#include <iomanip>
+#include <ctime>
+
 #include <boost/filesystem.hpp>
+#include <behaviortree_cpp/blackboard/blackboard_local.h>
 
 #include "BehaviorTreeNode.hpp"
 
@@ -32,13 +38,13 @@ namespace UPO
             return;
         }
 
-        const auto tree_status = tree_->Tick();
-        if(tree_status == ROSTree::Status::FAILURE)
+        const auto tree_status = tree_->root_node->executeTick();
+        if(tree_status == BT::NodeStatus::FAILURE)
         {
             ROS_ERROR("Tree finished with errors");
             RemoveTree();
         }
-        else if(tree_status == ROSTree::Status::SUCCESS)
+        else if(tree_status == BT::NodeStatus::SUCCESS)
         {
             ROS_INFO("Tree finished with no errors");
             RemoveTree();
@@ -79,12 +85,14 @@ namespace UPO
 
     void BehaviorTreeNode::BuildTree(const std::string& _tree_file)
     {
-        tree_ = std::make_unique<ROSTree>(bt_factory_, _tree_file, node_handle_);
+        tree_ = std::make_unique<BT::Tree>(BT::buildTreeFromFile(bt_factory_, _tree_file, BT::Blackboard::create<BT::BlackboardLocal>()));
+        InitializeLoggers();
     }
     
     void BehaviorTreeNode::RemoveTree()
     {
         tree_.reset();
+        ResetLoggers();
     }
 
     void BehaviorTreeNode::LoadPlugins(const std::string& _folder)
@@ -113,5 +121,56 @@ namespace UPO
     std::string BehaviorTreeNode::GetFullPath(const std::string& _file) const
     {
         return _file.front() == '/' ? _file : (trees_folder_.back() == '/' ? trees_folder_ : trees_folder_ + "/") + _file;
+    }
+
+    void BehaviorTreeNode::InitializeLoggers()
+    {
+        if(!tree_) { return; }
+
+        //Behaviortree_cpp complains if two instances of the same logger exist at the same time,
+        //so the pointer is resetted explictly first
+        ResetLoggers();
+
+        std::stringstream file_base;
+        const auto& current_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+        file_base << node_handle_.param<std::string>("log_folder", "/tmp/") << "behavior_tree_ros-" << std::put_time(std::localtime(&current_time), "%F-%R");;
+        const auto& log_file       = file_base.str() + ".fbl";
+        const auto& minitrace_file = file_base.str() + ".json";
+
+        if(node_handle_.param("enable_cout_log", false))
+        { 
+            bt_logger_cout_ = std::make_unique<BT::StdCoutLogger>(tree_->root_node);
+        }
+        
+        if(node_handle_.param("enable_minitrace_log", false))
+        { 
+            bt_logger_trace_ = std::make_unique<BT::MinitraceLogger>(tree_->root_node, minitrace_file.c_str());
+        }
+        
+        if(node_handle_.param("enable_file_log", false))
+        { 
+            bt_logger_file_ = std::make_unique<BT::FileLogger>(tree_->root_node, log_file.c_str());
+        }
+
+        if(node_handle_.param("enable_zmq_pub", false))
+        {
+            #ifdef ZMQ_FOUND
+            bt_logger_zmq_ = std::make_unique<BT::PublisherZMQ>(tree_->root_node);
+            #else
+            ROS_WARN("ZMQ logging is enabled but behaviortree_cpp was not compiled with ZMQ support.");
+            #endif
+        }
+
+    }
+
+    void BehaviorTreeNode::ResetLoggers()
+    {
+        bt_logger_cout_.reset();
+        bt_logger_trace_.reset();
+        bt_logger_file_.reset();
+        #ifdef ZMQ_FOUND
+        bt_logger_zmq_.reset();
+        #endif
     }
 }

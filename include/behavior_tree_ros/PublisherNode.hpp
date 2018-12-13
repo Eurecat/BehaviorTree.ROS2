@@ -1,34 +1,33 @@
 #ifndef PUBLISHER_NODE_HPP
 #define PUBLISHER_NODE_HPP
 
+#include <behaviortree_cpp/basic_types.h>
+
 #include "ROSActionNode.hpp"
 
 namespace BT_ROS
 {
 template <class MessageType>
-std::vector<std::string> messageRequiredParameters();
-
-template <class MessageType>
 class PublisherNode final : public ROSActionNode
 {
     public:
-        PublisherNode(const std::string& _name, const BT::NodeParameters& _params) : ROSActionNode(_name, _params)
+        PublisherNode(const std::string& _name, const NodeParameters& _params) : ROSActionNode(_name, _params)
         {}
         ~PublisherNode() = default;
 
-        static const BT::NodeParameters& requiredNodeParameters()
+        static const NodeParameters& requiredNodeParameters()
         {
-            static BT::NodeParameters params { {"topic", ""} };
+            static NodeParameters params { { "topic", "" }, { "queue_size", "1" }, { "latch", "false" } };
 
-            const auto& message_parameters = messageRequiredParameters<MessageType>();
-            for(const auto& param : message_parameters) { params.emplace(param, ""); }
+            const auto& message_parameters = requiredMessageParameters<MessageType>();
+            params.insert(message_parameters.cbegin(), message_parameters.cend());
 
             return params;
         }
 
-        virtual BT::NodeStatus tick() override
+        virtual NodeStatus tick() override
         {
-            setStatus(BT::NodeStatus::RUNNING);
+            setStatus(NodeStatus::RUNNING);
 
             try
             {
@@ -36,10 +35,10 @@ class PublisherNode final : public ROSActionNode
                 const auto& message = buildMessage<MessageType>(*this);
                 publisher_->publish(message);
             }
-            catch(const std::runtime_error&)      { return BT::NodeStatus::FAILURE; }
-            catch(const BT::bad_optional_access&) { return BT::NodeStatus::FAILURE; }
+            catch(const std::runtime_error&)      { return NodeStatus::FAILURE; }
+            catch(const BT::bad_optional_access&) { return NodeStatus::FAILURE; }
 
-            return BT::NodeStatus::SUCCESS;
+            return NodeStatus::SUCCESS;
         }
 
         virtual void halt() override {}
@@ -50,9 +49,14 @@ class PublisherNode final : public ROSActionNode
             if(publisher_) { return; }
 
             std::string topic;
-            if(!getParam("topic", topic)) { throw std::runtime_error {"Missing topic name"}; }
+            uint32_t queue_size;
+            bool latch;
 
-            publisher_ = node_handle_.advertise<MessageType>(topic, 1);
+            if(!getParam("topic", topic))           { throw std::runtime_error { "Missing topic parameter" }; }
+            if(!getParam("queue_size", queue_size)) { throw std::runtime_error { "Missing queue size parameter" }; }
+            if(!getParam("latch", latch))           { throw std::runtime_error { "Missing latch parameter" }; }
+
+            publisher_ = node_handle_.advertise<MessageType>(topic, queue_size, latch);
         }
 
     private:

@@ -12,8 +12,6 @@ find_package(behaviortree_cpp 1.0 REQUIRED)
 find_package(catkin REQUIRED
     COMPONENTS
         roscpp
-        ros_type_introspection
-        topic_tools
         message_generation
 )
 
@@ -28,8 +26,6 @@ generate_messages(DEPENDENCIES)
 catkin_package(
     CATKIN_DEPENDS 
         roscpp
-        ros_type_introspection
-        topic_tools
         message_runtime
     INCLUDE_DIRS
         include
@@ -45,7 +41,7 @@ target_link_libraries(${PROJECT_NAME} INTERFACE ${behaviortree_cpp_LIBRARIES})
 target_compile_options(${PROJECT_NAME} INTERFACE -Wl,--no-undefined)
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME})
 
-add_executable(${PROJECT_NAME}_node src/behavior_tree_node.cpp src/BehaviorTreeNode.cpp src/ROSTree.cpp)
+add_executable(${PROJECT_NAME}_node src/behavior_tree_node.cpp src/BehaviorTreeNode.cpp)
 target_link_libraries(${PROJECT_NAME}_node PRIVATE ${catkin_LIBRARIES} ${behaviortree_cpp_LIBRARIES})
 target_include_directories(${PROJECT_NAME}_node PRIVATE ${catkin_INCLUDE_DIRS} include)
 target_compile_options(${PROJECT_NAME}_node PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
