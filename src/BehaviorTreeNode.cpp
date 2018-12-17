@@ -153,7 +153,7 @@ namespace UPO
             bt_logger_file_ = std::make_unique<BT::FileLogger>(tree_->root_node, log_file.c_str());
         }
 
-        if(node_handle_.param("enable_zmq_pub", false))
+        if(node_handle_.param("enable_zmq_log", false))
         {
             #ifdef ZMQ_FOUND
             bt_logger_zmq_ = std::make_unique<BT::PublisherZMQ>(tree_->root_node);

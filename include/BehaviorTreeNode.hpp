@@ -19,7 +19,7 @@
 #include <behaviortree_cpp/loggers/bt_minitrace_logger.h>
 
 #ifdef ZMQ_FOUND
-#include <behaviortree_cpp/loggers/bt_zmq_logger.h>
+#include <behaviortree_cpp/loggers/bt_zmq_publisher.h>
 #endif
 
 namespace UPO
