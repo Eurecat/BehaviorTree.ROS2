@@ -31,9 +31,8 @@ class PublisherNode final : public ROSActionNode
 
             try
             {
-                advertiseTopic();
                 const auto& message = buildMessage<MessageType>(*this);
-                publisher_->publish(message);
+                publisher_.publish(message);
             }
             catch(const std::runtime_error&)      { return NodeStatus::FAILURE; }
             catch(const BT::bad_optional_access&) { return NodeStatus::FAILURE; }
@@ -41,13 +40,8 @@ class PublisherNode final : public ROSActionNode
             return NodeStatus::SUCCESS;
         }
 
-        virtual void halt() override {}
-
-    private:
-        void advertiseTopic()
+        virtual void onInit() override
         {
-            if(publisher_) { return; }
-
             std::string topic;
             uint32_t queue_size;
             bool latch;
@@ -59,8 +53,10 @@ class PublisherNode final : public ROSActionNode
             publisher_ = node_handle_.advertise<MessageType>(topic, queue_size, latch);
         }
 
+        virtual void halt() override {}
+
     private:
-        BT::optional<ros::Publisher> publisher_;
+        ros::Publisher publisher_;
 };
 }
 

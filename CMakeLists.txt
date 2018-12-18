@@ -13,6 +13,8 @@ find_package(catkin REQUIRED
     COMPONENTS
         roscpp
         message_generation
+        ros_type_introspection
+        topic_tools
 )
 
 add_service_files(
@@ -27,6 +29,8 @@ catkin_package(
     CATKIN_DEPENDS 
         roscpp
         message_runtime
+        ros_type_introspection
+        topic_tools
     INCLUDE_DIRS
         include
     DEPENDS
@@ -36,14 +40,20 @@ catkin_package(
 )
 
 add_library(${PROJECT_NAME} INTERFACE)
-target_include_directories(${PROJECT_NAME} INTERFACE ${CATKIN_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} INTERFACE ${catkin_INCLUDE_DIRS} 3rdparty)
 target_link_libraries(${PROJECT_NAME} INTERFACE ${behaviortree_cpp_LIBRARIES})
-target_compile_options(${PROJECT_NAME} INTERFACE -Wl,--no-undefined)
+target_compile_options(${PROJECT_NAME} INTERFACE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME})
 
+add_library(${PROJECT_NAME}_plugin src/plugin.cpp)
+target_link_libraries(${PROJECT_NAME}_plugin ${behaviortree_cpp_LIBRARIES} ${catkin_LIBRARIES})
+target_include_directories(${PROJECT_NAME}_plugin PRIVATE ${catkin_INCLUDE_DIRS} PUBLIC 3rdparty include)
+target_compile_options(${PROJECT_NAME}_plugin PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
+list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_plugin)
+
 add_executable(${PROJECT_NAME}_node src/behavior_tree_node.cpp src/BehaviorTreeNode.cpp)
-target_link_libraries(${PROJECT_NAME}_node PRIVATE ${catkin_LIBRARIES} ${behaviortree_cpp_LIBRARIES})
 target_include_directories(${PROJECT_NAME}_node PRIVATE ${catkin_INCLUDE_DIRS} include)
+target_link_libraries(${PROJECT_NAME}_node PRIVATE ${catkin_LIBRARIES} ${behaviortree_cpp_LIBRARIES})
 target_compile_options(${PROJECT_NAME}_node PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_node)
