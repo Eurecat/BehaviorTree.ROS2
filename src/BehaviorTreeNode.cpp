@@ -91,8 +91,8 @@ namespace UPO
     
     void BehaviorTreeNode::RemoveTree()
     {
-        tree_.reset();
         ResetLoggers();
+        tree_.reset();
     }
 
     void BehaviorTreeNode::LoadPlugins(const std::string& _folder)
