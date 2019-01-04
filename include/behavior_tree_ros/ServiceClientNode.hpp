@@ -25,34 +25,31 @@ class ServiceClientNode final : public ROSActionNode
 
         virtual BT::NodeStatus tick() override
         {
-            setStatus(NodeStatus::RUNNING);
+            std::cout << "Calling service" << std::endl;
 
             try
             {
-                connectToService();
                 auto message = buildMessage<MessageType>(*this);
-                if(!client_->call(message)) { return NodeStatus::FAILURE; }
+                if(!client_.call(message)) { return NodeStatus::FAILURE; }
             }
             catch(const std::runtime_error&)      { return NodeStatus::FAILURE; }
             catch(const BT::bad_optional_access&) { return NodeStatus::FAILURE; }
 
+            std::cout << "CallSservice returned success" << std::endl;
             return NodeStatus::SUCCESS;
         }
 
-        virtual void halt() override {}
-
-    private:
-        void connectToService()
+        virtual void onInit() override
         {
-            if(client_) { return; }
-
             std::string service;
             if(!getParam("service", service)) { throw std::runtime_error {"Missing service name"}; }
             client_ = node_handle_.serviceClient<MessageType>(service);
         }
 
+        virtual void halt() override {}
+
     private:
-        BT::optional<ros::ServiceClient> client_;
+        ros::ServiceClient client_;
 };
 
 }

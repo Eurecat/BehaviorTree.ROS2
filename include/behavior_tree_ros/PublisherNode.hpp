@@ -27,8 +27,6 @@ class PublisherNode final : public ROSActionNode
 
         virtual NodeStatus tick() override
         {
-            setStatus(NodeStatus::RUNNING);
-
             try
             {
                 const auto& message = buildMessage<MessageType>(*this);

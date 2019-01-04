@@ -31,7 +31,17 @@ class GetMessageFieldNode final : public BT::ActionNodeBase
                 const auto& output = getParam<std::string>("output");
 
                 nlohmann::json::json_pointer pointer(field.value());
-                blackboard()->set(output.value(), input.value().at(pointer).get<std::string>());
+                const auto& json_value = input.value().at(pointer);
+
+                //TODO: rethink the whole "everything and its mom is a string" approach
+                if(json_value.is_object() || json_value.is_array())
+                {
+                    blackboard()->set(output.value(), json_value);
+                }
+                else
+                {
+                    blackboard()->set(output.value(), json_value.get<std::string>());
+                }
 
                 return BT::NodeStatus::SUCCESS;
             }
