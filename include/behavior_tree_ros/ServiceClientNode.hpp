@@ -25,8 +25,6 @@ class ServiceClientNode final : public ROSActionNode
 
         virtual BT::NodeStatus tick() override
         {
-            std::cout << "Calling service" << std::endl;
-
             try
             {
                 auto message = buildMessage<MessageType>(*this);
@@ -35,7 +33,6 @@ class ServiceClientNode final : public ROSActionNode
             catch(const std::runtime_error&)      { return NodeStatus::FAILURE; }
             catch(const BT::bad_optional_access&) { return NodeStatus::FAILURE; }
 
-            std::cout << "CallSservice returned success" << std::endl;
             return NodeStatus::SUCCESS;
         }
 

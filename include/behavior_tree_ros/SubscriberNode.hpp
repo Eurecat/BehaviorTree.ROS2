@@ -1,6 +1,9 @@
 #ifndef SUBSCRIBER_NODE_HPP
 #define SUBSCRIBER_NODE_HPP
 
+#include <map>
+#include <functional>
+
 //Do not treat reorder as an error even if it's compiled using -Werror
 //(this warning comes from ros_type_intronspection itself)
 #pragma GCC diagnostic warning "-Wreorder"
@@ -64,6 +67,11 @@ class SubscriberNode final : public ROSActionNode
             blackboard()->set(getParam<std::string>("key").value() + "_serialized", toJson(flat_message_));
         }
 
+        //rosInstropection represents messages as trees where the nodes are the message's fields.
+        //A path in the tree is a string like: /path/to/vector/field.0/first/entry
+        //This can be converted to a valid flat json schema by changing the vectors entries delimiter (point to slash).
+        //This flattened json is later unflattened to have a hierarchical structure
+        //Type safety is kept in the resulting json
         nlohmann::json toJson(const RosIntrospection::FlatMessage& _flat_message)
         {
             nlohmann::json serialized_message;
@@ -79,69 +87,26 @@ class SubscriberNode final : public ROSActionNode
             {
                 auto field_name = entry.first.toStdString().substr(msgRosType().baseName().size());
                 std::replace(field_name.begin(), field_name.end(), '.', '/');
-                serialized_message[field_name] = variant2String(entry.second);
-            }
 
-            //std::cout << "Flattened JSON message: " << serialized_message << std::endl;
-            //std::cout << "Unflattended JSON message: " << serialized_message.unflatten() << std::endl;
+                try
+                {
+                    variant_to_json_map_.at(entry.second.getTypeID())(field_name, entry.second, serialized_message);
+                }
+                catch(const std::out_of_range&)
+                {
+                    throw std::runtime_error { "SubscriberNode: cannot serialize variant field " + field_name
+                                               + "of type " + std::string { RosIntrospection::toStr(entry.second.getTypeID()) }};
+                }
+            }
 
             return serialized_message.unflatten();
-        }
-
-        //There has to be a better way
-        std::string variant2String(const RosIntrospection::Variant& _variant)
-        {
-            using namespace RosIntrospection;
-            switch(_variant.getTypeID())
-            {
-                case UINT8:
-                    return std::to_string(_variant.extract<uint8_t>());
-                    break;
-                case UINT16:
-                    return std::to_string(_variant.extract<uint16_t>());
-                    break;
-                case UINT32:
-                    return std::to_string(_variant.extract<uint32_t>());
-                    break;
-                case UINT64:
-                    return std::to_string(_variant.extract<uint64_t>());
-                    break;
-                case BOOL:
-                    return std::to_string(_variant.extract<bool>());
-                    break;
-                case BYTE:
-                    return std::to_string(_variant.extract<unsigned char>());
-                    break;
-                case CHAR:
-                    return std::to_string(_variant.extract<char>());
-                    break;
-                case INT8:
-                    return std::to_string(_variant.extract<int8_t>());
-                    break;
-                case INT16:
-                    return std::to_string(_variant.extract<int16_t>());
-                    break;
-                case INT32:
-                    return std::to_string(_variant.extract<int32_t>());
-                    break;
-                case INT64:
-                    return std::to_string(_variant.extract<int64_t>());
-                    break;
-                case FLOAT32:
-                    return std::to_string(_variant.extract<float>());
-                case FLOAT64:
-                    return std::to_string(_variant.extract<double>());
-                    break;
-                default:
-                    return std::to_string(_variant.convert<double>());
-            }
         }
 
         static const char* msgDefinition() { return ros::message_traits::Definition<MessageType>::value(); };
         static const char* msgDataType()   { return ros::message_traits::DataType<MessageType>::value();   };
 
         static RosIntrospection::ROSType msgRosType() { return { ros::message_traits::DataType<MessageType>::value() }; };
-        static RosIntrospection::Parser& parser() { static RosIntrospection::Parser parser; return parser; };
+        static RosIntrospection::Parser& parser()     { static RosIntrospection::Parser parser; return parser; };
 
     private:
         ros::Subscriber subscriber_;
@@ -150,6 +115,26 @@ class SubscriberNode final : public ROSActionNode
         std::vector<uint8_t> buffer_;
 
         bool serialize_;
+
+        using InsertVariantInJsonFieldFunction = std::function<void(const std::string&, const RosIntrospection::Variant&, nlohmann::json&)>;
+        const std::map<RosIntrospection::BuiltinType, InsertVariantInJsonFieldFunction> variant_to_json_map_
+        {
+            { RosIntrospection::UINT8,    [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<uint8_t>()); }},
+            { RosIntrospection::UINT16,   [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<uint16_t>()); }},
+            { RosIntrospection::UINT32,   [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<uint32_t>()); }},
+            { RosIntrospection::UINT64,   [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<uint64_t>()); }},
+            { RosIntrospection::BOOL,     [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<bool>()); }},
+            { RosIntrospection::BYTE,     [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<unsigned char>()); }},
+            { RosIntrospection::CHAR,     [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<char>()); }},
+            { RosIntrospection::INT8,     [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<int8_t>()); }},
+            { RosIntrospection::INT16,    [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<int16_t>()); }},
+            { RosIntrospection::INT32,    [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<int32_t>()); }},
+            { RosIntrospection::INT64,    [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<int64_t>()); }},
+            { RosIntrospection::FLOAT32,  [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<float>()); }},
+            { RosIntrospection::FLOAT64,  [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<double>()); }},
+            { RosIntrospection::TIME,     [] (const auto& _field_name, const auto& _variant, auto& _json) {}}, //Don't do anything
+            { RosIntrospection::DURATION, [] (const auto& _field_name, const auto& _variant, auto& _json) {}}, //Don't do anything
+        };
 };
 }
 
