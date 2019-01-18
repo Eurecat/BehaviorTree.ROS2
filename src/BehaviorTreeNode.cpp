@@ -38,9 +38,8 @@ namespace UPO
             return;
         }
 
-        //std::lock_guard<std::mutex> lock { tree_mutex_ };
-
         const auto tree_status = tree_->root_node->executeTick();
+
         if(tree_status == BT::NodeStatus::FAILURE)
         {
             ROS_ERROR("Tree finished with errors");
@@ -60,7 +59,6 @@ namespace UPO
     {
         const auto& full_path = GetFullPath(_request.tree_file);
 
-        //std::lock_guard<std::mutex> lock { tree_mutex_ };
         try
         {
             BuildTree(full_path);
@@ -76,8 +74,6 @@ namespace UPO
 
     bool BehaviorTreeNode::StopTree(std_srvs::Empty::Request& _request, std_srvs::Empty::Response& _response)
     {
-        //std::lock_guard<std::mutex> lock { tree_mutex_ };
-
         RemoveTree();
         return true;
     }

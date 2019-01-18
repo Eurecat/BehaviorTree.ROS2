@@ -12,6 +12,7 @@
 #include <ros_type_introspection/ros_introspection.hpp>
 
 #include "ROSActionNode.hpp"
+#include "conversion_types.hpp"
 #include "nlohmann/json.hpp"
 
 namespace BT_ROS
