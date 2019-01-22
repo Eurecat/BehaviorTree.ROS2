@@ -3,8 +3,6 @@
 
 #include <set>
 #include <string>
-#include <memory>
-#include <mutex>
 
 #include <ros/ros.h>
 #include <std_srvs/Empty.h>
@@ -60,7 +58,6 @@ namespace UPO
             ros::ServiceServer load_tree_srv_;
             ros::ServiceServer stop_tree_srv_;
 
-            std::mutex tree_mutex_;
             std::unique_ptr<BT::Tree> tree_;
             BT::BehaviorTreeFactory bt_factory_;
 
