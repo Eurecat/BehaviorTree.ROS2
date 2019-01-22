@@ -1,11 +1,12 @@
 #ifndef ROS_ACTION_NODE_HPP
 #define ROS_ACTION_NODE_HPP
 
-#include <string>
 #include <ros/ros.h>
 
 #include <behaviortree_cpp/action_node.h>
 #include <behaviortree_cpp/basic_types.h>
+
+#include "conversion_types.hpp"
 
 namespace BT_ROS
 {
@@ -19,7 +20,7 @@ NodeParameters requiredMessageParameters();
 class ROSActionNode : public BT::ActionNodeBase
 {
     public:
-        ROSActionNode(const std::string& _name, const NodeParameters& _params) : ActionNodeBase(_name, _params) {}
+        using BT::ActionNodeBase::ActionNodeBase;
         virtual ~ROSActionNode() = default;
 
         template <typename MessageType>
@@ -28,7 +29,6 @@ class ROSActionNode : public BT::ActionNodeBase
     protected:
         ros::NodeHandle node_handle_;
 };
-
 }
 
 #endif

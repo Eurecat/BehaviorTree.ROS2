@@ -8,11 +8,10 @@
 //(this warning comes from ros_type_intronspection itself)
 #pragma GCC diagnostic warning "-Wreorder"
 
-#include <topic_tools/shape_shifter.h>
 #include <ros_type_introspection/ros_introspection.hpp>
+#include <topic_tools/shape_shifter.h>
 
 #include "ROSActionNode.hpp"
-#include "conversion_types.hpp"
 #include "nlohmann/json.hpp"
 
 namespace BT_ROS
@@ -29,7 +28,7 @@ class SubscriberNode final : public ROSActionNode
         {
             parser().registerMessageDefinition(msgDataType(), msgRosType(), msgDefinition());
 
-            static BT::NodeParameters params { { "topic", "" }, { "queue_size", "1" }, { "key", "" }, {"serialize", "false"} };
+            static NodeParameters params { { "topic", "" }, { "queue_size", "1" }, { "key", "" }, { "serialize", "false" } };
             return params;
         }
 
@@ -125,8 +124,8 @@ class SubscriberNode final : public ROSActionNode
             { RosIntrospection::UINT32,   [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<uint32_t>()); }},
             { RosIntrospection::UINT64,   [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<uint64_t>()); }},
             { RosIntrospection::BOOL,     [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<bool>()); }},
-            { RosIntrospection::BYTE,     [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<unsigned char>()); }},
-            { RosIntrospection::CHAR,     [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<char>()); }},
+            { RosIntrospection::BYTE,     [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<int8_t>()); }},
+            { RosIntrospection::CHAR,     [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<uint8_t>()); }},
             { RosIntrospection::INT8,     [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<int8_t>()); }},
             { RosIntrospection::INT16,    [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<int16_t>()); }},
             { RosIntrospection::INT32,    [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<int32_t>()); }},
