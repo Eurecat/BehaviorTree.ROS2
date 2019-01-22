@@ -4,7 +4,7 @@
 #include <topic_tools/shape_shifter.h>
 
 #include "ROSActionNode.hpp"
-#include "serialization.hpp"
+#include "details/serialization.hpp"
 
 namespace BT_ROS
 {

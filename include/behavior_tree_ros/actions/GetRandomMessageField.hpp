@@ -4,7 +4,7 @@
 #include <behaviortree_cpp/action_node.h>
 
 #include "nlohmann/json.hpp"
-#include "utils/random.hpp"
+#include "behavior_tree_ros/utils/random.hpp"
 
 namespace BT_ROS
 {

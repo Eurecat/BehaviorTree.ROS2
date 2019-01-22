@@ -6,7 +6,7 @@
 #include <behaviortree_cpp/action_node.h>
 #include <behaviortree_cpp/basic_types.h>
 
-#include "conversion_types.hpp"
+#include "details/conversion_types.hpp"
 
 namespace BT_ROS
 {

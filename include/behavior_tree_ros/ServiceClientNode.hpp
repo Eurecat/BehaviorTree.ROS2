@@ -2,7 +2,7 @@
 #define SERVICE_CLIENT_NODE_HPP
 
 #include "ROSActionNode.hpp"
-#include "serialization.hpp"
+#include "details/serialization.hpp"
 
 namespace BT_ROS
 {
