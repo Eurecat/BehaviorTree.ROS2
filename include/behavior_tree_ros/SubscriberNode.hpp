@@ -1,8 +1,6 @@
 #ifndef SUBSCRIBER_NODE_HPP
 #define SUBSCRIBER_NODE_HPP
 
-#include <topic_tools/shape_shifter.h>
-
 #include "ROSActionNode.hpp"
 #include "details/serialization.hpp"
 
@@ -45,14 +43,15 @@ class SubscriberNode final : public ROSActionNode
         virtual void halt() override {}
 
     private:
-        void callback(const topic_tools::ShapeShifter& _message)
+        void callback(const MessageType& _message)
         {
-            blackboard()->set(getParam<std::string>("key").value(), *_message.instantiate<MessageType>());
+            blackboard()->set(getParam<std::string>("key").value(), _message);
             if(!serialize_) { return; }
 
-            buffer_.resize(_message.size());
+            //Note: is it possible to receive the serialized data directly?
+            buffer_.resize(ros::serialization::serializationLength(_message));
             ros::serialization::OStream stream(buffer_.data(), buffer_.size());
-            _message.write(stream);
+            ros::serialization::serialize(stream, _message);
 
             parser().deserializeIntoFlatContainer(serialization::msgDataType<MessageType>(),
                                                   absl::Span<uint8_t>(buffer_), &flat_message_, buffer_.size());

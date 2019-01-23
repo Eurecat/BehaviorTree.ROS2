@@ -1,6 +1,8 @@
 #ifndef SERVICE_CLIENT_NODE_HPP
 #define SERVICE_CLIENT_NODE_HPP
 
+#include <topic_tools/shape_shifter.h>
+
 #include "ROSActionNode.hpp"
 #include "details/serialization.hpp"
 

@@ -1,8 +1,6 @@
 #ifndef PUBLISHER_NODE_HPP
 #define PUBLISHER_NODE_HPP
 
-#include <topic_tools/shape_shifter.h>
-
 #include "ROSActionNode.hpp"
 #include "details/serialization.hpp"
 
@@ -72,12 +70,7 @@ template <class MessageType>
 class PublisherNode<MessageType, true> final : public BasePublisherNode<MessageType>
 {
     public:
-        PublisherNode(const std::string& _name, const NodeParameters& _params) : BasePublisherNode<MessageType>(_name, _params)
-        {
-            shape_shifter_.morph(serialization::msgMD5Sum<MessageType>(),
-                                 serialization::msgDataType<MessageType>(),
-                                 serialization::msgDefinition<MessageType>(), "" );
-        }
+        using BasePublisherNode<MessageType>::BasePublisherNode;
         ~PublisherNode() = default;
 
         static const NodeParameters& requiredNodeParameters()
@@ -102,10 +95,11 @@ class PublisherNode<MessageType, true> final : public BasePublisherNode<MessageT
                     serialization::serializeField(*this, field, serialization_buffer_);
                 }
 
-                ros::serialization::OStream stream(serialization_buffer_.data(), serialization_buffer_.size());
-                shape_shifter_.read(stream);
-                this->publisher_.publish(shape_shifter_);
-
+                //Note: is it possible to transmit the serialized data directly?
+                MessageType message;
+                ros::serialization::IStream stream(serialization_buffer_.data(), serialization_buffer_.size());
+                ros::serialization::Serializer<MessageType>::read(stream, message);
+                this->publisher_.publish(message);
                 serialization_buffer_.clear();
             }
             catch(const std::runtime_error&)      { return NodeStatus::FAILURE; }
@@ -124,7 +118,6 @@ class PublisherNode<MessageType, true> final : public BasePublisherNode<MessageT
         static const RosIntrospection::ROSMessage& msgInfo() { static const auto msg_info = serialization::msgInfo<MessageType>(); return msg_info; }
 
     private:
-        topic_tools::ShapeShifter shape_shifter_;
         std::vector<uint8_t> serialization_buffer_;
 };
 }
