@@ -10,6 +10,7 @@
 #include <ros_type_introspection/ros_introspection.hpp>
 
 #include "nlohmann/json.hpp"
+#include "behavior_tree_ros/utils/definitions.hpp"
 
 namespace BT_ROS
 {
@@ -60,7 +61,7 @@ namespace serialization
     }
 
     using SerializeFieldFunction = std::function<void(const ROSActionNode&, const RosIntrospection::ROSField&, std::vector<uint8_t>&)>;
-    static const std::map<RosIntrospection::BuiltinType, SerializeFieldFunction> serialize_field_map
+    static const Utils::UnorderedMap<RosIntrospection::BuiltinType, SerializeFieldFunction> serialize_field_map
     {
         { RosIntrospection::UINT8,    [] (const auto& _node, const auto& _field, auto& _buffer) { serializeField<uint8_t>(_node, _field, _buffer);     }},
         { RosIntrospection::UINT16,   [] (const auto& _node, const auto& _field, auto& _buffer) { serializeField<uint16_t>(_node, _field, _buffer);    }},
@@ -86,7 +87,7 @@ namespace serialization
     }
 
     using InsertVariantInJsonFieldFunction = std::function<void(const std::string&, const RosIntrospection::Variant&, nlohmann::json&)>;
-    static const std::map<RosIntrospection::BuiltinType, InsertVariantInJsonFieldFunction> variant_to_json_map
+    static const Utils::UnorderedMap<RosIntrospection::BuiltinType, InsertVariantInJsonFieldFunction> variant_to_json_map
     {
         { RosIntrospection::UINT8,    [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<uint8_t>()); }},
         { RosIntrospection::UINT16,   [] (const auto& _field_name, const auto& _variant, auto& _json) { _json.emplace(_field_name, _variant.template extract<uint16_t>()); }},

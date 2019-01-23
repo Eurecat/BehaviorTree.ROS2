@@ -6,6 +6,7 @@
 #include <behaviortree_cpp/action_node.h>
 
 #include "nlohmann/json.hpp"
+#include "behavior_tree_ros/utils/definitions.hpp"
 
 namespace BT_ROS
 {
@@ -67,7 +68,7 @@ class FindByFieldValueNode final : public BT::ActionNodeBase
 
     private:
         using FindFunction = std::function<BT::NodeStatus(const Json&, const Json::json_pointer&)>;
-        const std::map<Json::value_t, FindFunction> find_functions_map_
+        const Utils::UnorderedMap<Json::value_t, FindFunction> find_functions_map_
         {
             { Json::value_t::boolean,         [this] (const auto& _input, const auto& _field) { return findValue<bool>(_input, _field);        }},
             { Json::value_t::string,          [this] (const auto& _input, const auto& _field) { return findValue<std::string>(_input, _field); }},

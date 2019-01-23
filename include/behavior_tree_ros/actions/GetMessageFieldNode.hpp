@@ -7,6 +7,7 @@
 #include <behaviortree_cpp/action_node.h>
 
 #include "nlohmann/json.hpp"
+#include "behavior_tree_ros/utils/definitions.hpp"
 
 namespace BT_ROS
 {
@@ -51,7 +52,7 @@ class GetMessageFieldNode final : public BT::ActionNodeBase
     private:
         using Json = nlohmann::json;
         using InsertFunction = std::function<void(const std::string&, const Json&)>;
-        const std::map<Json::value_t, InsertFunction> insert_functions_map_
+        const Utils::UnorderedMap<Json::value_t, InsertFunction> insert_functions_map_
         {
             { Json::value_t::boolean,         [this] (const auto& _key, const auto& _json) { blackboard()->set(_key, _json.template get<bool>()); }},
             { Json::value_t::string,          [this] (const auto& _key, const auto& _json) { blackboard()->set(_key, _json.template get<std::string>()); }},
@@ -61,6 +62,7 @@ class GetMessageFieldNode final : public BT::ActionNodeBase
             { Json::value_t::object,          [this] (const auto& _key, const auto& _json) { blackboard()->set(_key, _json); }},
             { Json::value_t::array,           [this] (const auto& _key, const auto& _json) { blackboard()->set(_key, _json); }}, //Should be converted to vector?
         };
+
 };
 }
 

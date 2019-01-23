@@ -5,6 +5,8 @@
 #include <chrono>
 #include <limits>
 
+namespace BT_ROS
+{
 namespace Utils
 {
     template<typename T>
@@ -43,6 +45,7 @@ namespace Utils
 
         return _first;
     }
+}
 }
 
 #endif
