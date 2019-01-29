@@ -1,0 +1,11 @@
+#include <std_msgs/String.h>
+
+#include <behaviortree_cpp/bt_factory.h>
+#include <behavior_tree_ros/behavior_tree_ros.hpp>
+
+BT_REGISTER_NODES(factory)
+{
+    using namespace BT_ROS;
+
+    factory.registerNodeType<PublisherNode<std_msgs::String>>("DemoPublishString");
+}

@@ -33,3 +33,5 @@
 
 # Behavior tree files
 *.xml
+
+[Bb]uild/
