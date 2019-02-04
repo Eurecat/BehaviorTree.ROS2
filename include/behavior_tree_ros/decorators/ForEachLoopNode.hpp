@@ -38,33 +38,32 @@ class ForEachLoopNode final : public BT::DecoratorNode
                     sequence_iterator_ = input_sequence_.cbegin();
                 }
 
-                if(sequence_iterator_.value() == input_sequence_.cend())
+                while(sequence_iterator_ != input_sequence_.cend())
                 {
-                    sequence_iterator_.reset();
-                    return BT::NodeStatus::SUCCESS;
+                    if(output_index)
+                    {
+                        blackboard()->set(output_index.value(), std::distance(input_sequence_.cbegin(), sequence_iterator_.value()));
+                    }
+
+                    if(output_element)
+                    {
+                        blackboard()->set(output_element.value(), *sequence_iterator_.value());
+                    }
+
+                    const auto child_status = child_node_->executeTick();
+
+                    if(child_status == BT::NodeStatus::FAILURE && break_on_child_failure_)
+                    {
+                        sequence_iterator_.reset();
+                        return BT::NodeStatus::FAILURE;
+                    }
+                    else if (child_status == BT::NodeStatus::RUNNING) { return child_status; }
+
+                    std::advance(sequence_iterator_.value(), 1);
                 }
 
-                if(output_index)
-                {
-                    blackboard()->set(output_index.value(), std::distance(input_sequence_.cbegin(), sequence_iterator_.value()));
-                }
-
-                if(output_element)
-                {
-                    blackboard()->set(output_element.value(), *sequence_iterator_.value());
-                }
-
-                const auto child_status = child_node_->executeTick();
-
-                if(child_status == BT::NodeStatus::FAILURE && break_on_child_failure_)
-                {
-                    sequence_iterator_.reset();
-                    return BT::NodeStatus::FAILURE;
-                }
-
-                std::advance(sequence_iterator_.value(), 1);
-
-                return BT::NodeStatus::RUNNING;
+                sequence_iterator_.reset();
+                return BT::NodeStatus::SUCCESS;
             }
             catch(const std::runtime_error&)        { return BT::NodeStatus::FAILURE; }
             catch(const BT::bad_optional_access&)   { return BT::NodeStatus::FAILURE; }
@@ -79,7 +78,11 @@ class ForEachLoopNode final : public BT::DecoratorNode
             }
         }
 
-        virtual void halt() override {}
+        virtual void halt() override
+        {
+            sequence_iterator_.reset();
+            BT::DecoratorNode::halt();
+        }
 
     private:
         bool break_on_child_failure_ {};
