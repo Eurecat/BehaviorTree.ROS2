@@ -99,6 +99,18 @@ namespace UPO
     void BehaviorTreeNode::LoadPlugins(const std::string& _folder)
     {
         using namespace boost::filesystem;
+
+        //Check first if the folder exists
+        if(!exists(_folder))
+        {
+            ROS_INFO("Plugin folder %s does not exist. It will be created.", _folder.c_str());
+            if(!create_directory(_folder))
+            {
+                ROS_FATAL("Could not create plugin folder %s. Aborting...", _folder.c_str());
+                ros::shutdown();
+            }
+        }
+
         auto directory_list = [&] { return boost::make_iterator_range(directory_iterator(_folder), {}); };
 
         for(const auto& entry : directory_list())
