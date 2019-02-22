@@ -38,16 +38,24 @@ namespace UPO
             return;
         }
 
-        const auto tree_status = tree_->root_node->executeTick();
+        try
+        {
+            const auto tree_status = tree_->root_node->executeTick();
 
-        if(tree_status == BT::NodeStatus::FAILURE)
-        {
-            ROS_ERROR("Tree finished with errors");
-            RemoveTree();
+            if(tree_status == BT::NodeStatus::FAILURE)
+            {
+                ROS_ERROR("Tree finished with errors");
+                RemoveTree();
+            }
+            else if(tree_status == BT::NodeStatus::SUCCESS)
+            {
+                ROS_INFO("Tree finished with no errors");
+                RemoveTree();
+            }
         }
-        else if(tree_status == BT::NodeStatus::SUCCESS)
+        catch(const std::runtime_error& ex)
         {
-            ROS_INFO("Tree finished with no errors");
+            ROS_ERROR("Tree crashed with exception: %s", ex.what());
             RemoveTree();
         }
 
