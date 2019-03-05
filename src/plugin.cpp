@@ -3,6 +3,7 @@
 #include "behavior_tree_ros/actions/GetMessageFieldNode.hpp"
 #include "behavior_tree_ros/actions/GetRandomMessageField.hpp"
 #include "behavior_tree_ros/actions/FindByFieldValueNode.hpp"
+#include "behavior_tree_ros/actions/loggers.hpp"
 #include "behavior_tree_ros/decorators/ForEachLoopNode.hpp"
 
 #include "behavior_tree_ros/SubscriberNode.hpp"
@@ -16,4 +17,6 @@ BT_REGISTER_NODES(factory)
     factory.registerNodeType<GetRandomMessageFieldNode>("GetRandomMessageField");
     factory.registerNodeType<FindByFieldValueNode>("FindByFieldValue");
     factory.registerNodeType<ForEachLoopNode>("ForEachLoop");
+
+    factory.registerNodeType<InfoLogger>("InfoLog");
 }
