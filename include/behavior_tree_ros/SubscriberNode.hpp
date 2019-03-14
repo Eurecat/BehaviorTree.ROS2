@@ -10,42 +10,48 @@ template <class MessageType>
 class SubscriberNode final : public ROSActionNode
 {
     public:
-        using ROSActionNode::ROSActionNode;
-        ~SubscriberNode() = default;
-
-        static const NodeParameters& requiredNodeParameters()
-        {
-            static NodeParameters params { { "topic", "" }, { "queue_size", "1" }, { "key", "" }, { "serialize", "true" } };
-            return params;
-        }
-
-        virtual BT::NodeStatus tick() override
-        {
-            return NodeStatus::SUCCESS;
-        }
-
-        virtual void onInit() override
+        SubscriberNode(const std::string& _name, const BT::NodeConfiguration& _config) : ROSActionNode(_name, _config)
         {
             parser().registerMessageDefinition(serialization::msgDataType<MessageType>(),
                                                serialization::msgType<MessageType>(),
                                                serialization::msgDefinition<MessageType>());
 
-            std::string topic;
-            uint32_t queue_size;
+            const auto& topic      = getInput<std::string>("topic");
+            const auto& queue_size = getInput<uint32_t>("queue_size");
+            const auto& serialize  = getInput<bool>("serialize");
 
-            if(!getParam("topic", topic))           { throw std::runtime_error {"Missing topic parameter"}; }
-            if(!getParam("queue_size", queue_size)) { throw std::runtime_error {"Missing queue size parameter"}; }
-            if(!getParam("serialize", serialize_))  { throw std::runtime_error {"Missing serialize parameter"}; }
+            if(!topic)      {  throw BT::RuntimeError { std::string{ "SubscriberNode<" } + serialization::msgDataType<MessageType>() + ">: " + topic.error() }; }
+            if(!queue_size) {  throw BT::RuntimeError { std::string{ "SubscriberNode<" } + serialization::msgDataType<MessageType>() + ">: " + queue_size.error() }; }
+            if(!serialize)  {  throw BT::RuntimeError { std::string{ "SubscriberNode<" } + serialization::msgDataType<MessageType>() + ">: " + serialize.error() }; }
 
-            subscriber_ = node_handle_.subscribe(topic, queue_size, &SubscriberNode::callback, this);
+            serialize_  = serialize.value();
+            subscriber_ = node_handle_.subscribe(topic.value(), queue_size.value(), &SubscriberNode::callback, this);
         }
 
-        virtual void halt() override {}
+        ~SubscriberNode() = default;
+
+        static BT::PortsList providedPorts()
+        {
+            return { BT::InputPort<nlohmann::json>("topic", "Topic to subscribe"),
+                     BT::InputPort<uint32_t>("queue_size", 1, "Subscriber callback queue size"),
+                     BT::InputPort<bool>("serialize", false, "Serialize ROS message?"),
+                     BT::OutputPort<MessageType>("output", "Received message"),
+                     BT::OutputPort<nlohmann::json>("serialized_output", "Serialized ROS message output")
+                   };
+        }
+
+        virtual BT::NodeStatus tick() override
+        {
+            return BT::NodeStatus::SUCCESS;
+        }
+
+        virtual void halt() override {};
 
     private:
         void callback(const MessageType& _message)
         {
-            blackboard()->set(getParam<std::string>("key").value(), _message);
+            setOutput("output", _message);
+
             if(!serialize_) { return; }
 
             //Note: is it possible to receive the serialized data directly?
@@ -58,7 +64,7 @@ class SubscriberNode final : public ROSActionNode
 
             //Serialization is done in to_json() function (serialization.hpp)
             nlohmann::json serialized_json = flat_message_;
-            blackboard()->set(getParam<std::string>("key").value() + "_serialized", serialized_json);
+            setOutput("serialized_output", serialized_json);
         }
 
         static RosIntrospection::Parser& parser() { static RosIntrospection::Parser parser; return parser; };

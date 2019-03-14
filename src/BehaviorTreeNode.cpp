@@ -2,9 +2,7 @@
 #include <sstream>
 #include <iomanip>
 #include <ctime>
-
 #include <boost/filesystem.hpp>
-#include <behaviortree_cpp/blackboard/blackboard_local.h>
 
 #include "BehaviorTreeNode.hpp"
 
@@ -53,7 +51,7 @@ namespace UPO
                 RemoveTree();
             }
         }
-        catch(const std::runtime_error& ex)
+        catch(const BT::BehaviorTreeException& ex)
         {
             ROS_ERROR("Tree crashed with exception: %s", ex.what());
             RemoveTree();
@@ -94,7 +92,7 @@ namespace UPO
 
     void BehaviorTreeNode::BuildTree(const std::string& _tree_file)
     {
-        tree_ = std::make_unique<BT::Tree>(BT::buildTreeFromFile(bt_factory_, _tree_file, BT::Blackboard::create<BT::BlackboardLocal>()));
+        tree_ = std::make_unique<BT::Tree>(bt_factory_.createTreeFromFile(_tree_file));
         InitializeLoggers();
     }
     
@@ -161,23 +159,23 @@ namespace UPO
 
         if(node_handle_.param("enable_cout_log", false))
         { 
-            bt_logger_cout_ = std::make_unique<BT::StdCoutLogger>(tree_->root_node);
+            bt_logger_cout_ = std::make_unique<BT::StdCoutLogger>(*tree_);
         }
         
         if(node_handle_.param("enable_minitrace_log", false))
         { 
-            bt_logger_trace_ = std::make_unique<BT::MinitraceLogger>(tree_->root_node, minitrace_file.c_str());
+            bt_logger_trace_ = std::make_unique<BT::MinitraceLogger>(*tree_, minitrace_file.c_str());
         }
         
         if(node_handle_.param("enable_file_log", false))
         { 
-            bt_logger_file_ = std::make_unique<BT::FileLogger>(tree_->root_node, log_file.c_str());
+            bt_logger_file_ = std::make_unique<BT::FileLogger>(*tree_, log_file.c_str());
         }
 
         if(node_handle_.param("enable_zmq_log", false))
         {
             #ifdef ZMQ_FOUND
-            bt_logger_zmq_ = std::make_unique<BT::PublisherZMQ>(tree_->root_node);
+            bt_logger_zmq_ = std::make_unique<BT::PublisherZMQ>(*tree_);
             #else
             ROS_WARN("ZMQ logging is enabled but behaviortree_cpp was not compiled with ZMQ support.");
             #endif

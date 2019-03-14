@@ -8,6 +8,7 @@
 
 namespace BT_ROS
 {
+    /*
 template <class MessageType>
 class BaseServiceClientNode : public ROSActionNode
 {
@@ -122,6 +123,7 @@ class ServiceClientNode<MessageType, true> final : public BaseServiceClientNode<
         topic_tools::ShapeShifter shape_shifter_;
         std::vector<uint8_t> serialization_buffer_;
 };
+*/
 }
 
 #endif

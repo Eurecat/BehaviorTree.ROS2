@@ -2,7 +2,6 @@
 #define FIND_BY_FIELD_VALUE_NODE_HPP
 
 #include <algorithm>
-
 #include <behaviortree_cpp/action_node.h>
 
 #include "nlohmann/json.hpp"
@@ -10,29 +9,27 @@
 
 namespace BT_ROS
 {
-class FindByFieldValueNode final : public BT::ActionNodeBase
+class FindByFieldValueNode final : public BT::SyncActionNode
 {
-    private:
-        using Json = nlohmann::json;
-
     public:
-        FindByFieldValueNode(const std::string& _name, const BT::NodeParameters& _params) : ActionNodeBase(_name, _params)
-        {}
+        using BT::SyncActionNode::SyncActionNode;
         ~FindByFieldValueNode() = default;
 
-        static const BT::NodeParameters& requiredNodeParameters()
+        static BT::PortsList providedPorts()
         {
-            static BT::NodeParameters params { { "input", "" }, { "field", "" },
-                                               { "value", "" }, { "output", "" } };
-            return params;
+            return { BT::InputPort<nlohmann::json>("input", "Serialized ROS message"),
+                     BT::InputPort<std::string>("field", "Field to fetch"),
+                     BT::InputPort<std::string>("value", "Value to search for"),
+                     BT::OutputPort<std::string>("output", "Output variable")
+                   };
         }
 
         virtual BT::NodeStatus tick() override
         {
             try
             {
-                const auto& input  = getParam<nlohmann::json>("input");
-                const auto& field  = getParam<std::string>("field");
+                const auto& input  = getInput<nlohmann::json>("input");
+                const auto& field  = getInput<std::string>("field");
 
                 nlohmann::json::json_pointer json_pointer(field.value());
 
@@ -40,7 +37,7 @@ class FindByFieldValueNode final : public BT::ActionNodeBase
                 return find_functions_map_.at(input_type)(input.value(), json_pointer);
             }
             catch(const std::runtime_error&)        { return BT::NodeStatus::FAILURE; }
-            catch(const BT::bad_optional_access&)   { return BT::NodeStatus::FAILURE; }
+            //catch(const BT::bad_optional_access&)   { return BT::NodeStatus::FAILURE; }
             catch(const nlohmann::json::exception&) { return BT::NodeStatus::FAILURE; }
             catch(const std::out_of_range&)
             {
@@ -48,25 +45,24 @@ class FindByFieldValueNode final : public BT::ActionNodeBase
             }
         }
 
-        virtual void halt() override {}
-
     private:
         template <typename T>
-        BT::NodeStatus findValue(const Json& _input, const Json::json_pointer& _field)
+        BT::NodeStatus findValue(const nlohmann::json& _input, const nlohmann::json::json_pointer& _field)
         {
-            const auto& output  = getParam<std::string>("output");
-            const auto& value   = getParam<T>("value");
+            const auto& output  = getInput<std::string>("output");
+            const auto& value   = getInput<T>("value");
             const auto entry_it = std::find_if(_input.cbegin(), _input.cend(),
                                               [&] (const auto& _json) { return _json.at(_field) == value.value(); });
 
             if(entry_it == _input.cend()) { return BT::NodeStatus::FAILURE; }
 
-            if(output) { blackboard()->set(output.value(), *entry_it); }
+            if(output) { setOutput(output.value(), *entry_it); }
 
             return BT::NodeStatus::SUCCESS;
         }
 
     private:
+        using Json = nlohmann::json;
         using FindFunction = std::function<BT::NodeStatus(const Json&, const Json::json_pointer&)>;
         const Utils::UnorderedMap<Json::value_t, FindFunction> find_functions_map_
         {

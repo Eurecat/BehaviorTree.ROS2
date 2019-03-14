@@ -13,6 +13,7 @@ class BasePublisherNode : public ROSActionNode
         using ROSActionNode::ROSActionNode;
         virtual ~BasePublisherNode() = default;
 
+        /*
         virtual void onInit() override
         {
             std::string topic;
@@ -25,6 +26,7 @@ class BasePublisherNode : public ROSActionNode
 
             publisher_ = node_handle_.advertise<MessageType>(topic, queue_size, latch);
         }
+        */
 
         virtual void halt() override {}
 
@@ -42,27 +44,30 @@ class PublisherNode<MessageType, false> final : public BasePublisherNode<Message
         using BasePublisherNode<MessageType>::BasePublisherNode;
         ~PublisherNode() = default;
 
-        static const NodeParameters& requiredNodeParameters()
+        static BT::PortsList providedPorts()
         {
-            static NodeParameters params { { "topic", "" }, { "queue_size", "1" }, { "latch", "false" } };
+            BT::PortsList ports { BT::InputPort<std::string>("topic", "Topic to publish to"),
+                                  BT::InputPort<uint32_t>("queue_size", 1, "Internal publisher queue size"),
+                                  BT::InputPort<bool>("latch", false, "Latch messages?")
+                                };
             
-            const auto& message_parameters = requiredMessageParameters<MessageType>();
-            params.insert(message_parameters.cbegin(), message_parameters.cend());
+            const auto& message_ports = requiredMessagePorts<MessageType>();
+            ports.insert(message_ports.cbegin(), message_ports.cend());
 
-            return params;
+            return ports;
         }
 
-        virtual NodeStatus tick() override
+        virtual BT::NodeStatus tick() override
         {
             try
             {
                 const auto& message = buildMessage<MessageType>(*this);
                 this->publisher_.publish(message);
             }
-            catch(const std::runtime_error&)      { return NodeStatus::FAILURE; }
-            catch(const BT::bad_optional_access&) { return NodeStatus::FAILURE; }
+            catch(const std::runtime_error&)      { return BT::NodeStatus::FAILURE; }
+            //catch(const BT::bad_optional_access&) { return BT::NodeStatus::FAILURE; }
 
-            return NodeStatus::SUCCESS;
+            return BT::NodeStatus::SUCCESS;
         }
 };
 
@@ -73,20 +78,25 @@ class PublisherNode<MessageType, true> final : public BasePublisherNode<MessageT
         using BasePublisherNode<MessageType>::BasePublisherNode;
         ~PublisherNode() = default;
 
-        static const NodeParameters& requiredNodeParameters()
+        static BT::PortsList providedPorts()
         {
-            static NodeParameters params { { "topic", "" }, { "queue_size", "1" }, { "latch", "false" } };
+            BT::PortsList ports { BT::InputPort<std::string>("topic", "Topic to publish to"),
+                                  BT::InputPort<uint32_t>("queue_size", 1, "Internal publisher queue size"),
+                                  BT::InputPort<bool>("latch", false, "Latch messages?")
+                                };
 
             for(const auto& field : msgInfo().fields())
             {
                 if(field.isConstant()) { continue; }
-                params[field.name()] = "";
+                //TODO: get correct type
+                const auto& field_port = BT::InputPort<std::string>(field.name(), "Field test");
+                ports.insert(field_port);
             }
 
-            return params;
+            return ports;
         }
 
-        virtual NodeStatus tick() override
+        virtual BT::NodeStatus tick() override
         {
             try
             {
@@ -102,8 +112,8 @@ class PublisherNode<MessageType, true> final : public BasePublisherNode<MessageT
                 this->publisher_.publish(message);
                 serialization_buffer_.clear();
             }
-            catch(const std::runtime_error&)      { return NodeStatus::FAILURE; }
-            catch(const BT::bad_optional_access&) { return NodeStatus::FAILURE; }
+            catch(const std::runtime_error&)      { return BT::NodeStatus::FAILURE; }
+            //catch(const BT::bad_optional_access&) { return BT::NodeStatus::FAILURE; }
             catch(const std::out_of_range&)
             {
                 throw std::runtime_error { "PublisherNode: unrecognized field type in message " +  std::string { serialization::msgDataType<MessageType>() }
@@ -111,7 +121,7 @@ class PublisherNode<MessageType, true> final : public BasePublisherNode<MessageT
                                             + " Implement specializations for buildMessage<> and requiredMessageParameters<> functions instead." };
             }
 
-            return NodeStatus::SUCCESS;
+            return BT::NodeStatus::SUCCESS;
         }
 
     private:

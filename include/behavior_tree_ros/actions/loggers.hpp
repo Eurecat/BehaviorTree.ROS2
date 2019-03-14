@@ -7,31 +7,25 @@
 //TODO: add more loggers. Maybe using a template class
 namespace BT_ROS
 {
-class InfoLogger final : public BT::ActionNodeBase
+class InfoLogger final : public BT::SyncActionNode
 {
     public:
-        using BT::ActionNodeBase::ActionNodeBase;
+        using BT::SyncActionNode::SyncActionNode;
         ~InfoLogger() = default;
 
-        static const BT::NodeParameters& requiredNodeParameters()
+        static BT::PortsList providedPorts()
         {
-            static BT::NodeParameters params { { "message", "" } };
-            return params;
+            return { BT::InputPort<std::string>("message", "Message to log") };
         }
 
         virtual BT::NodeStatus tick() override
         {
-            try
-            {
-                const auto& message  = getParam<std::string>("message");
-                ROS_INFO("%s", message.value().c_str());
-            }
-            catch(const BT::bad_optional_access&)   { return BT::NodeStatus::FAILURE; }
+            const auto& message = getInput<std::string>("message");
+            if(!message) { throw BT::RuntimeError { "LogInfo: " + message.error() }; }
 
+            ROS_INFO("%s", message.value().c_str());
             return BT::NodeStatus::SUCCESS;
         }
-
-        virtual void halt() override {}
 };
 }
 

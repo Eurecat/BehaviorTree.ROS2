@@ -8,42 +8,39 @@
 
 namespace BT_ROS
 {
-class GetRandomMessageFieldNode final : public BT::ActionNodeBase
+class GetRandomMessageFieldNode final : public BT::SyncActionNode
 {
     public:
-        GetRandomMessageFieldNode(const std::string& _name, const BT::NodeParameters& _params) : ActionNodeBase(_name, _params)
-        {}
+        using BT::SyncActionNode::SyncActionNode;
         ~GetRandomMessageFieldNode() = default;
 
-        static const BT::NodeParameters& requiredNodeParameters()
+        static BT::PortsList providedPorts()
         {
-            static BT::NodeParameters params { { "input", "" }, { "field", "" }, { "output", "" } };
-            return params;
+            return { BT::InputPort<nlohmann::json>("input", "Serialized ROS message"),
+                     BT::InputPort<std::string>("field", "Field to fetch"),
+                     BT::OutputPort<std::string>("output", "Output variable")
+                   };
         }
 
         virtual BT::NodeStatus tick() override
         {
-            setStatus(BT::NodeStatus::RUNNING);
-
             try
             {
-                const auto& input  = getParam<nlohmann::json>("input");
-                const auto& field  = getParam<std::string>("field");
-                const auto& output = getParam<std::string>("output");
+                const auto& input  = getInput<nlohmann::json>("input");
+                const auto& field  = getInput<std::string>("field");
+                const auto& output = getInput<std::string>("output");
 
                 nlohmann::json::json_pointer pointer(field.value());
                 const auto& json_entry = input.value().at(pointer);
 
-                blackboard()->set(output.value(), *Utils::getRandomIterator(json_entry.cbegin(), json_entry.cend()));
+                setOutput(output.value(), *Utils::getRandomIterator(json_entry.cbegin(), json_entry.cend()));
 
                 return BT::NodeStatus::SUCCESS;
             }
             catch(const std::runtime_error&)        { return BT::NodeStatus::FAILURE; }
-            catch(const BT::bad_optional_access&)   { return BT::NodeStatus::FAILURE; }
+            //catch(const BT::bad_optional_access&)   { return BT::NodeStatus::FAILURE; }
             catch(const nlohmann::json::exception&) { return BT::NodeStatus::FAILURE; }
         }
-
-        virtual void halt() override {}
 };
 }
 

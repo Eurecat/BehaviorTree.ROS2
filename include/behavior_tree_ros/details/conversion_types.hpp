@@ -7,21 +7,21 @@ namespace BT
 {
     //TODO: check numeric range
     template <>
-    inline uint8_t convertFromString<uint8_t>(const StringView& str)
+    inline uint8_t convertFromString<uint8_t>(StringView str)
     {
         const auto result = std::stoul(str.data());
         return result;
     }
 
     template <>
-    inline uint16_t convertFromString<uint16_t>(const StringView& str)
+    inline uint16_t convertFromString<uint16_t>(StringView str)
     {
         const auto result = std::stoul(str.data());
         return result;
     }
 
     template <>
-    inline float convertFromString<float>(const StringView& str)
+    inline float convertFromString<float>(StringView str)
     {
         const auto result = std::stod(str.data());
         return result;

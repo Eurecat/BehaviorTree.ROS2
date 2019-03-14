@@ -51,7 +51,7 @@ namespace serialization
     {
         if(_field.isConstant()) { return; }
 
-        const auto& field_value   = _node.getParam<MessageType>(_field.name());
+        const auto& field_value   = _node.getInput<MessageType>(_field.name());
         const auto current_length = _buffer.size();
         const auto field_length   = ros::serialization::serializationLength(field_value.value());
         _buffer.resize(current_length + field_length);
