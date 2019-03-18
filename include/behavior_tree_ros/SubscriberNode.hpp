@@ -16,7 +16,7 @@ class SubscriberNode final : public ROSActionNode
                                                serialization::msgType<MessageType>(),
                                                serialization::msgDefinition<MessageType>());
 
-            const auto& topic      = getInput<std::string>("topic");
+            const auto& topic      = getInput<BT::StringView>("topic");
             const auto& queue_size = getInput<uint32_t>("queue_size");
             const auto& serialize  = getInput<bool>("serialize");
 
@@ -25,7 +25,7 @@ class SubscriberNode final : public ROSActionNode
             if(!serialize)  {  throw BT::RuntimeError { std::string{ "SubscriberNode<" } + serialization::msgDataType<MessageType>() + ">: " + serialize.error() }; }
 
             serialize_  = serialize.value();
-            subscriber_ = node_handle_.subscribe(topic.value(), queue_size.value(), &SubscriberNode::callback, this);
+            subscriber_ = node_handle_.subscribe(topic.value().data(), queue_size.value(), &SubscriberNode::callback, this);
         }
 
         ~SubscriberNode() = default;

@@ -3,8 +3,8 @@
 
 #include <behaviortree_cpp/action_node.h>
 
-#include "nlohmann/json.hpp"
 #include "behavior_tree_ros/utils/random.hpp"
+#include "behavior_tree_ros/details/conversion_json.hpp"
 
 namespace BT_ROS
 {
@@ -17,28 +17,29 @@ class GetRandomMessageFieldNode final : public BT::SyncActionNode
         static BT::PortsList providedPorts()
         {
             return { BT::InputPort<nlohmann::json>("input", "Serialized ROS message"),
-                     BT::InputPort<std::string>("field", "Field to fetch"),
-                     BT::OutputPort<std::string>("output", "Output variable")
+                     BT::InputPort<BT::StringView>("field", "Field to fetch"),
+                     BT::OutputPort<BT::Any>("output", "Output variable")
                    };
         }
 
         virtual BT::NodeStatus tick() override
         {
+            const auto& input  = getInput<nlohmann::json>("input");
+            const auto& field  = getInput<BT::StringView>("field");
+
+            if(!input) { return BT::NodeStatus::FAILURE; }
+            if(!field) { return BT::NodeStatus::FAILURE; }
+
             try
             {
-                const auto& input  = getInput<nlohmann::json>("input");
-                const auto& field  = getInput<std::string>("field");
-                const auto& output = getInput<std::string>("output");
-
-                nlohmann::json::json_pointer pointer(field.value());
+                nlohmann::json::json_pointer pointer(field.value().data());
                 const auto& json_entry = input.value().at(pointer);
+                const auto random_it   = Utils::getRandomIterator(json_entry.cbegin(), json_entry.cend());
 
-                setOutput(output.value(), *Utils::getRandomIterator(json_entry.cbegin(), json_entry.cend()));
+                setOutput("output", json2Any(*random_it));
 
                 return BT::NodeStatus::SUCCESS;
             }
-            catch(const std::runtime_error&)        { return BT::NodeStatus::FAILURE; }
-            //catch(const BT::bad_optional_access&)   { return BT::NodeStatus::FAILURE; }
             catch(const nlohmann::json::exception&) { return BT::NodeStatus::FAILURE; }
         }
 };

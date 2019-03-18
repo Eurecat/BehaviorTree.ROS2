@@ -26,6 +26,12 @@ namespace BT
         const auto result = std::stod(str.data());
         return result;
     }
+
+    template <>
+    inline Any convertFromString<Any>(StringView str)
+    {
+        return Any(str);
+    }
 }
 
 #endif

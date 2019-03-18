@@ -3,7 +3,6 @@
 #include "behavior_tree_ros/actions/GetMessageFieldNode.hpp"
 #include "behavior_tree_ros/actions/GetRandomMessageField.hpp"
 #include "behavior_tree_ros/actions/FindByFieldValueNode.hpp"
-#include "behavior_tree_ros/actions/CastToTypeNode.hpp"
 #include "behavior_tree_ros/actions/loggers.hpp"
 #include "behavior_tree_ros/decorators/ForEachLoopNode.hpp"
 
@@ -17,13 +16,7 @@ BT_REGISTER_NODES(factory)
     factory.registerNodeType<GetMessageFieldNode>("GetMessageField");
     factory.registerNodeType<GetRandomMessageFieldNode>("GetRandomMessageField");
     factory.registerNodeType<FindByFieldValueNode>("FindByFieldValue");
-    factory.registerNodeType<ForEachLoopNode>("ForEachLoop");
-
-    factory.registerNodeType<CastToTypeNode<std::string>>("CastToString");
-    factory.registerNodeType<CastToTypeNode<bool>>("CastToBoolean");
-    factory.registerNodeType<CastToTypeNode<int64_t>>("CastToInteger");
-    factory.registerNodeType<CastToTypeNode<uint64_t>>("CastToUnsigned");
-    factory.registerNodeType<CastToTypeNode<double>>("CastToDouble");
+    factory.registerNodeType<ForEachLoopNode<nlohmann::json>>("ForEachLoop");
 
     factory.registerNodeType<InfoLogger>("InfoLog");
 }

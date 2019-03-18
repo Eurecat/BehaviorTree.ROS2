@@ -15,15 +15,15 @@ class InfoLogger final : public BT::SyncActionNode
 
         static BT::PortsList providedPorts()
         {
-            return { BT::InputPort<std::string>("message", "Message to log") };
+            return { BT::InputPort<BT::StringView>("message", "Message to log") };
         }
 
         virtual BT::NodeStatus tick() override
         {
-            const auto& message = getInput<std::string>("message");
+            const auto& message = getInput<BT::StringView>("message");
             if(!message) { throw BT::RuntimeError { "LogInfo: " + message.error() }; }
 
-            ROS_INFO("%s", message.value().c_str());
+            ROS_INFO("%s", message.value().data());
             return BT::NodeStatus::SUCCESS;
         }
 };
