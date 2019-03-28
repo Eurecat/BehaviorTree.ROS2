@@ -81,7 +81,7 @@ class ForEachLoopNode final : public BT::DecoratorNode
         bool break_on_child_failure_ {};
 
         //TODO: iterators may be invalidated if the blackboard entry is modified. Think of a way to
-        //avoid this, or at least check on runtime if they are valid
+        //avoid this, or at least check on runtime if they are still valid
         std::unique_ptr<typename T::const_iterator> current_iterator_ {};
         std::unique_ptr<typename T::const_iterator> begin_iterator_   {};
         std::unique_ptr<typename T::const_iterator> end_iterator_     {};

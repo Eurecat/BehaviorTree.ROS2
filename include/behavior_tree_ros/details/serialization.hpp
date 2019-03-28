@@ -4,6 +4,8 @@
 #include <map>
 #include <functional>
 
+#include <behaviortree_cpp/action_node.h>
+
 //Do not treat reorder as an error even if it's compiled using -Werror
 //(this warning comes from ros_type_intronspection itself)
 #pragma GCC diagnostic warning "-Wreorder"
@@ -47,7 +49,7 @@ namespace serialization
     };
 
     template <typename MessageType>
-    inline void serializeField(const ROSActionNode& _node, const RosIntrospection::ROSField& _field, std::vector<uint8_t>& _buffer)
+    inline void serializeField(const BT::ActionNodeBase& _node, const RosIntrospection::ROSField& _field, std::vector<uint8_t>& _buffer)
     {
         if(_field.isConstant()) { return; }
 
@@ -60,7 +62,7 @@ namespace serialization
         ros::serialization::serialize(stream, field_value.value());
     }
 
-    using SerializeFieldFunction = std::function<void(const ROSActionNode&, const RosIntrospection::ROSField&, std::vector<uint8_t>&)>;
+    using SerializeFieldFunction = std::function<void(const BT::ActionNodeBase&, const RosIntrospection::ROSField&, std::vector<uint8_t>&)>;
     static const Utils::UnorderedMap<RosIntrospection::BuiltinType, SerializeFieldFunction> serialize_field_map
     {
         { RosIntrospection::UINT8,    [] (const auto& _node, const auto& _field, auto& _buffer) { serializeField<uint8_t>(_node, _field, _buffer);     }},
@@ -81,7 +83,7 @@ namespace serialization
         { RosIntrospection::DURATION, [] (const auto& _node, const auto& _field, auto& _buffer) {}}, //Don't do anything
     };
 
-    inline void serializeField(const ROSActionNode& _node, const RosIntrospection::ROSField& _field, std::vector<uint8_t>& _buffer)
+    inline void serializeField(const BT::ActionNodeBase& _node, const RosIntrospection::ROSField& _field, std::vector<uint8_t>& _buffer)
     {
         serialize_field_map.at(_field.type().typeID())(_node, _field, _buffer);
     }

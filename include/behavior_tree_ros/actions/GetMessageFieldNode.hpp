@@ -15,6 +15,7 @@ class GetMessageFieldNode final : public BT::SyncActionNode
 
         static BT::PortsList providedPorts()
         {
+            //TODO: test setting the output port as void to disable type checking
             return { BT::InputPort<nlohmann::json>("input", "Serialized ROS message"),
                      BT::InputPort<std::string>("field", "Field to fetch"),
                      BT::OutputPort<BT::Any>("output", "Output variable")

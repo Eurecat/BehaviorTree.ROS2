@@ -1,29 +1,23 @@
 #ifndef SERVICE_CLIENT_NODE_HPP
 #define SERVICE_CLIENT_NODE_HPP
 
-#include <topic_tools/shape_shifter.h>
-#include <behaviortree_cpp/utils/demangle_util.h>
+#include <behaviortree_cpp/action_node.h>
 
-#include "ROSActionNode.hpp"
-#include "details/serialization.hpp"
+#include "behavior_tree_ros/policies/deserialization_policies.hpp"
+#include "behavior_tree_ros/details/conversion_types.hpp"
 
 namespace BT_ROS
 {
-template <class MessageType>
-class ServiceClientNode final : public ROSActionNode
+template <class MessageType, template <class> class RequestDeserializationPolicy>
+class ServiceClientNode final : public BT::ActionNodeBase, public RequestDeserializationPolicy<typename MessageType::Request>
 {
     public:
-        ServiceClientNode(const std::string& _name, const BT::NodeConfiguration& _config) : ROSActionNode(_name, _config)
+        ServiceClientNode(const std::string& _name, const BT::NodeConfiguration& _config) : ActionNodeBase(_name, _config)
         {
-            shape_shifter_.morph(serialization::msgMD5Sum<typename MessageType::Request>(),
-                                 serialization::msgDataType<typename MessageType::Request>(),
-                                 serialization::msgDefinition<typename MessageType::Request>(), "" );
-
             const auto& service = getInput<std::string>("service");
             if(!service) { throw BT::RuntimeError { name() + ": " + service.error() }; }
 
             client_ = node_handle_.serviceClient<MessageType>(service.value());
-
         }
         ~ServiceClientNode() = default;
 
@@ -31,14 +25,8 @@ class ServiceClientNode final : public ROSActionNode
         {
             BT:: PortsList ports { BT::InputPort<std::string>("service", "ROS service name") };
 
-            for(const auto& field : msgInfo().fields())
-            {
-                if(field.isConstant()) { continue; }
-                //Setting void as the port type disables type checking
-                const auto& field_port = BT::InputPort<void>(field.name(), std::string { "Auto-generated field from " }
-                                                                            + BT::demangle(typeid(MessageType)));
-                ports.insert(field_port);
-            }
+            const auto& field_ports = RequestDeserializationPolicy<typename MessageType::Request>::requiredPorts();
+            ports.insert(field_ports.cbegin(), field_ports.cend());
 
             return ports;
         }
@@ -47,39 +35,34 @@ class ServiceClientNode final : public ROSActionNode
         {
             setStatus(BT::NodeStatus::RUNNING);
 
-            try
-            {
-                for(const auto& field : msgInfo().fields())
-                {
-                    serialization::serializeField(*this, field, serialization_buffer_);
-                }
+            const auto& service_request = request_policy_.buildMessage(*this);
+            typename MessageType::Response service_response {};
 
-                ros::serialization::OStream stream(serialization_buffer_.data(), serialization_buffer_.size());
-                shape_shifter_.read(stream);
+            //TODO: do something with the response. Probably an option to either serialize it or store it
+            //as a message, like how it's done with the subscriber
+            if(!client_.call(service_request, service_response)) { return BT::NodeStatus::FAILURE; }
 
-                typename MessageType::Response service_response {};
-                if(!this->client_.call(shape_shifter_, service_response, shape_shifter_.getMD5Sum())) { return BT::NodeStatus::FAILURE; }
-
-                serialization_buffer_.clear();
-                return BT::NodeStatus::SUCCESS;
-            }
-            catch(const std::out_of_range&)
-            {
-                throw BT::RuntimeError { name() + ": unrecognized field type in message " +  std::string { serialization::msgDataType<typename MessageType::Request>() }
-                                            + ". Non-builtin types automatic serialization is not supported."
-                                            + " Implement specializations for buildMessage<> and requiredMessageParameters<> functions instead." };
-            }
+            return BT::NodeStatus::SUCCESS;
         }
 
         virtual void halt() override {}
 
-        static const RosIntrospection::ROSMessage& msgInfo() { static const auto msg_info = serialization::msgInfo<typename MessageType::Request>(); return msg_info; };
-
     private:
+        ros::NodeHandle node_handle_;
         ros::ServiceClient client_;
-        topic_tools::ShapeShifter shape_shifter_;
-        std::vector<uint8_t> serialization_buffer_;
+
+        RequestDeserializationPolicy<typename MessageType::Request> request_policy_ {};
 };
+
+//Shortcut alias
+template <class MessageType>
+using ServiceClient = ServiceClientNode<MessageType, NoDeserialization>;
+
+template <class MessageType>
+using CustomServiceClient = ServiceClientNode<MessageType, CustomDeserialization>;
+
+template <class MessageType>
+using AutomaticServiceClient = ServiceClientNode<MessageType, AutomaticDeserialization>;
 }
 
 #endif

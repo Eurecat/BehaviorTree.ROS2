@@ -1,19 +1,18 @@
 #ifndef PUBLISHER_NODE_HPP
 #define PUBLISHER_NODE_HPP
 
-#include <behaviortree_cpp/utils/demangle_util.h>
+#include <behaviortree_cpp/action_node.h>
 
-#include "ROSActionNode.hpp"
-#include "details/serialization.hpp"
+#include "behavior_tree_ros/policies/deserialization_policies.hpp"
+#include "behavior_tree_ros/details/conversion_types.hpp"
 
-//TODO: use a better approach to support user-defined parsing functions (like policies for example)
 namespace BT_ROS
 {
-template <class MessageType>
-class PublisherNode final : public ROSActionNode
+template <class MessageType, template <class> class DeserializationPolicy>
+class PublisherNode final : public BT::ActionNodeBase, public DeserializationPolicy<MessageType>
 {
     public:
-        PublisherNode(const std::string& _name, const BT::NodeConfiguration& _config) : ROSActionNode(_name, _config)
+        PublisherNode(const std::string& _name, const BT::NodeConfiguration& _config) : ActionNodeBase(_name, _config)
         {
             const auto& topic      = getInput<std::string>("topic");
             const auto& queue_size = getInput<uint32_t>("queue_size");
@@ -34,14 +33,8 @@ class PublisherNode final : public ROSActionNode
                                   BT::InputPort<bool>("latch", false, "Latch messages?")
                                 };
 
-            for(const auto& field : msgInfo().fields())
-            {
-                if(field.isConstant()) { continue; }
-                //Setting void as the port type disables type checking
-                const auto& field_port = BT::InputPort<void>(field.name(), std::string { "Auto-generated field from " }
-                                                                            + BT::demangle(typeid(MessageType)));
-                ports.insert(field_port);
-            }
+            const auto& field_ports = DeserializationPolicy<MessageType>::requiredPorts();
+            ports.insert(field_ports.cbegin(), field_ports.cend());
 
             return ports;
         }
@@ -50,40 +43,29 @@ class PublisherNode final : public ROSActionNode
         {
             setStatus(BT::NodeStatus::RUNNING);
 
-            try
-            {
-                for(const auto& field : msgInfo().fields())
-                {
-                    serialization::serializeField(*this, field, serialization_buffer_);
-                }
-
-                //Note: is it possible to transmit the serialized data directly?
-                MessageType message;
-                ros::serialization::IStream stream(serialization_buffer_.data(), serialization_buffer_.size());
-                ros::serialization::Serializer<MessageType>::read(stream, message);
-                this->publisher_.publish(message);
-                serialization_buffer_.clear();
-
-                return BT::NodeStatus::SUCCESS;
-            }
-            catch(const std::out_of_range&)
-            {
-                throw BT::RuntimeError { name() + ": unrecognized field type in message " +  std::string { serialization::msgDataType<MessageType>() }
-                                            + ". Non-builtin types automatic serialization is not supported."
-                                            + " Implement specializations for buildMessage<> and requiredMessageParameters<> functions instead." };
-            }
+            const auto& message = deserialization_policy_.buildMessage(*this);
+            publisher_.publish(message);
+            return BT::NodeStatus::SUCCESS;
         }
 
         virtual void halt() override {}
 
     private:
-        static const RosIntrospection::ROSMessage& msgInfo() { static const auto msg_info = serialization::msgInfo<MessageType>(); return msg_info; }
-
-    private:
+        ros::NodeHandle node_handle_;
         ros::Publisher publisher_;
 
-        std::vector<uint8_t> serialization_buffer_;
+        DeserializationPolicy<MessageType> deserialization_policy_ {};
 };
+
+//Shortcut alias
+template <class MessageType>
+using Publisher = PublisherNode<MessageType, NoDeserialization>;
+
+template <class MessageType>
+using CustomPublisher = PublisherNode<MessageType, CustomDeserialization>;
+
+template <class MessageType>
+using AutomaticPublisher = PublisherNode<MessageType, AutomaticDeserialization>;
 }
 
 #endif
