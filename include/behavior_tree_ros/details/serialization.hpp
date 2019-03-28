@@ -145,7 +145,7 @@ namespace nlohmann
                 }
                 catch(const std::out_of_range&)
                 {
-                    throw std::runtime_error { "Cannot serialize variant field " + field_name + "of type "
+                    throw BT::RuntimeError { "Cannot serialize variant field " + field_name + " of type "
                                                 + std::string { RosIntrospection::toStr(entry.second.getTypeID()) }};
                 }
             }

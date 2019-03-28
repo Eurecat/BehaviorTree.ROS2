@@ -1,81 +1,30 @@
 #ifndef PUBLISHER_NODE_HPP
 #define PUBLISHER_NODE_HPP
 
+#include <behaviortree_cpp/utils/demangle_util.h>
+
 #include "ROSActionNode.hpp"
 #include "details/serialization.hpp"
 
+//TODO: use a better approach to support user-defined parsing functions (like policies for example)
 namespace BT_ROS
 {
 template <class MessageType>
-class BasePublisherNode : public ROSActionNode
+class PublisherNode final : public ROSActionNode
 {
     public:
-        using ROSActionNode::ROSActionNode;
-        virtual ~BasePublisherNode() = default;
-
-        /*
-        virtual void onInit() override
+        PublisherNode(const std::string& _name, const BT::NodeConfiguration& _config) : ROSActionNode(_name, _config)
         {
-            std::string topic;
-            uint32_t queue_size;
-            bool latch;
+            const auto& topic      = getInput<std::string>("topic");
+            const auto& queue_size = getInput<uint32_t>("queue_size");
+            const auto& latch      = getInput<bool>("latch");
 
-            if(!getParam("topic", topic))           { throw std::runtime_error { "Missing topic parameter" }; }
-            if(!getParam("queue_size", queue_size)) { throw std::runtime_error { "Missing queue size parameter" }; }
-            if(!getParam("latch", latch))           { throw std::runtime_error { "Missing latch parameter" }; }
+            if(!topic)      { throw BT::RuntimeError { name() + ": " + topic.error() };      }
+            if(!queue_size) { throw BT::RuntimeError { name() + ": " + queue_size.error() }; }
+            if(!latch)      { throw BT::RuntimeError { name() + ": " + latch.error() };      }
 
-            publisher_ = node_handle_.advertise<MessageType>(topic, queue_size, latch);
+            publisher_ = node_handle_.advertise<MessageType>(topic.value(), queue_size.value(), latch.value());
         }
-        */
-
-        virtual void halt() override {}
-
-    protected:
-        ros::Publisher publisher_;
-};
-
-template <class MessageType, bool Serialize = true>
-class PublisherNode;
-
-template <class MessageType>
-class PublisherNode<MessageType, false> final : public BasePublisherNode<MessageType>
-{
-    public:
-        using BasePublisherNode<MessageType>::BasePublisherNode;
-        ~PublisherNode() = default;
-
-        static BT::PortsList providedPorts()
-        {
-            BT::PortsList ports { BT::InputPort<std::string>("topic", "Topic to publish to"),
-                                  BT::InputPort<uint32_t>("queue_size", 1, "Internal publisher queue size"),
-                                  BT::InputPort<bool>("latch", false, "Latch messages?")
-                                };
-            
-            const auto& message_ports = requiredMessagePorts<MessageType>();
-            ports.insert(message_ports.cbegin(), message_ports.cend());
-
-            return ports;
-        }
-
-        virtual BT::NodeStatus tick() override
-        {
-            try
-            {
-                const auto& message = buildMessage<MessageType>(*this);
-                this->publisher_.publish(message);
-            }
-            catch(const std::runtime_error&)      { return BT::NodeStatus::FAILURE; }
-            //catch(const BT::bad_optional_access&) { return BT::NodeStatus::FAILURE; }
-
-            return BT::NodeStatus::SUCCESS;
-        }
-};
-
-template <class MessageType>
-class PublisherNode<MessageType, true> final : public BasePublisherNode<MessageType>
-{
-    public:
-        using BasePublisherNode<MessageType>::BasePublisherNode;
         ~PublisherNode() = default;
 
         static BT::PortsList providedPorts()
@@ -88,8 +37,9 @@ class PublisherNode<MessageType, true> final : public BasePublisherNode<MessageT
             for(const auto& field : msgInfo().fields())
             {
                 if(field.isConstant()) { continue; }
-                //TODO: get correct type
-                const auto& field_port = BT::InputPort<std::string>(field.name(), "Field test");
+                //Setting void as the port type disables type checking
+                const auto& field_port = BT::InputPort<void>(field.name(), std::string { "Auto-generated field from " }
+                                                                            + BT::demangle(typeid(MessageType)));
                 ports.insert(field_port);
             }
 
@@ -98,6 +48,8 @@ class PublisherNode<MessageType, true> final : public BasePublisherNode<MessageT
 
         virtual BT::NodeStatus tick() override
         {
+            setStatus(BT::NodeStatus::RUNNING);
+
             try
             {
                 for(const auto& field : msgInfo().fields())
@@ -111,23 +63,25 @@ class PublisherNode<MessageType, true> final : public BasePublisherNode<MessageT
                 ros::serialization::Serializer<MessageType>::read(stream, message);
                 this->publisher_.publish(message);
                 serialization_buffer_.clear();
+
+                return BT::NodeStatus::SUCCESS;
             }
-            catch(const std::runtime_error&)      { return BT::NodeStatus::FAILURE; }
-            //catch(const BT::bad_optional_access&) { return BT::NodeStatus::FAILURE; }
             catch(const std::out_of_range&)
             {
-                throw std::runtime_error { "PublisherNode: unrecognized field type in message " +  std::string { serialization::msgDataType<MessageType>() }
+                throw BT::RuntimeError { name() + ": unrecognized field type in message " +  std::string { serialization::msgDataType<MessageType>() }
                                             + ". Non-builtin types automatic serialization is not supported."
                                             + " Implement specializations for buildMessage<> and requiredMessageParameters<> functions instead." };
             }
-
-            return BT::NodeStatus::SUCCESS;
         }
+
+        virtual void halt() override {}
 
     private:
         static const RosIntrospection::ROSMessage& msgInfo() { static const auto msg_info = serialization::msgInfo<MessageType>(); return msg_info; }
 
     private:
+        ros::Publisher publisher_;
+
         std::vector<uint8_t> serialization_buffer_;
 };
 }

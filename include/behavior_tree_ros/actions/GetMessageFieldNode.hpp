@@ -16,18 +16,19 @@ class GetMessageFieldNode final : public BT::SyncActionNode
         static BT::PortsList providedPorts()
         {
             return { BT::InputPort<nlohmann::json>("input", "Serialized ROS message"),
-                     BT::InputPort<BT::StringView>("field", "Field to fetch"),
+                     BT::InputPort<std::string>("field", "Field to fetch"),
                      BT::OutputPort<BT::Any>("output", "Output variable")
-                    };
+                   };
         }
 
         virtual BT::NodeStatus tick() override
         {
-            const auto& input  = getInput<nlohmann::json>("input");
-            const auto& field  = getInput<BT::StringView>("field");
+            const auto& input = getInput<nlohmann::json>("input");
+            const auto& field = getInput<std::string>("field");
 
+            //Should input be mandatory too? This could be a problem if messages are yet to be published
+            if(!field) { throw BT::RuntimeError { name() + ": " + field.error() }; }
             if(!input) { return BT::NodeStatus::FAILURE; }
-            if(!field) { return BT::NodeStatus::FAILURE; }
 
             try
             {
@@ -35,7 +36,6 @@ class GetMessageFieldNode final : public BT::SyncActionNode
                 const auto& json_value = input.value().at(pointer);
 
                 setOutput("output", json2Any(json_value));
-
                 return BT::NodeStatus::SUCCESS;
             }
             catch(const nlohmann::json::exception&) { return BT::NodeStatus::FAILURE; }

@@ -16,23 +16,23 @@ class SubscriberNode final : public ROSActionNode
                                                serialization::msgType<MessageType>(),
                                                serialization::msgDefinition<MessageType>());
 
-            const auto& topic      = getInput<BT::StringView>("topic");
+            const auto& topic      = getInput<std::string>("topic");
             const auto& queue_size = getInput<uint32_t>("queue_size");
             const auto& serialize  = getInput<bool>("serialize");
 
-            if(!topic)      {  throw BT::RuntimeError { std::string{ "SubscriberNode<" } + serialization::msgDataType<MessageType>() + ">: " + topic.error() }; }
-            if(!queue_size) {  throw BT::RuntimeError { std::string{ "SubscriberNode<" } + serialization::msgDataType<MessageType>() + ">: " + queue_size.error() }; }
-            if(!serialize)  {  throw BT::RuntimeError { std::string{ "SubscriberNode<" } + serialization::msgDataType<MessageType>() + ">: " + serialize.error() }; }
+            if(!topic)      { throw BT::RuntimeError { name() + ": " + topic.error() };      }
+            if(!queue_size) { throw BT::RuntimeError { name() + ": " + queue_size.error() }; }
+            if(!serialize)  { throw BT::RuntimeError { name() + ": " + serialize.error() };  }
 
             serialize_  = serialize.value();
-            subscriber_ = node_handle_.subscribe(topic.value().data(), queue_size.value(), &SubscriberNode::callback, this);
+            subscriber_ = node_handle_.subscribe(topic.value(), queue_size.value(), &SubscriberNode::callback, this);
         }
 
         ~SubscriberNode() = default;
 
         static BT::PortsList providedPorts()
         {
-            return { BT::InputPort<nlohmann::json>("topic", "Topic to subscribe"),
+            return { BT::InputPort<std::string>("topic", "Topic to subscribe"),
                      BT::InputPort<uint32_t>("queue_size", 1, "Subscriber callback queue size"),
                      BT::InputPort<bool>("serialize", false, "Serialize ROS message?"),
                      BT::OutputPort<MessageType>("output", "Received message"),

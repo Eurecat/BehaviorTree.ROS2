@@ -8,6 +8,7 @@
 namespace BT_ROS
 {
     BT::Any json2Any(const nlohmann::json& _json);
+    bool areJsonAndAnyEquals(const nlohmann::json& _json, const BT::Any& _any);
 }
 
 #endif
