@@ -3,7 +3,7 @@
 #include "behavior_tree_ros/actions/GetMessageFieldNode.hpp"
 #include "behavior_tree_ros/actions/GetRandomMessageField.hpp"
 #include "behavior_tree_ros/actions/FindByFieldValueNode.hpp"
-#include "behavior_tree_ros/actions/loggers.hpp"
+#include "behavior_tree_ros/actions/Logger.hpp"
 #include "behavior_tree_ros/decorators/ForEachLoopNode.hpp"
 
 #include "behavior_tree_ros/SubscriberNode.hpp"
@@ -18,5 +18,9 @@ BT_REGISTER_NODES(factory)
     factory.registerNodeType<FindByFieldValueNode>("FindByFieldValue");
     factory.registerNodeType<ForEachLoopNode<nlohmann::json>>("ForEachLoop");
 
-    factory.registerNodeType<InfoLogger>("InfoLog");
+    factory.registerNodeType<DebugLog>("DebugLog");
+    factory.registerNodeType<InfoLog>("InfoLog");
+    factory.registerNodeType<WarnLog>("WarnLog");
+    factory.registerNodeType<ErrorLog>("ErrorLog");
+    factory.registerNodeType<FatalLog>("FatalLog");
 }

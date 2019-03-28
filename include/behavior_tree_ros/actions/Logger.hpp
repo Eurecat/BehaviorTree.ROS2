@@ -1,17 +1,17 @@
-#ifndef LOGGERS_HPP
-#define LOGGERS_HPP
+#ifndef LOGGER_HPP
+#define LOGGER_HPP
 
 #include <behaviortree_cpp/action_node.h>
 #include <ros/ros.h>
 
-//TODO: add more loggers. Maybe using a template class
 namespace BT_ROS
 {
-class InfoLogger final : public BT::SyncActionNode
+template <ros::console::Level LogLevel>
+class Logger final : public BT::SyncActionNode
 {
     public:
         using BT::SyncActionNode::SyncActionNode;
-        ~InfoLogger() = default;
+        ~Logger() = default;
 
         static BT::PortsList providedPorts()
         {
@@ -23,10 +23,16 @@ class InfoLogger final : public BT::SyncActionNode
             const auto& message = getInput<std::string>("message");
             if(!message) { throw BT::RuntimeError { name() + ": " + message.error() }; }
 
-            ROS_INFO("%s", message.value().c_str());
+            ROS_LOG(LogLevel, ROSCONSOLE_DEFAULT_NAME, "%s", message.value().c_str());
             return BT::NodeStatus::SUCCESS;
         }
 };
+
+using DebugLog = Logger<ros::console::Level::Debug>;
+using InfoLog  = Logger<ros::console::Level::Info>;
+using WarnLog  = Logger<ros::console::Level::Warn>;
+using ErrorLog = Logger<ros::console::Level::Error>;
+using FatalLog = Logger<ros::console::Level::Fatal>;
 }
 
 #endif
