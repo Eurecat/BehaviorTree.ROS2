@@ -4,12 +4,16 @@
 #include <behaviortree_cpp/action_node.h>
 
 #include "behavior_tree_ros/policies/deserialization_policies.hpp"
+#include "behavior_tree_ros/policies/serialization_policies.hpp"
 #include "behavior_tree_ros/details/conversion_types.hpp"
 
 namespace BT_ROS
 {
-template <class MessageType, template <class> class RequestDeserializationPolicy>
-class ServiceClientNode final : public BT::ActionNodeBase, public RequestDeserializationPolicy<typename MessageType::Request>
+template <class MessageType, template <class> class RequestDeserializationPolicy,
+                             template <class> class ResponseSerializationPolicy>
+class ServiceClientNode final : public BT::ActionNodeBase,
+                                public RequestDeserializationPolicy<typename MessageType::Request>,
+                                public ResponseSerializationPolicy<typename MessageType::Response>
 {
     public:
         ServiceClientNode(const std::string& _name, const BT::NodeConfiguration& _config) : ActionNodeBase(_name, _config)
@@ -25,8 +29,11 @@ class ServiceClientNode final : public BT::ActionNodeBase, public RequestDeseria
         {
             BT:: PortsList ports { BT::InputPort<std::string>("service", "ROS service name") };
 
-            const auto& field_ports = RequestDeserializationPolicy<typename MessageType::Request>::requiredPorts();
-            ports.insert(field_ports.cbegin(), field_ports.cend());
+            const auto& request_ports = RequestDeserializationPolicy<typename MessageType::Request>::requiredPorts();
+            ports.insert(request_ports.cbegin(), request_ports.cend());
+
+            const auto& response_ports = ResponseSerializationPolicy<typename MessageType::Response>::requiredPorts();
+            ports.insert(response_ports.cbegin(), response_ports.cend());
 
             return ports;
         }
@@ -38,10 +45,9 @@ class ServiceClientNode final : public BT::ActionNodeBase, public RequestDeseria
             const auto& service_request = request_policy_.buildMessage(*this);
             typename MessageType::Response service_response {};
 
-            //TODO: do something with the response. Probably an option to either serialize it or store it
-            //as a message, like how it's done with the subscriber
             if(!client_.call(service_request, service_response)) { return BT::NodeStatus::FAILURE; }
 
+            response_policy_.onNewMessage(service_response, *this);
             return BT::NodeStatus::SUCCESS;
         }
 
@@ -52,17 +58,21 @@ class ServiceClientNode final : public BT::ActionNodeBase, public RequestDeseria
         ros::ServiceClient client_;
 
         RequestDeserializationPolicy<typename MessageType::Request> request_policy_ {};
+        ResponseSerializationPolicy<typename MessageType::Response> response_policy_ {};
 };
 
 //Shortcut alias
 template <class MessageType>
-using ServiceClient = ServiceClientNode<MessageType, NoDeserialization>;
+using ServiceClient = ServiceClientNode<MessageType, NoDeserialization, NoSerialization>;
 
 template <class MessageType>
-using CustomServiceClient = ServiceClientNode<MessageType, CustomDeserialization>;
+using AutomaticRequestServiceClient = ServiceClientNode<MessageType, AutomaticDeserialization, NoSerialization>;
 
 template <class MessageType>
-using AutomaticServiceClient = ServiceClientNode<MessageType, AutomaticDeserialization>;
+using SerializedResponseServiceClient = ServiceClientNode<MessageType, NoDeserialization, JsonSerialization>;
+
+template <class MessageType>
+using AutomaticServiceClient = ServiceClientNode<MessageType, AutomaticDeserialization, JsonSerialization>;
 }
 
 #endif

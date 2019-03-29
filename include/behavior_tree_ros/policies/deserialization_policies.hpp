@@ -13,35 +13,16 @@ struct NoDeserialization
 {
     static BT::PortsList requiredPorts()
     {
-       return { BT::InputPort<MessageType>("message", "ROS message of type " + BT::demangle(typeid(MessageType))) };
+       return { BT::InputPort<MessageType>("input", "Input ROS message ["
+                                            + BT::demangle(typeid(MessageType)) + "]") };
     }
 
     MessageType buildMessage(const BT::ActionNodeBase& _tree_node)
     {
-        const auto& expected_message = _tree_node.getInput<MessageType>("message");
+        const auto& expected_message = _tree_node.getInput<MessageType>("input");
         if(!expected_message) { throw BT::RuntimeError { _tree_node.name() + ": " + expected_message.error() }; }
 
         return expected_message.value();
-    }
-};
-
-template <class MessageType>
-static BT::PortsList customMessageRequiredPorts();
-
-template <class MessageType>
-MessageType customBuildMessage();
-
-template <class MessageType>
-struct CustomDeserialization
-{
-    static BT::PortsList requiredPorts()
-    {
-        return customMessageRequiredPorts<MessageType>();
-    }
-
-    MessageType buildMessage(const BT::ActionNodeBase& _tree_node)
-    {
-        return customBuildMessage<MessageType>(_tree_node);
     }
 };
 

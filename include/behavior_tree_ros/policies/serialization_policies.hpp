@@ -12,12 +12,13 @@ struct NoSerialization
 {
     static BT::PortsList requiredPorts()
     {
-       return { BT::OutputPort<MessageType>("message", "Received ROS message") };
+       return { BT::OutputPort<MessageType>("output", "Received ROS message ["
+                                                + BT::demangle(typeid(MessageType)) + "]") };
     }
 
     void onNewMessage(const MessageType& _message, BT::ActionNodeBase& _tree_node)
     {
-        _tree_node.setOutput("message", _message);
+        _tree_node.setOutput("output", _message);
     }
 };
 
@@ -34,7 +35,8 @@ struct JsonSerialization
 
         static BT::PortsList requiredPorts()
         {
-            return { BT::OutputPort<nlohmann::json>("serialized_message", "Serialized ROS message") };
+            return { BT::OutputPort<nlohmann::json>("serialized_output", "Serialized ROS message ["
+                                                        + BT::demangle(typeid(MessageType)) + "]") };
         }
 
         void onNewMessage(const MessageType& _message, BT::ActionNodeBase& _tree_node)
@@ -48,7 +50,7 @@ struct JsonSerialization
 
             //Serialization is done in to_json() function (serialization.hpp)
             nlohmann::json serialized_json = flat_message_;
-            _tree_node.setOutput("serialized_message", serialized_json);
+            _tree_node.setOutput("serialized_output", serialized_json);
         }
 
     private:

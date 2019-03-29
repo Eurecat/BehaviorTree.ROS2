@@ -62,9 +62,6 @@ template <class MessageType>
 using Publisher = PublisherNode<MessageType, NoDeserialization>;
 
 template <class MessageType>
-using CustomPublisher = PublisherNode<MessageType, CustomDeserialization>;
-
-template <class MessageType>
 using AutomaticPublisher = PublisherNode<MessageType, AutomaticDeserialization>;
 }
 
