@@ -2,7 +2,7 @@
 #include <behaviortree_cpp/utils/demangle_util.h>
 
 #include "behavior_tree_ros/details/conversion_json.hpp"
-#include "behavior_tree_ros/utils/definitions.hpp"
+#include "behavior_tree_ros/utils/UnorderedMap.hpp"
 #include "nlohmann/json.hpp"
 
 namespace BT_ROS

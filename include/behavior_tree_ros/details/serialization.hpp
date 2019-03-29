@@ -12,7 +12,7 @@
 #include <ros_type_introspection/ros_introspection.hpp>
 
 #include "nlohmann/json.hpp"
-#include "behavior_tree_ros/utils/definitions.hpp"
+#include "behavior_tree_ros/utils/UnorderedMap.hpp"
 
 namespace BT_ROS
 {

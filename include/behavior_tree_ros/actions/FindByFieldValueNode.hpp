@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <behaviortree_cpp/action_node.h>
 
-#include "behavior_tree_ros/utils/definitions.hpp"
 #include "behavior_tree_ros/details/conversion_json.hpp"
 
 namespace BT_ROS
