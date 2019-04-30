@@ -48,6 +48,13 @@ namespace serialization
         return { msgDataType<MessageType>() };
     };
 
+    //Helper function to check if a message is empty (useful to detect empty services responses)
+    template <class MessageType>
+    inline bool isMsgEmpty()
+    {
+        return strcmp(msgDefinition<MessageType>(), "\n") == 0;
+    };
+
     template <typename MessageType>
     inline void serializeField(const BT::ActionNodeBase& _node, const RosIntrospection::ROSField& _field, std::vector<uint8_t>& _buffer)
     {
@@ -152,6 +159,8 @@ namespace nlohmann
                 }
             }
 
+            //ROS empty messages/services responses are not considered objects
+            if(!_json.is_object()) { return; }
             _json = _json.unflatten();
         }
     };

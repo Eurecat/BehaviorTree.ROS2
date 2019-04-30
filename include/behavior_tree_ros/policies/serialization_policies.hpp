@@ -12,12 +12,16 @@ struct NoSerialization
 {
     static BT::PortsList requiredPorts()
     {
-       return { BT::OutputPort<MessageType>("output", "Received ROS message ["
+        if(serialization::isMsgEmpty<MessageType>()) { return {}; }
+
+        return { BT::OutputPort<MessageType>("output", "Received ROS message ["
                                                 + BT::demangle(typeid(MessageType)) + "]") };
     }
 
     void onNewMessage(const MessageType& _message, BT::ActionNodeBase& _tree_node)
     {
+        if(serialization::isMsgEmpty<MessageType>()) { return; }
+
         _tree_node.setOutput("output", _message);
     }
 };
@@ -35,12 +39,16 @@ struct JsonSerialization
 
         static BT::PortsList requiredPorts()
         {
+            if(serialization::isMsgEmpty<MessageType>()) { return {}; }
+
             return { BT::OutputPort<nlohmann::json>("serialized_output", "Serialized ROS message ["
                                                         + BT::demangle(typeid(MessageType)) + "]") };
         }
 
         void onNewMessage(const MessageType& _message, BT::ActionNodeBase& _tree_node)
         {
+            if(serialization::isMsgEmpty<MessageType>()) { return; }
+
             buffer_.resize(ros::serialization::serializationLength(_message));
             ros::serialization::OStream stream(buffer_.data(), buffer_.size());
             ros::serialization::serialize(stream, _message);
