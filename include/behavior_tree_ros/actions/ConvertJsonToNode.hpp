@@ -25,6 +25,7 @@ class ConvertJsonToNode final : public BT::SyncActionNode
 
         virtual BT::NodeStatus tick() override
         {
+            setStatus(BT::NodeStatus::RUNNING);
             const auto& input = getInput<nlohmann::json>("input");
             
             if(!input) { return BT::NodeStatus::FAILURE; }

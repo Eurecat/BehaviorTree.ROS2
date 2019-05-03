@@ -25,8 +25,9 @@ class ForEachLoopNode final : public BT::DecoratorNode
 
         virtual BT::NodeStatus tick() override
         {
+            setStatus(BT::NodeStatus::RUNNING);
             if(!current_iterator_) { init(); }
-
+            
             while(*current_iterator_ != *end_iterator_)
             {
                 setOutput("output_index", std::distance(*begin_iterator_, *current_iterator_));
