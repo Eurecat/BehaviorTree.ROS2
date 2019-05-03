@@ -3,6 +3,7 @@
 #include "behavior_tree_ros/actions/GetMessageFieldNode.hpp"
 #include "behavior_tree_ros/actions/GetRandomMessageField.hpp"
 #include "behavior_tree_ros/actions/FindByFieldValueNode.hpp"
+#include "behavior_tree_ros/actions/ConvertJsonToNode.hpp"
 #include "behavior_tree_ros/actions/Logger.hpp"
 #include "behavior_tree_ros/decorators/ForEachLoopNode.hpp"
 
@@ -14,6 +15,10 @@ BT_REGISTER_NODES(factory)
     using namespace BT_ROS;
 
     factory.registerNodeType<GetMessageFieldNode>("GetMessageField");
+    factory.registerNodeType<ConvertJsonToNode<std::string>>("ConvertJsonToString");
+    factory.registerNodeType<ConvertJsonToNode<double>>("ConvertJsonToDouble");
+    factory.registerNodeType<ConvertJsonToNode<int64_t>>("ConvertJsonToInt64");
+    factory.registerNodeType<ConvertJsonToNode<uint64_t>>("ConvertJsonToUint64");
     factory.registerNodeType<GetRandomMessageFieldNode>("GetRandomMessageField");
     factory.registerNodeType<FindByFieldValueNode>("FindByFieldValue");
     factory.registerNodeType<ForEachLoopNode<nlohmann::json>>("ForEachLoop");

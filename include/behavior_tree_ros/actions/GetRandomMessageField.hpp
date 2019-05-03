@@ -18,7 +18,7 @@ class GetRandomMessageFieldNode final : public BT::SyncActionNode
         {
             return { BT::InputPort<nlohmann::json>("input", "Serialized ROS message"),
                      BT::InputPort<std::string>("field", "Field to fetch"),
-                     BT::OutputPort<BT::Any>("output", "Output variable")
+                     BT::OutputPort<nlohmann::json>("output", "Output variable")
                    };
         }
 
@@ -37,7 +37,7 @@ class GetRandomMessageFieldNode final : public BT::SyncActionNode
                 const auto& json_entry = input.value().at(pointer);
                 const auto random_it   = Utils::getRandomIterator(json_entry.cbegin(), json_entry.cend());
 
-                setOutput("output", json2Any(*random_it));
+                setOutput("output", *random_it);
 
                 return BT::NodeStatus::SUCCESS;
             }

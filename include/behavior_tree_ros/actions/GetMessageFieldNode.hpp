@@ -18,7 +18,7 @@ class GetMessageFieldNode final : public BT::SyncActionNode
             //Seting void as the port type disables type checking
             return { BT::InputPort<nlohmann::json>("input", "Serialized ROS message"),
                      BT::InputPort<std::string>("field", "Field to fetch"),
-                     BT::OutputPort<void>("output", "Output variable")
+                     BT::OutputPort<nlohmann::json>("output", "Output variable")
                    };
         }
 
@@ -34,9 +34,9 @@ class GetMessageFieldNode final : public BT::SyncActionNode
             try
             {
                 nlohmann::json::json_pointer pointer(field.value().data());
-                const auto& json_value = input.value().at(pointer);
+                const nlohmann::json& json_value = input.value().at(pointer);
 
-                setOutput("output", json2Any(json_value));
+                setOutput("output", json_value);
                 return BT::NodeStatus::SUCCESS;
             }
             catch(const nlohmann::json::exception&) { return BT::NodeStatus::FAILURE; }
