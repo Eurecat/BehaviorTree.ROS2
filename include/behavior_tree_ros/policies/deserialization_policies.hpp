@@ -13,12 +13,16 @@ struct NoDeserialization
 {
     static BT::PortsList requiredPorts()
     {
+       if(serialization::isMsgEmpty<MessageType>()) { return {}; }
+
        return { BT::InputPort<MessageType>("input", "Input ROS message ["
                                             + BT::demangle(typeid(MessageType)) + "]") };
     }
 
     MessageType buildMessage(const BT::ActionNodeBase& _tree_node)
     {
+       if(serialization::isMsgEmpty<MessageType>()) { return {}; }
+
         const auto& expected_message = _tree_node.getInput<MessageType>("input");
         if(!expected_message) { throw BT::RuntimeError { _tree_node.name() + ": " + expected_message.error() }; }
 
