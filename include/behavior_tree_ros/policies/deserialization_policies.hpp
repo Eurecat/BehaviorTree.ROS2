@@ -38,13 +38,19 @@ struct AutomaticDeserialization
         {
             BT::PortsList ports {};
 
-            for(const auto& field : msgInfo().fields())
+            //const std::string& base_name = msgInfo().string_tree.croot()->value();
+
+            for(const auto& msg : msgInfo().type_list)
             {
-                if(field.isConstant()) { continue; }
-                //Setting void as the port type disables type checking
-                const auto& field_port = BT::InputPort<void>(field.name(), std::string { "Auto-generated field from " }
-                                                                            + BT::demangle(typeid(MessageType)));
-                ports.insert(field_port);
+                for(const auto& field : msg.fields())
+                {
+                    if(field.isConstant()) { continue; }
+                    //TODO: set the port type properly and do not use void
+                    //Setting void as the port type disables type checking
+                    const auto& field_port = BT::InputPort<void>(field.name(), std::string { "Auto-generated field from " }
+                                                                                + BT::demangle(typeid(MessageType)));
+                    ports.insert(field_port);
+                }
             }
 
             return ports;
@@ -52,6 +58,7 @@ struct AutomaticDeserialization
 
         MessageType buildMessage(const BT::ActionNodeBase& _tree_node)
         {
+            /*
             serialization_buffer_.clear();
 
             try
@@ -73,10 +80,22 @@ struct AutomaticDeserialization
                                             + ". Non-builtin types automatic serialization is not supported."
                                             + " Use a different message creation policy." };
             }
+            */
+            return {};
         }
 
     private:
-        static const RosIntrospection::ROSMessage& msgInfo() { static const auto msg_info = serialization::msgInfo<MessageType>(); return msg_info; };
+        static const RosIntrospection::ROSMessageInfo& msgInfo()
+        { 
+            static RosIntrospection::Parser parser;
+            parser.registerMessageDefinition(serialization::msgDataType<MessageType>(),
+                                             serialization::msgType<MessageType>(),
+                                             serialization::msgDefinition<MessageType>());
+            
+            //TODO: does this leak?
+            static const auto msg_info = parser.getMessageInfo(serialization::msgDataType<MessageType>());
+            return *msg_info;
+        };
 
     private:
         std::vector<uint8_t> serialization_buffer_;
