@@ -31,7 +31,7 @@ class ForEachLoopNode final : public BT::DecoratorNode
             while(*current_iterator_ != *end_iterator_)
             {
                 setOutput("output_index", std::distance(*begin_iterator_, *current_iterator_));
-                setOutput("element", **current_iterator_);
+                setOutput("output_element", **current_iterator_);
 
                 const auto child_status = child_node_->executeTick();
 

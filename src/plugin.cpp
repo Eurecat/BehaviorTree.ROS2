@@ -6,6 +6,8 @@
 #include "behavior_tree_ros/actions/ConvertJsonToNode.hpp"
 #include "behavior_tree_ros/actions/Logger.hpp"
 #include "behavior_tree_ros/actions/GetSizeNode.hpp"
+#include "behavior_tree_ros/actions/CopyNode.hpp"
+#include "behavior_tree_ros/actions/InitializeNode.hpp"
 #include "behavior_tree_ros/decorators/ForEachLoopNode.hpp"
 
 #include "behavior_tree_ros/SubscriberNode.hpp"
@@ -24,6 +26,8 @@ BT_REGISTER_NODES(factory)
     factory.registerNodeType<FindByFieldValueNode>("FindByFieldValue");
     factory.registerNodeType<ForEachLoopNode<nlohmann::json>>("ForEachLoop");
     factory.registerNodeType<GetSizeNode<nlohmann::json>>("GetJsonSize");
+    factory.registerNodeType<CopyNode<nlohmann::json>>("CopyJson");
+    factory.registerNodeType<InitializeNode<nlohmann::json>>("InitializeJson");
 
     factory.registerNodeType<DebugLog>("DebugLog");
     factory.registerNodeType<InfoLog>("InfoLog");
