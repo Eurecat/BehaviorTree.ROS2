@@ -2,7 +2,10 @@
 #include <sstream>
 #include <iomanip>
 #include <ctime>
+
+#include <ros/package.h>
 #include <boost/filesystem.hpp>
+#include <tinyxml2.h>
 
 #include "BehaviorTreeNode.hpp"
 
@@ -13,15 +16,7 @@ namespace UPO
     {
         node_handle_.getParam("trees_folder", trees_folder_);
 
-        std::string plugins_folder;
-
-        if(!node_handle_.getParam("plugins_folder", plugins_folder))
-        {
-            ROS_FATAL("Plugins folder param is missing. Aborting...");
-            ros::shutdown();
-        }
-
-        LoadPlugins(plugins_folder);
+	LoadAllPlugins();
 
         get_loaded_plugins_srv_ = node_handle_.advertiseService("behavior_tree/get_loaded_plugins", &BehaviorTreeNode::GetLoadedPluginsService, this);
         load_tree_srv_          = node_handle_.advertiseService("behavior_tree/load_tree", &BehaviorTreeNode::LoadTree, this);
@@ -102,19 +97,74 @@ namespace UPO
         tree_.reset();
     }
 
-    void BehaviorTreeNode::LoadPlugins(const std::string& _folder)
+    void BehaviorTreeNode::LoadPluginsFromROS()
+    {
+	using namespace tinyxml2;
+
+	std::vector<std::pair<std::string, std::string>> exported_plugins;
+	ros::package::getPlugins("behavior_tree_ros", "plugin", exported_plugins);
+	XMLDocument plugin_description;
+
+	for(const auto& plugin : exported_plugins)
+	{
+	    try
+	    {
+	    plugin_description.LoadFile(plugin.second.c_str());
+
+	    if(plugin_description.Error())
+	    {
+		throw std::runtime_error { std::string { "XML file may be ill-formed ( " }
+				           + plugin_description.GetErrorStr1() + ". "
+					   + plugin_description.GetErrorStr2() + ")" };
+	    }
+
+	    XMLElement* root_entry = plugin_description.RootElement(); 
+
+	    if(!root_entry)
+	    {
+		throw std::runtime_error { "No root element was found in XML file" };
+	    }
+
+	    XMLElement* plugin_entry = root_entry->FirstChildElement("plugin");
+
+	    // This loop abort the parsing on first error. This could be a problem if there are multiple plugins
+	    // defined in the same file.
+	    while(plugin_entry)
+	    {
+	        std::string plugin_lib = plugin_entry->Attribute("path");
+
+		if(plugin_lib.empty())
+		{
+		    throw std::runtime_error { "Missing path attribute in plugin element" };
+		}
+
+		const std::string& xml_path = plugin.second;
+		std::string devel_path = xml_path.substr(0, xml_path.find("/src/")) + "/devel/";
+
+		std::string lib_full_path = devel_path + plugin_lib + ".so";
+		LoadPlugin(lib_full_path);
+
+	    	ROS_INFO("Loaded plugin %s from ROS plugin", lib_full_path.c_str());
+		
+		plugin_entry = plugin_entry->NextSiblingElement("plugin");
+	    }
+	    }
+	    catch(const std::runtime_error& ex)
+	    {
+	        ROS_ERROR("Error loading plugin %s in path %s: %s.", plugin.first.c_str(),
+				plugin.second.c_str(), ex.what());
+	    }
+	}
+    }
+
+    void BehaviorTreeNode::LoadPluginsFromFolder(const std::string& _folder)
     {
         using namespace boost::filesystem;
 
-        //Check first if the folder exists
         if(!exists(_folder))
         {
-            ROS_INFO("Plugin folder %s does not exist. It will be created.", _folder.c_str());
-            if(!create_directory(_folder))
-            {
-                ROS_FATAL("Could not create plugin folder %s. Aborting...", _folder.c_str());
-                ros::shutdown();
-            }
+            ROS_ERROR("Plugin folder %s does not exist.", _folder.c_str());
+	    return;
         }
 
         auto directory_list = [&] { return boost::make_iterator_range(directory_iterator(_folder), {}); };
@@ -126,15 +176,49 @@ namespace UPO
             try
             {
                 const auto& plugin_path = canonical(entry.path());
-                bt_factory_.registerFromPlugin(plugin_path.string());
-                loaded_plugins_.emplace(plugin_path.filename().string());
-                ROS_INFO("Loaded plugin %s", plugin_path.filename().string().c_str());
+		LoadPlugin(plugin_path.string());
+                ROS_INFO("Loaded plugin %s from folder %s", plugin_path.filename().string().c_str(),
+				_folder.c_str());
             }
             catch(const std::runtime_error& ex)
             {
-                ROS_ERROR("Cannot load plugin %s. Error: %s", entry.path().filename().string().c_str(), ex.what());
+                ROS_ERROR("Cannot load plugin %s from folder %s. Error: %s", entry.path().filename().string().c_str(),
+				_folder.c_str(), ex.what());
             }
         }
+    }
+
+    void BehaviorTreeNode::LoadPlugin(const std::string& _plugin_path)
+    {
+        try
+        {
+	    bt_factory_.registerFromPlugin(_plugin_path);
+            loaded_plugins_.emplace(_plugin_path);
+	}
+        catch(const BT::BehaviorTreeException& ex)
+        {
+	    throw std::runtime_error { ex.what() };
+        }
+    }
+
+    void BehaviorTreeNode::LoadAllPlugins()
+    {
+        LoadPluginsFromROS();
+
+	bool import_from_folder = node_handle_.param("import_from_folder", false);
+
+	if(import_from_folder)
+	{
+            std::string plugins_folder;
+            if(!node_handle_.getParam("plugins_folder", plugins_folder))
+            {
+                ROS_WARN("Import from folder option is set, but folder param is missing");
+            }
+	    else
+	    {
+                LoadPluginsFromFolder(plugins_folder);
+	    }
+	}
     }
 
     std::string BehaviorTreeNode::GetFullPath(const std::string& _file) const

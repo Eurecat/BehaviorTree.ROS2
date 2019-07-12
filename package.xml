@@ -15,11 +15,13 @@
   <build_depend>ros_type_introspection</build_depend>
   <build_depend>topic_tools</build_depend>
   <build_depend>message_generation</build_depend>
+  <build_depend>cmake_modules</build_depend>
 
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>behaviortree_cpp_v3</build_export_depend>
   <build_export_depend>ros_type_introspection</build_export_depend>
   <build_export_depend>topic_tools</build_export_depend>
+  <build_export_depend>cmake_modules</build_export_depend>
 
   <exec_depend>message_runtime</exec_depend>
 
