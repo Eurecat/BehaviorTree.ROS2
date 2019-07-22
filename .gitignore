@@ -31,7 +31,4 @@
 *.out
 *.app
 
-# Behavior tree files
-*.xml
-
 [Bb]uild/

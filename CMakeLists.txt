@@ -14,7 +14,10 @@ find_package(catkin REQUIRED
         ros_type_introspection
         topic_tools
         behaviortree_cpp_v3
+	cmake_modules
 )
+
+find_package(TinyXML2 REQUIRED)
 
 add_service_files(
     FILES
@@ -31,6 +34,9 @@ catkin_package(
         ros_type_introspection
         behaviortree_cpp_v3
         topic_tools
+	cmake_modules
+    DEPENDS
+	TinyXML2
     INCLUDE_DIRS
         include
     LIBRARIES
@@ -51,8 +57,8 @@ target_compile_definitions(${PROJECT_NAME}_plugin PRIVATE BT_PLUGIN_EXPORT)
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_plugin)
 
 add_executable(${PROJECT_NAME}_node src/behavior_tree_node.cpp src/BehaviorTreeNode.cpp)
-target_include_directories(${PROJECT_NAME}_node PRIVATE ${catkin_INCLUDE_DIRS} include)
-target_link_libraries(${PROJECT_NAME}_node PRIVATE ${catkin_LIBRARIES})
+target_include_directories(${PROJECT_NAME}_node PRIVATE ${catkin_INCLUDE_DIRS} ${TinyXML2_INCLUDE_DIRS} include)
+target_link_libraries(${PROJECT_NAME}_node PRIVATE ${catkin_LIBRARIES} ${TinyXML2_LIBRARIES})
 target_compile_options(${PROJECT_NAME}_node PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_node)

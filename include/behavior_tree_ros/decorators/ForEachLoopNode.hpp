@@ -27,11 +27,11 @@ class ForEachLoopNode final : public BT::DecoratorNode
         {
             setStatus(BT::NodeStatus::RUNNING);
             if(!current_iterator_) { init(); }
-            
+
             while(*current_iterator_ != *end_iterator_)
             {
                 setOutput("output_index", std::distance(*begin_iterator_, *current_iterator_));
-                setOutput("element", **current_iterator_);
+                setOutput("output_element", **current_iterator_);
 
                 const auto child_status = child_node_->executeTick();
 
@@ -65,20 +65,22 @@ class ForEachLoopNode final : public BT::DecoratorNode
 
         void init()
         {
-            const auto& input_sequence         = getInput<T>("input_message");
+            const auto& input_sequence         = getInput<T>("input");
             const auto& break_on_child_failure = getInput<bool>("break_on_child_failure");
 
             if(!input_sequence)         { throw BT::RuntimeError { name() + ": " + input_sequence.error() }; }
             if(!break_on_child_failure) { throw BT::RuntimeError { name() + ": " + break_on_child_failure.error() }; }
 
+            input_sequence_ = input_sequence.value();
             break_on_child_failure_ = break_on_child_failure.value();
 
-            current_iterator_ = std::make_unique<typename T::const_iterator>(input_sequence.value().cbegin());
-            begin_iterator_   = std::make_unique<typename T::const_iterator>(input_sequence.value().cbegin());
-            end_iterator_     = std::make_unique<typename T::const_iterator>(input_sequence.value().cend());
+            current_iterator_ = std::make_unique<typename T::const_iterator>(input_sequence_.cbegin());
+            begin_iterator_   = std::make_unique<typename T::const_iterator>(input_sequence_.cbegin());
+            end_iterator_     = std::make_unique<typename T::const_iterator>(input_sequence_.cend());
         }
 
     private:
+        T input_sequence_ {};
         bool break_on_child_failure_ {};
 
         //TODO: iterators may be invalidated if the blackboard entry is modified. Think of a way to

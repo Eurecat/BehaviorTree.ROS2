@@ -1,0 +1,5 @@
+<description>
+    <plugin name="behavior_tree_ros_plugin"
+	    path="lib/libbehavior_tree_ros_plugin"
+	    description="General introspection nodes for ROS messages" />
+</description>

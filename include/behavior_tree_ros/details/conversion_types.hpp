@@ -32,6 +32,12 @@ namespace BT
     {
         return Any(str);
     }
+
+    template <>
+    inline nlohmann::json convertFromString<nlohmann::json>(StringView str)
+    {
+        return nlohmann::json(str);
+    }
 }
 
 #endif
