@@ -25,7 +25,7 @@ add_service_files(
         LoadTree.srv
 )
 
-generate_messages(DEPENDENCIES)
+generate_messages()
 
 catkin_package(
     CATKIN_DEPENDS 
@@ -45,7 +45,6 @@ add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME} INTERFACE ${catkin_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} INTERFACE ${catkin_LIBRARIES})
 target_compile_options(${PROJECT_NAME} INTERFACE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
-#list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME})
 
 add_library(${PROJECT_NAME}_plugin src/plugin.cpp src/details/conversion_json.cpp)
 target_link_libraries(${PROJECT_NAME}_plugin ${catkin_LIBRARIES})

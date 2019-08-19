@@ -99,62 +99,82 @@ namespace UPO
 
     void BehaviorTreeNode::LoadPluginsFromROS()
     {
-	using namespace tinyxml2;
+        using namespace tinyxml2;
 
-	std::vector<std::pair<std::string, std::string>> exported_plugins;
-	ros::package::getPlugins("behavior_tree_ros", "plugin", exported_plugins);
-	XMLDocument plugin_description;
+        // ros::package::getPlugins returns a pair of strings for each result.
+        // The first one is the name of the package that exported the target xml entry (behavior_tree_ros)
+        // and the second one is the value of the attribute (plugin)
+        std::vector<std::pair<std::string, std::string>> exported_plugins;
+        ros::package::getPlugins("behavior_tree_ros", "plugin", exported_plugins);
+        XMLDocument plugin_description;
 
-	for(const auto& plugin : exported_plugins)
-	{
-	    try
-	    {
-	    plugin_description.LoadFile(plugin.second.c_str());
+        for(const auto& plugin : exported_plugins)
+        {
+            try
+            {
+                plugin_description.LoadFile(plugin.second.c_str());
 
-	    if(plugin_description.Error())
-	    {
-		throw std::runtime_error { std::string { "XML file may be ill-formed ( " }
-				           + plugin_description.GetErrorStr1() + ". "
-					   + plugin_description.GetErrorStr2() + ")" };
-	    }
+                if(plugin_description.Error())
+                {
+                    throw std::runtime_error { std::string { "XML file may be ill-formed ( " }
+                            + plugin_description.GetErrorStr1() + ". "
+                            + plugin_description.GetErrorStr2() + ")" };
+                }
 
-	    XMLElement* root_entry = plugin_description.RootElement(); 
+                XMLElement* root_entry = plugin_description.RootElement(); 
 
-	    if(!root_entry)
-	    {
-		throw std::runtime_error { "No root element was found in XML file" };
-	    }
+                if(!root_entry)
+                {
+                    throw std::runtime_error { "No root element was found in XML file" };
+                }
 
-	    XMLElement* plugin_entry = root_entry->FirstChildElement("plugin");
+                XMLElement* plugin_entry = root_entry->FirstChildElement("plugin");
 
-	    // This loop abort the parsing on first error. This could be a problem if there are multiple plugins
-	    // defined in the same file.
-	    while(plugin_entry)
-	    {
-	        std::string plugin_lib = plugin_entry->Attribute("path");
+                // This loop abort the parsing on first error. This could be a problem if there are multiple plugins
+                // defined in the same file.
+                while(plugin_entry)
+                {
+                    std::string plugin_lib = plugin_entry->Attribute("path");
 
-		if(plugin_lib.empty())
-		{
-		    throw std::runtime_error { "Missing path attribute in plugin element" };
-		}
+                    if(plugin_lib.empty())
+                    {
+                        throw std::runtime_error { "Missing path attribute in plugin element" };
+                    }
 
-		const std::string& xml_path = plugin.second;
-		std::string devel_path = xml_path.substr(0, xml_path.find("/src/")) + "/devel/";
+                    std::string devel_path;
+                    const std::string& xml_path = plugin.second;
 
-		std::string lib_full_path = devel_path + plugin_lib + ".so";
-		LoadPlugin(lib_full_path);
+                    // Is there a better way to do this?
+                    // Check if the path contains a src folder (then we assume is a local workspace)
+                    // or if it contains a share folder (then we assume we are in the system path)
+                    if(xml_path.find("/src/") != std::string::npos)
+                    {
+                        devel_path = xml_path.substr(0, xml_path.find("/src/")) + "/devel/";
+                    }
+                    else if(xml_path.find("/share/") != std::string::npos)
+                    {
+                        devel_path = xml_path.substr(0, xml_path.find("/share/")) + "/";
+                    }
 
-	    	ROS_INFO("Loaded plugin %s from ROS plugin", lib_full_path.c_str());
-		
-		plugin_entry = plugin_entry->NextSiblingElement("plugin");
-	    }
-	    }
-	    catch(const std::runtime_error& ex)
-	    {
-	        ROS_ERROR("Error loading plugin %s in path %s: %s.", plugin.first.c_str(),
-				plugin.second.c_str(), ex.what());
-	    }
-	}
+                    if(devel_path.empty())
+                    {
+                        throw std::runtime_error { "Cannot find devel path to plugin" };
+                    }
+
+                    std::string lib_full_path = devel_path + plugin_lib + ".so";
+                    LoadPlugin(lib_full_path);
+
+                    ROS_INFO("Loaded plugin %s from ROS plugin", lib_full_path.c_str());
+
+                    plugin_entry = plugin_entry->NextSiblingElement("plugin");
+                }
+            }
+            catch(const std::runtime_error& ex)
+            {
+                ROS_ERROR("Error loading plugin %s in path %s: %s.", plugin.first.c_str(),
+                        plugin.second.c_str(), ex.what());
+            }
+        }
     }
 
     void BehaviorTreeNode::LoadPluginsFromFolder(const std::string& _folder)
@@ -164,7 +184,7 @@ namespace UPO
         if(!exists(_folder))
         {
             ROS_ERROR("Plugin folder %s does not exist.", _folder.c_str());
-	    return;
+	        return;
         }
 
         auto directory_list = [&] { return boost::make_iterator_range(directory_iterator(_folder), {}); };
@@ -176,7 +196,7 @@ namespace UPO
             try
             {
                 const auto& plugin_path = canonical(entry.path());
-		LoadPlugin(plugin_path.string());
+		        LoadPlugin(plugin_path.string());
                 ROS_INFO("Loaded plugin %s from folder %s", plugin_path.filename().string().c_str(),
 				_folder.c_str());
             }
@@ -192,12 +212,12 @@ namespace UPO
     {
         try
         {
-	    bt_factory_.registerFromPlugin(_plugin_path);
+	        bt_factory_.registerFromPlugin(_plugin_path);
             loaded_plugins_.emplace(_plugin_path);
-	}
+	    }
         catch(const BT::BehaviorTreeException& ex)
         {
-	    throw std::runtime_error { ex.what() };
+	        throw std::runtime_error { ex.what() };
         }
     }
 
