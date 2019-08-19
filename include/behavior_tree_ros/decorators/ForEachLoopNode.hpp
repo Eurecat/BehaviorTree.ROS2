@@ -3,7 +3,7 @@
 
 #include <behaviortree_cpp/decorator_node.h>
 
-#include "nlohmann/json.hpp"
+#include "behavior_tree_ros/3rdparty/nlohmann/json.hpp"
 
 namespace BT_ROS
 {

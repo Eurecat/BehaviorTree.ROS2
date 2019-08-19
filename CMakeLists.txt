@@ -14,7 +14,7 @@ find_package(catkin REQUIRED
         ros_type_introspection
         topic_tools
         behaviortree_cpp_v3
-	cmake_modules
+	    cmake_modules
 )
 
 find_package(TinyXML2 REQUIRED)
@@ -34,30 +34,28 @@ catkin_package(
         ros_type_introspection
         behaviortree_cpp_v3
         topic_tools
-	cmake_modules
+	    cmake_modules
     DEPENDS
-	TinyXML2
+	    TinyXML2
     INCLUDE_DIRS
         include
-    LIBRARIES
-        ${PROJECT_NAME}
 )
 
 add_library(${PROJECT_NAME} INTERFACE)
-target_include_directories(${PROJECT_NAME} INTERFACE ${catkin_INCLUDE_DIRS} 3rdparty)
+target_include_directories(${PROJECT_NAME} INTERFACE ${catkin_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} INTERFACE ${catkin_LIBRARIES})
 target_compile_options(${PROJECT_NAME} INTERFACE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
-list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME})
+#list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME})
 
 add_library(${PROJECT_NAME}_plugin src/plugin.cpp src/details/conversion_json.cpp)
 target_link_libraries(${PROJECT_NAME}_plugin ${catkin_LIBRARIES})
-target_include_directories(${PROJECT_NAME}_plugin PRIVATE ${catkin_INCLUDE_DIRS} PUBLIC 3rdparty include)
+target_include_directories(${PROJECT_NAME}_plugin PUBLIC include PRIVATE ${catkin_INCLUDE_DIRS})
 target_compile_options(${PROJECT_NAME}_plugin PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 target_compile_definitions(${PROJECT_NAME}_plugin PRIVATE BT_PLUGIN_EXPORT)
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_plugin)
 
 add_executable(${PROJECT_NAME}_node src/behavior_tree_node.cpp src/BehaviorTreeNode.cpp)
-target_include_directories(${PROJECT_NAME}_node PRIVATE ${catkin_INCLUDE_DIRS} ${TinyXML2_INCLUDE_DIRS} include)
+target_include_directories(${PROJECT_NAME}_node PRIVATE include ${catkin_INCLUDE_DIRS} ${TinyXML2_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME}_node PRIVATE ${catkin_LIBRARIES} ${TinyXML2_LIBRARIES})
 target_compile_options(${PROJECT_NAME}_node PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS})
@@ -69,3 +67,8 @@ install(TARGETS ${${PROJECT_NAME}_targets}
         RUNTIME  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
         INCLUDES DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
+
+install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+install(DIRECTORY launch/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
+
+install(FILES plugin_description.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

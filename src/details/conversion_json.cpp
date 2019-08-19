@@ -3,7 +3,7 @@
 
 #include "behavior_tree_ros/details/conversion_json.hpp"
 #include "behavior_tree_ros/utils/UnorderedMap.hpp"
-#include "nlohmann/json.hpp"
+#include "behavior_tree_ros/3rdparty/nlohmann/json.hpp"
 
 namespace BT_ROS
 {

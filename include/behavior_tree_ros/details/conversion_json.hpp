@@ -3,7 +3,8 @@
 
 #include <behaviortree_cpp/basic_types.h>
 
-#include "nlohmann/json.hpp"
+//TODO: do not expose this
+#include "behavior_tree_ros/3rdparty/nlohmann/json.hpp"
 
 namespace BT_ROS
 {

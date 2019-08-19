@@ -11,7 +11,7 @@
 #pragma GCC diagnostic warning "-Wreorder"
 #include <ros_type_introspection/ros_introspection.hpp>
 
-#include "nlohmann/json.hpp"
+#include "behavior_tree_ros/3rdparty/nlohmann/json.hpp"
 #include "behavior_tree_ros/utils/UnorderedMap.hpp"
 
 namespace BT_ROS
