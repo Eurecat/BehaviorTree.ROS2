@@ -1,9 +1,7 @@
 #ifndef BEHAVIOR_TREE_ROS_SERIALIZATION
 #define BEHAVIOR_TREE_ROS_SERIALIZATION
 
-#include <map>
 #include <functional>
-
 #include <behaviortree_cpp/action_node.h>
 
 //Do not treat reorder as an error even if it's compiled using -Werror
@@ -55,21 +53,25 @@ namespace serialization
         return strcmp(msgDefinition<MessageType>(), "\n") == 0;
     };
 
-    template <typename MessageType>
-    inline void serializeField(const BT::ActionNodeBase& _node, const RosIntrospection::ROSField& _field, std::vector<uint8_t>& _buffer)
+    template <typename FieldType>
+    inline void serializeField(const FieldType& _value, std::vector<uint8_t>& _buffer)
     {
-        if(_field.isConstant()) { return; }
-
-        const auto& field_value   = _node.getInput<MessageType>(_field.name());
         const auto current_length = _buffer.size();
-        const auto field_length   = ros::serialization::serializationLength(field_value.value());
+        const auto field_length   = ros::serialization::serializationLength(_value);
         _buffer.resize(current_length + field_length);
 
         ros::serialization::OStream stream(_buffer.data() + current_length, field_length);
-        ros::serialization::serialize(stream, field_value.value());
+        ros::serialization::serialize(stream, _value);
     }
 
-    using SerializeFieldFunction = std::function<void(const BT::ActionNodeBase&, const RosIntrospection::ROSField&, std::vector<uint8_t>&)>;
+    template <typename FieldType>
+    inline void serializeField(const BT::ActionNodeBase& _node, const std::string& _port, std::vector<uint8_t>& _buffer)
+    {
+        const auto& field_value = _node.getInput<FieldType>(_port);
+        serializeField<FieldType>(field_value.value(), _buffer);
+    }
+
+    using SerializeFieldFunction = std::function<void(const BT::ActionNodeBase&, const std::string&, std::vector<uint8_t>&)>;
     static const Utils::UnorderedMap<RosIntrospection::BuiltinType, SerializeFieldFunction> serialize_field_map
     {
         { RosIntrospection::UINT8,    [] (const auto& _node, const auto& _field, auto& _buffer) { serializeField<uint8_t>(_node, _field, _buffer);     }},
@@ -80,19 +82,48 @@ namespace serialization
         { RosIntrospection::BYTE,     [] (const auto& _node, const auto& _field, auto& _buffer) { serializeField<int8_t>(_node, _field, _buffer);      }},
         { RosIntrospection::CHAR,     [] (const auto& _node, const auto& _field, auto& _buffer) { serializeField<uint8_t>(_node, _field, _buffer);     }},
         { RosIntrospection::INT8,     [] (const auto& _node, const auto& _field, auto& _buffer) { serializeField<int8_t>(_node, _field, _buffer);      }},
-        { RosIntrospection::INT16,    [] (const auto& _node, const auto& _field, auto& _buffer) { serializeField<int16_t>(_node, _field, _buffer);      }},
-        { RosIntrospection::INT32,    [] (const auto& _node, const auto& _field, auto& _buffer) { serializeField<int32_t>(_node, _field, _buffer);      }},
-        { RosIntrospection::INT64,    [] (const auto& _node, const auto& _field, auto& _buffer) { serializeField<int64_t>(_node, _field, _buffer);      }},
+        { RosIntrospection::INT16,    [] (const auto& _node, const auto& _field, auto& _buffer) { serializeField<int16_t>(_node, _field, _buffer);     }},
+        { RosIntrospection::INT32,    [] (const auto& _node, const auto& _field, auto& _buffer) { serializeField<int32_t>(_node, _field, _buffer);     }},
+        { RosIntrospection::INT64,    [] (const auto& _node, const auto& _field, auto& _buffer) { serializeField<int64_t>(_node, _field, _buffer);     }},
         { RosIntrospection::FLOAT32,  [] (const auto& _node, const auto& _field, auto& _buffer) { serializeField<float>(_node, _field, _buffer);       }},
         { RosIntrospection::FLOAT64,  [] (const auto& _node, const auto& _field, auto& _buffer) { serializeField<double>(_node, _field, _buffer);      }},
         { RosIntrospection::STRING,   [] (const auto& _node, const auto& _field, auto& _buffer) { serializeField<std::string>(_node, _field, _buffer); }},
-        { RosIntrospection::TIME,     [] (const auto& _node, const auto& _field, auto& _buffer) {}}, //Don't do anything
-        { RosIntrospection::DURATION, [] (const auto& _node, const auto& _field, auto& _buffer) {}}, //Don't do anything
+        { RosIntrospection::TIME,     [] (const auto& _node, const auto& _field, auto& _buffer) { serializeField(ros::Time::now(), _buffer);           }}, // Use default value
+        { RosIntrospection::DURATION, [] (const auto& _node, const auto& _field, auto& _buffer) { serializeField(ros::Duration(), _buffer);            }}, // Use default value
     };
 
-    inline void serializeField(const BT::ActionNodeBase& _node, const RosIntrospection::ROSField& _field, std::vector<uint8_t>& _buffer)
+    inline void serializeField(const BT::ActionNodeBase& _node, const std::string& _port,
+                               const RosIntrospection::BuiltinType& _type, std::vector<uint8_t>& _buffer)
     {
-        serialize_field_map.at(_field.type().typeID())(_node, _field, _buffer);
+        serialize_field_map.at(_type)(_node, _port, _buffer);
+    }
+
+    using PortData     = std::pair<std::string, BT::PortInfo>;
+    using PortFunction = std::function<PortData(const BT::PortDirection, const std::string&, const std::string&)>;
+    static const Utils::UnorderedMap<RosIntrospection::BuiltinType, PortFunction> generate_port_map
+    {
+        { RosIntrospection::UINT8,    [] (const auto _direction, const auto& _name, const auto& _description) { return BT::CreatePort<uint8_t>(_direction, _name, _description);  }},
+        { RosIntrospection::UINT16,   [] (const auto _direction, const auto& _name, const auto& _description) { return BT::CreatePort<uint16_t>(_direction, _name, _description); }},
+        { RosIntrospection::UINT32,   [] (const auto _direction, const auto& _name, const auto& _description) { return BT::CreatePort<uint32_t>(_direction, _name, _description); }},
+        { RosIntrospection::UINT64,   [] (const auto _direction, const auto& _name, const auto& _description) { return BT::CreatePort<uint64_t>(_direction, _name, _description); }},
+        { RosIntrospection::BOOL,     [] (const auto _direction, const auto& _name, const auto& _description) { return BT::CreatePort<bool>(_direction, _name, _description);     }},
+        { RosIntrospection::BYTE,     [] (const auto _direction, const auto& _name, const auto& _description) { return BT::CreatePort<int8_t>(_direction, _name, _description);   }},
+        { RosIntrospection::CHAR,     [] (const auto _direction, const auto& _name, const auto& _description) { return BT::CreatePort<uint8_t>(_direction, _name, _description);  }},
+        { RosIntrospection::INT8,     [] (const auto _direction, const auto& _name, const auto& _description) { return BT::CreatePort<int8_t>(_direction, _name, _description);   }},
+        { RosIntrospection::INT16,    [] (const auto _direction, const auto& _name, const auto& _description) { return BT::CreatePort<int16_t>(_direction, _name, _description);  }},
+        { RosIntrospection::INT32,    [] (const auto _direction, const auto& _name, const auto& _description) { return BT::CreatePort<int32_t>(_direction, _name, _description);  }},
+        { RosIntrospection::INT64,    [] (const auto _direction, const auto& _name, const auto& _description) { return BT::CreatePort<int64_t>(_direction, _name, _description);  }},
+        { RosIntrospection::FLOAT32,  [] (const auto _direction, const auto& _name, const auto& _description) { return BT::CreatePort<float>(_direction, _name, _description);    }},
+        { RosIntrospection::FLOAT64,  [] (const auto _direction, const auto& _name, const auto& _description) { return BT::CreatePort<double>(_direction, _name, _description);   }},
+        { RosIntrospection::STRING,   [] (const auto _direction, const auto& _name, const auto& _description) { return BT::CreatePort<std::string>(_direction, _name, _description); }},
+    };
+
+    inline PortData getTypedPort(const RosIntrospection::ROSField& _field,
+                                 const BT::PortDirection _port_direction,
+                                 const std::string& _port_name,
+                                 const std::string& _port_description)
+    {
+        return generate_port_map.at(_field.type().typeID())(_port_direction, _port_name, _port_description);
     }
 
     using InsertVariantInJsonFieldFunction = std::function<void(const std::string&, const RosIntrospection::Variant&, nlohmann::json&)>;
