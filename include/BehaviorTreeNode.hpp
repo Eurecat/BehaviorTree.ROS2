@@ -17,7 +17,7 @@
 #include <behaviortree_cpp/loggers/bt_file_logger.h>
 #include <behaviortree_cpp/loggers/bt_minitrace_logger.h>
 
-#ifdef ZMQ_FOUND
+#ifdef BEHAVIOR_TREE_CPP_ZMQ
 #include <behaviortree_cpp/loggers/bt_zmq_publisher.h>
 #endif
 
@@ -67,7 +67,7 @@ namespace UPO
             std::unique_ptr<BT::StdCoutLogger>   bt_logger_cout_;
             std::unique_ptr<BT::FileLogger>      bt_logger_file_;
             std::unique_ptr<BT::MinitraceLogger> bt_logger_trace_;
-            #ifdef ZMQ_FOUND
+            #ifdef BEHAVIOR_TREE_CPP_ZMQ
             std::unique_ptr<BT::PublisherZMQ>    bt_logger_zmq_;
             #endif
 

@@ -278,7 +278,7 @@ namespace UPO
 
         if(node_handle_.param("enable_zmq_log", false))
         {
-            #ifdef ZMQ_FOUND
+            #ifdef BEHAVIOR_TREE_CPP_ZMQ
             bt_logger_zmq_ = std::make_unique<BT::PublisherZMQ>(*tree_);
             #else
             ROS_WARN("ZMQ logging is enabled but behaviortree_cpp was not compiled with ZMQ support.");
@@ -292,7 +292,7 @@ namespace UPO
         bt_logger_cout_.reset();
         bt_logger_trace_.reset();
         bt_logger_file_.reset();
-        #ifdef ZMQ_FOUND
+        #ifdef BEHAVIOR_TREE_CPP_ZMQ
         bt_logger_zmq_.reset();
         #endif
     }
