@@ -24,7 +24,8 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
             if(!consume_msgs) { throw BT::RuntimeError { name() + ": " + consume_msgs.error() }; }
 
             consume_msgs_ = consume_msgs.value();
-            subscriber_   = node_handle_.subscribe(topic.value(), queue_size.value(), &SubscriberNode::callback, this);
+            topic_        = topic.value();
+            queue_size_   = queue_size.value();
         }
 
         ~SubscriberNode() = default;
@@ -46,6 +47,13 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
         virtual BT::NodeStatus tick() override
         {
             setStatus(BT::NodeStatus::RUNNING);
+
+            //Subscribe if not already subscribed (this is done here instead of the constructor
+            //to avoid issues when using a ros::AsyncSpinner)
+            if(subscriber_ == nullptr)
+            {
+                subscriber_ = node_handle_.subscribe(topic_, queue_size_, &SubscriberNode::callback, this);
+            }
 
             std::lock_guard<std::mutex> lock (message_mutex_);
 
@@ -84,11 +92,13 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
         ros::NodeHandle node_handle_;
         ros::Subscriber subscriber_;
 
+        std::string topic_;
+        uint32_t    queue_size_;
+        bool        consume_msgs_;
+
         typename MessageType::Ptr message_ {};
         bool message_received_ {};
         std::mutex message_mutex_;
-
-        bool consume_msgs_;
 
         SerializationPolicy<MessageType> serialization_policy_ {};
 };

@@ -16,7 +16,7 @@ namespace UPO
     {
         node_handle_.getParam("trees_folder", trees_folder_);
 
-	LoadAllPlugins();
+        LoadAllPlugins();
 
         get_loaded_plugins_srv_ = node_handle_.advertiseService("behavior_tree/get_loaded_plugins", &BehaviorTreeNode::GetLoadedPluginsService, this);
         load_tree_srv_          = node_handle_.advertiseService("behavior_tree/load_tree", &BehaviorTreeNode::LoadTree, this);
@@ -228,17 +228,17 @@ namespace UPO
 	bool import_from_folder = node_handle_.param("import_from_folder", false);
 
 	if(import_from_folder)
-	{
-            std::string plugins_folder;
-            if(!node_handle_.getParam("plugins_folder", plugins_folder))
-            {
-                ROS_WARN("Import from folder option is set, but folder param is missing");
-            }
-	    else
-	    {
-                LoadPluginsFromFolder(plugins_folder);
-	    }
-	}
+    {
+        std::string plugins_folder;
+        if(!node_handle_.getParam("plugins_folder", plugins_folder))
+        {
+            ROS_WARN("Import from folder option is set, but folder param is missing");
+        }
+        else
+        {
+            LoadPluginsFromFolder(plugins_folder);
+        }
+    }
     }
 
     std::string BehaviorTreeNode::GetFullPath(const std::string& _file) const

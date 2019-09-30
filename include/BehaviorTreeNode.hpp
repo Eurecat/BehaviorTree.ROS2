@@ -40,10 +40,10 @@ namespace UPO
             bool LoadTree(LoadTreeService::Request& _request, LoadTreeService::Response& _response);
             bool StopTree(std_srvs::Empty::Request& _request, std_srvs::Empty::Response& _response);
 
-	    void LoadAllPlugins();
+            void LoadAllPlugins();
             void LoadPluginsFromROS();
             void LoadPluginsFromFolder(const std::string& _plugins_folder);
-	    void LoadPlugin(const std::string& _plugin_path);
+            void LoadPlugin(const std::string& _plugin_path);
 
             void BuildTree(const std::string& _xml_file);
             void RemoveTree();
