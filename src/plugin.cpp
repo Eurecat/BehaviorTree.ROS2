@@ -9,9 +9,10 @@
 #include "behavior_tree_ros/actions/CopyNode.hpp"
 #include "behavior_tree_ros/actions/InitializeNode.hpp"
 #include "behavior_tree_ros/decorators/ForEachLoopNode.hpp"
+#include "behavior_tree_ros/actions/ConvertMessageFieldNode.hpp"
+#include "behavior_tree_ros/actions/ConvertRandomMessageFieldNode.hpp"
 
 #include "behavior_tree_ros/SubscriberNode.hpp"
-
 
 BT_REGISTER_NODES(factory)
 {
@@ -28,6 +29,8 @@ BT_REGISTER_NODES(factory)
     factory.registerNodeType<GetSizeNode<nlohmann::json>>("GetJsonSize");
     factory.registerNodeType<CopyNode<nlohmann::json>>("CopyJson");
     factory.registerNodeType<InitializeNode<nlohmann::json>>("InitializeJson");
+    factory.registerNodeType<ConvertMessageFieldNode>("ConvertMessageField");
+    factory.registerNodeType<ConvertRandomMessageFieldNode>("ConvertRandomMessageField");
 
     factory.registerNodeType<DebugLog>("DebugLog");
     factory.registerNodeType<InfoLog>("InfoLog");

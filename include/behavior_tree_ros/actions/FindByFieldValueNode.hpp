@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <behaviortree_cpp/action_node.h>
 
-#include "behavior_tree_ros/details/conversion_json.hpp"
+#include "behavior_tree_ros/details/deserialization.hpp"
 
 namespace BT_ROS
 {
@@ -19,7 +19,7 @@ class FindByFieldValueNode final : public BT::SyncActionNode
             return { BT::InputPort<nlohmann::json>("input", "Serialized ROS message"),
                      BT::InputPort<std::string>("field", "Field to fetch"),
                      BT::InputPort<nlohmann::json>("value", "Value to search for"),
-                     BT::OutputPort<nlohmann::json>("output", "Output variable")
+                     BT::OutputPort("output", "Output variable")
                    };
         }
 
@@ -48,7 +48,7 @@ class FindByFieldValueNode final : public BT::SyncActionNode
 
                 if(entry_it == input.value().cend()) { return BT::NodeStatus::FAILURE; }
 
-                setOutput("output", json2Any(*entry_it));
+                deserialization::deserializeField(*this, "output", *entry_it);
                 return BT::NodeStatus::SUCCESS;
             }
             catch(const nlohmann::json::exception&) { return BT::NodeStatus::FAILURE; }
