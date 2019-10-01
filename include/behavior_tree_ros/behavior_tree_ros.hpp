@@ -5,4 +5,6 @@
 #include "SubscriberNode.hpp"
 #include "ServiceClientNode.hpp"
 
+#include "behavior_tree_ros/details/types_conversion.hpp"
+
 #endif

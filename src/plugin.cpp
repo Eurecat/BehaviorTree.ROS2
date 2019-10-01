@@ -1,5 +1,7 @@
 #include <behaviortree_cpp/bt_factory.h>
 
+#include "behavior_tree_ros/details/types_conversion.hpp"
+
 #include "behavior_tree_ros/actions/GetMessageFieldNode.hpp"
 #include "behavior_tree_ros/actions/GetRandomMessageField.hpp"
 #include "behavior_tree_ros/actions/FindByFieldValueNode.hpp"
@@ -11,15 +13,6 @@
 #include "behavior_tree_ros/decorators/ForEachLoopNode.hpp"
 #include "behavior_tree_ros/actions/ConvertMessageFieldNode.hpp"
 #include "behavior_tree_ros/actions/ConvertRandomMessageFieldNode.hpp"
-
-namespace BT
-{
-    template <>
-    inline nlohmann::json convertFromString<nlohmann::json>(StringView str)
-    {
-        return nlohmann::json(str);
-    }
-}
 
 BT_REGISTER_NODES(factory)
 {
