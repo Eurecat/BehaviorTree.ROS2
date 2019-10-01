@@ -10,7 +10,7 @@ namespace BT
     template <>
     inline nlohmann::json convertFromString<nlohmann::json>(StringView str)
     {
-        return nlohmann::json(str);
+        return nlohmann::json::parse(str);
     }
 }
 

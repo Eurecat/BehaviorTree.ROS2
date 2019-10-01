@@ -28,7 +28,6 @@ class ConvertMessageFieldNode final : public BT::SyncActionNode
             const auto& input = getInput<nlohmann::json>("input");
             const auto& field = getInput<std::string>("field");
 
-            //Should input be mandatory too? This could be a problem if messages are yet to be published
             if(!field) { throw BT::RuntimeError { name() + ": " + field.error() }; }
             if(!input) { return BT::NodeStatus::FAILURE; }
 

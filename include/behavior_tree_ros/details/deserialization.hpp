@@ -2,6 +2,7 @@
 #define BEHAVIOR_TREE_ROS_DESERIALIZATION
 
 #include <functional>
+#include <ros/ros.h>
 #include <behaviortree_cpp/action_node.h>
 
 #include "behavior_tree_ros/3rdparty/nlohmann/json.hpp"
@@ -15,9 +16,15 @@ namespace deserialization
     using DeserializeFieldFunction = std::function<void(BT::ActionNodeBase&, const std::string&, const Json&)>;
 
     template <typename FieldType>
-    inline void deserializeField(BT::ActionNodeBase& _node, const std::string& _port, const Json& _field)
+    void deserializeField(BT::ActionNodeBase& _node, const std::string& _port, const Json& _field)
     {
         _node.setOutput(_port, _field.get<FieldType>());
+    }
+
+    template <>
+    inline void deserializeField<Json>(BT::ActionNodeBase& _node, const std::string& _port, const Json& _field)
+    {
+        _node.setOutput(_port, _field);
     }
 
     static const Utils::UnorderedMap<Json::value_t, DeserializeFieldFunction> deserialize_field_map
