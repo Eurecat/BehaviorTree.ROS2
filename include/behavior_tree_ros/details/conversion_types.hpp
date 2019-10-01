@@ -5,28 +5,6 @@
 
 namespace BT
 {
-    //TODO: check numeric range
-    template <>
-    inline uint8_t convertFromString<uint8_t>(StringView str)
-    {
-        const auto result = std::stoul(str.data());
-        return result;
-    }
-
-    template <>
-    inline uint16_t convertFromString<uint16_t>(StringView str)
-    {
-        const auto result = std::stoul(str.data());
-        return result;
-    }
-
-    template <>
-    inline float convertFromString<float>(StringView str)
-    {
-        const auto result = std::stod(str.data());
-        return result;
-    }
-
     template <>
     inline Any convertFromString<Any>(StringView str)
     {
