@@ -14,6 +14,14 @@
 #include "behavior_tree_ros/actions/ConvertMessageFieldNode.hpp"
 #include "behavior_tree_ros/actions/ConvertRandomMessageFieldNode.hpp"
 
+namespace BT_ROS
+{
+    std::string json2String(const nlohmann::json& _input)
+    {
+        return _input.dump();
+    }
+}
+
 BT_REGISTER_NODES(factory)
 {
     using namespace BT_ROS;
@@ -39,4 +47,5 @@ BT_REGISTER_NODES(factory)
     factory.registerNodeType<FatalLog>("FatalLog");
 
     factory.registerTypeConverter<std::string, nlohmann::json>(BT::convertFromString<nlohmann::json>);
+    factory.registerTypeConverter<nlohmann::json, std::string>(json2String);
 }
