@@ -4,7 +4,6 @@
 #include <behaviortree_cpp/action_node.h>
 
 #include "behavior_tree_ros/policies/deserialization_policies.hpp"
-#include "behavior_tree_ros/details/conversion_types.hpp"
 
 namespace BT_ROS
 {
