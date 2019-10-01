@@ -87,7 +87,10 @@ namespace UPO
 
     void BehaviorTreeNode::BuildTree(const std::string& _tree_file)
     {
-        tree_ = std::make_unique<BT::Tree>(bt_factory_.createTreeFromFile(_tree_file));
+        // Wait between creating and executing the Tree to fully initialize ROS publishers
+        auto temp_tree = std::make_unique<BT::Tree>(bt_factory_.createTreeFromFile(_tree_file));
+        ros::Duration(0.5).sleep();
+        tree_.swap(temp_tree);
         InitializeLoggers();
     }
     
