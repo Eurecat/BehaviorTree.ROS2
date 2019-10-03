@@ -13,7 +13,7 @@ find_package(catkin REQUIRED
         message_generation
         ros_type_introspection
         topic_tools
-        behaviortree_cpp_v3
+        behavior_tree_core
 	    cmake_modules
 )
 
@@ -32,7 +32,7 @@ catkin_package(
         roscpp
         message_runtime
         ros_type_introspection
-        behaviortree_cpp_v3
+        behavior_tree_core
         topic_tools
 	    cmake_modules
     DEPENDS
