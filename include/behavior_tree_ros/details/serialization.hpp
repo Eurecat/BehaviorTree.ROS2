@@ -7,6 +7,7 @@
 //Do not treat reorder as an error even if it's compiled using -Werror
 //(this warning comes from ros_type_intronspection itself)
 #pragma GCC diagnostic warning "-Wreorder"
+#pragma GCC diagnostic warning "-Wsign-compare"
 #include <ros_type_introspection/ros_introspection.hpp>
 
 #include "behavior_tree_ros/3rdparty/nlohmann/json.hpp"

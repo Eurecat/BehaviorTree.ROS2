@@ -54,7 +54,7 @@ struct JsonSerialization
             ros::serialization::serialize(stream, _message);
 
             parser().deserializeIntoFlatContainer(serialization::msgDataType<MessageType>(),
-                                                  absl::Span<uint8_t>(buffer_), &flat_message_, buffer_.size());
+                                                  RosIntrospection::Span<uint8_t>(buffer_), &flat_message_, buffer_.size());
 
             //Serialization is done in to_json() function (serialization.hpp)
             nlohmann::json serialized_json = flat_message_;
