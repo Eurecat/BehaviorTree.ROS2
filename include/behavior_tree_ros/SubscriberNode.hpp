@@ -52,6 +52,7 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
             if(subscriber_ == nullptr)
             {
                 subscriber_ = node_handle_.subscribe(topic_, queue_size_, &SubscriberNode::callback, this);
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
             }
 
             std::lock_guard<std::mutex> lock (message_mutex_);
