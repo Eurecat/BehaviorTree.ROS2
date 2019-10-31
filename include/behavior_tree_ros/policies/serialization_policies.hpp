@@ -10,19 +10,20 @@ namespace BT_ROS
 template <class MessageType>
 struct NoSerialization
 {
-    static BT::PortsList requiredPorts()
+    static BT::PortsList requiredPorts(const std::string& _port_name = "output")
     {
         if(serialization::isMsgEmpty<MessageType>()) { return {}; }
 
-        return { BT::OutputPort<MessageType>("output", "Received ROS message ["
+        return { BT::OutputPort<MessageType>(_port_name, "Received ROS message ["
                                                 + BT::demangle(typeid(MessageType)) + "]") };
     }
 
-    void onNewMessage(const MessageType& _message, BT::ActionNodeBase& _tree_node)
+    void onNewMessage(const MessageType& _message, BT::ActionNodeBase& _tree_node,
+                      const std::string& _port_name = "output")
     {
         if(serialization::isMsgEmpty<MessageType>()) { return; }
 
-        _tree_node.setOutput("output", _message);
+        _tree_node.setOutput(_port_name, _message);
     }
 };
 
@@ -37,15 +38,16 @@ struct JsonSerialization
                                                serialization::msgDefinition<MessageType>());
         }
 
-        static BT::PortsList requiredPorts()
+        static BT::PortsList requiredPorts(const std::string& _port_name = "serialized_output")
         {
             if(serialization::isMsgEmpty<MessageType>()) { return {}; }
 
-            return { BT::OutputPort<nlohmann::json>("serialized_output", "Serialized ROS message ["
+            return { BT::OutputPort<nlohmann::json>(_port_name, "Serialized ROS message ["
                                                         + BT::demangle(typeid(MessageType)) + "]") };
         }
 
-        void onNewMessage(const MessageType& _message, BT::ActionNodeBase& _tree_node)
+        void onNewMessage(const MessageType& _message, BT::ActionNodeBase& _tree_node,
+                          const std::string& _port_name = "serialized_output")
         {
             if(serialization::isMsgEmpty<MessageType>()) { return; }
 
@@ -58,7 +60,7 @@ struct JsonSerialization
 
             //Serialization is done in to_json() function (serialization.hpp)
             nlohmann::json serialized_json = flat_message_;
-            _tree_node.setOutput("serialized_output", serialized_json);
+            _tree_node.setOutput(_port_name, serialized_json);
         }
 
     private:

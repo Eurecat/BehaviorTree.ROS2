@@ -13,6 +13,7 @@ find_package(catkin REQUIRED
         message_generation
         ros_type_introspection
         topic_tools
+        actionlib
         behavior_tree_core
 	    cmake_modules
 )
@@ -34,6 +35,7 @@ catkin_package(
         ros_type_introspection
         behavior_tree_core
         topic_tools
+        actionlib
 	    cmake_modules
     DEPENDS
 	    TinyXML2

@@ -4,6 +4,7 @@
 #include "PublisherNode.hpp"
 #include "SubscriberNode.hpp"
 #include "ServiceClientNode.hpp"
+#include "SimpleActionClientNode.hpp"
 
 #include "behavior_tree_ros/details/types_conversion.hpp"
 
