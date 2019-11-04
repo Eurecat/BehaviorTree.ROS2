@@ -8,6 +8,20 @@
 namespace BT_ROS
 {
 template <class MessageType>
+struct EmptySerialization
+{
+    static BT::PortsList requiredPorts(const std::string& = {})
+    {
+        return {};
+    }
+
+    void onNewMessage(const MessageType&, BT::ActionNodeBase&, const std::string& = {})
+    {
+        return;
+    }
+};
+
+template <class MessageType>
 struct NoSerialization
 {
     static BT::PortsList requiredPorts(const std::string& _port_name = "output")
@@ -38,16 +52,16 @@ struct JsonSerialization
                                                serialization::msgDefinition<MessageType>());
         }
 
-        static BT::PortsList requiredPorts(const std::string& _port_name = "serialized_output")
+        static BT::PortsList requiredPorts(const std::string& _base_port_name = "output")
         {
             if(serialization::isMsgEmpty<MessageType>()) { return {}; }
 
-            return { BT::OutputPort<nlohmann::json>(_port_name, "Serialized ROS message ["
+            return { BT::OutputPort<nlohmann::json>("serialized_" + _base_port_name, "Serialized ROS message ["
                                                         + BT::demangle(typeid(MessageType)) + "]") };
         }
 
         void onNewMessage(const MessageType& _message, BT::ActionNodeBase& _tree_node,
-                          const std::string& _port_name = "serialized_output")
+                          const std::string& _base_port_name = "output")
         {
             if(serialization::isMsgEmpty<MessageType>()) { return; }
 
@@ -60,7 +74,7 @@ struct JsonSerialization
 
             //Serialization is done in to_json() function (serialization.hpp)
             nlohmann::json serialized_json = flat_message_;
-            _tree_node.setOutput(_port_name, serialized_json);
+            _tree_node.setOutput("serialized_" + _base_port_name, serialized_json);
         }
 
     private:
@@ -70,6 +84,14 @@ struct JsonSerialization
         RosIntrospection::FlatMessage flat_message_;
         std::vector<uint8_t> buffer_;
 };
-}
+
+template <class MessageType>
+struct CustomSerialization
+{
+    static BT::PortsList requiredPorts(const std::string& = {}) = delete;
+    void onNewMessage(const MessageType&, BT::ActionNodeBase&, const std::string& = {}) = delete;
+};
+
+} // namespace BT_ROS
 
 #endif

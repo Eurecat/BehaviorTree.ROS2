@@ -17,19 +17,23 @@ template <class ActionType,  template <class> class GoalDeserializationPolicy,
                              template <class> class ResultSerializationPolicy,
                              template <class> class FeedbackSerializationPolicy>
 class SimpleActionClientNode final : public BT::ActionNodeBase,
-                                     public GoalDeserializationPolicy<typename ActionType::_action_goal_type>,
-                                     public ResultSerializationPolicy<typename ActionType::_action_result_type>,
-                                     public FeedbackSerializationPolicy<typename ActionType::_action_feedback_type>
+                                     public GoalDeserializationPolicy<typename ActionType::_action_goal_type::_goal_type>,
+                                     public ResultSerializationPolicy<typename ActionType::_action_result_type::_result_type>,
+                                     public FeedbackSerializationPolicy<typename ActionType::_action_feedback_type::_feedback_type>
 {
     private:
         using SimpleClient    = actionlib::SimpleActionClient<ActionType>;
         using SimpleClientPtr = std::unique_ptr<SimpleClient>;
 
+        using Goal     = typename ActionType::_action_goal_type::_goal_type;
+        using Result   = typename ActionType::_action_result_type::_result_type;
+        using Feedback = typename ActionType::_action_feedback_type::_feedback_type;
+
         using GoalState = actionlib::SimpleClientGoalState;
 
-        using GoalPolicy     = GoalDeserializationPolicy<typename ActionType::_action_goal_type>;
-        using ResultPolicy   = ResultSerializationPolicy<typename ActionType::_action_result_type>;
-        using FeedbackPolicy = FeedbackSerializationPolicy<typename ActionType::_action_feedback_type>;
+        using GoalPolicy     = GoalDeserializationPolicy<Goal>;
+        using ResultPolicy   = ResultSerializationPolicy<Result>;
+        using FeedbackPolicy = FeedbackSerializationPolicy<Feedback>;
 
     public:
         SimpleActionClientNode(const std::string& _name, const BT::NodeConfiguration& _config) : ActionNodeBase(_name, _config)
@@ -37,8 +41,7 @@ class SimpleActionClientNode final : public BT::ActionNodeBase,
             const auto& action = getInput<std::string>("action");
             if(!action) { throw BT::RuntimeError { name() + ": " + action.error() }; }
 
-            client_ = std::make_unique<SimpleClient>(node_handle_, action.value(), false, {}, {},
-                                                     boost::bind(&SimpleActionClientNode::FeedbackCallback, this, _1));
+            client_ = std::make_unique<SimpleClient>(node_handle_, action.value(), false);
 
             client_->waitForServer();
         }
@@ -54,10 +57,10 @@ class SimpleActionClientNode final : public BT::ActionNodeBase,
             const auto& goal_ports = GoalPolicy::requiredPorts();
             ports.insert(goal_ports.cbegin(), goal_ports.cend());
 
-            const auto& feedback_ports = FeedbackPolicy::requiredPorts("serialized_feedback");
+            const auto& feedback_ports = FeedbackPolicy::requiredPorts("feedback");
             ports.insert(feedback_ports.cbegin(), feedback_ports.cend());
 
-            const auto& result_ports = ResultPolicy::requiredPorts("serialized_result");
+            const auto& result_ports = ResultPolicy::requiredPorts("result");
             ports.insert(result_ports.cbegin(), result_ports.cend());
 
             return ports;
@@ -69,35 +72,38 @@ class SimpleActionClientNode final : public BT::ActionNodeBase,
 
             if(!goal_sent_)
             {
+
                 const auto& goal_msg = goal_policy_.buildMessage(*this);
-                client_->sendGoal(goal_msg);
+                client_->sendGoal(goal_msg, {}, {}, boost::bind(&SimpleActionClientNode::FeedbackCallback, this, _1));
 
                 goal_sent_ = true;
             }
 
             // Get state, save it in the output and save it in the output variable
-            // TODO: make the output variable optional
             const auto& goal_state = client_->getState();
             setOutput("state", goal_state);
 
-            // TODO: is this the best way to handle feedback msgs
             {
                 std::unique_lock<std::mutex> lock (feedback_mutex_);
                 if(new_feedback_)
                 {
                     new_feedback_ = false;
-                    response_policy_.onNewMessage(new_feedback_, *this);
+                    feedback_policy_.onNewMessage(feedback_msg_, *this, "feedback");
                 }
             }
 
-            // TODO: is this pointer null?
-            const auto& result_ptr = client_->getResult();
-            result_policy_.onNewMessage(*result_ptr, *this);
+            if(goal_state.isDone())
+            {
+                const auto& result_ptr = client_->getResult();
+                result_policy_.onNewMessage(*result_ptr, *this, "result");
+            }
 
-            const BT::NodeStatus status = GoalState2Status(goal_state);
+            BT::NodeStatus status = GoalState2Status(goal_state);
 
-            // TODO: should we wait a bit more before checking this?
-            if(status != BT::NodeStatus::RUNNING) { goal_sent_ = false; }
+            if(goal_sent_ && status == BT::NodeStatus::IDLE)
+            {
+                status = BT::NodeStatus::RUNNING;
+            }
 
             return status;
         }
@@ -108,19 +114,15 @@ class SimpleActionClientNode final : public BT::ActionNodeBase,
         }
     
     private:
-        // TODO: move this out of here
         BT::NodeStatus GoalState2Status(const GoalState& _state)
         {
-            return BT::NodeStatus::SUCCESS;
-
-            switch(_state)
+            switch(_state.state_)
             {
                 case GoalState::StateEnum::PENDING:
                     return BT::NodeStatus::IDLE;
                     break;
                 case GoalState::StateEnum::ACTIVE:
-                case GoalState::StateEnum::RECALLING:
-                case GoalState::StateEnum::PREEMPTING:
+                case GoalState::StateEnum::RECALLED:
                     return BT::NodeStatus::RUNNING;
                     break;
                 case GoalState::StateEnum::PREEMPTED:
@@ -137,7 +139,7 @@ class SimpleActionClientNode final : public BT::ActionNodeBase,
             }
         }
 
-        void FeedbackCallback(const FeedbackConstPtr& _feedback_msg)
+        void FeedbackCallback(const typename Feedback::ConstPtr& _feedback_msg)
         {
             std::unique_lock<std::mutex> lock (feedback_mutex_);
 
@@ -156,7 +158,7 @@ class SimpleActionClientNode final : public BT::ActionNodeBase,
         bool goal_sent_ { false };
 
         std::mutex        feedback_mutex_;
-        std::atomic<bool> new_feedback_;
+        std::atomic<bool> new_feedback_ { false };
         Feedback          feedback_msg_;
 };
 

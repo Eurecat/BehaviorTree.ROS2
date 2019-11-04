@@ -150,6 +150,14 @@ struct AutomaticDeserialization
     private:
         std::vector<uint8_t> serialization_buffer_;
 };
-}
+
+template <class MessageType>
+struct CustomDeserialization
+{
+    static BT::PortsList requiredPorts() = delete;
+    MessageType buildMessage(const BT::ActionNodeBase& _tree_node) = delete;
+};
+
+} // namespace BT_ROS
 
 #endif
