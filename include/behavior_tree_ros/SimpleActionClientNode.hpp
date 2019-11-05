@@ -96,6 +96,8 @@ class SimpleActionClientNode final : public BT::ActionNodeBase,
             {
                 const auto& result_ptr = client_->getResult();
                 result_policy_.onNewMessage(*result_ptr, *this, "result");
+
+                goal_sent_ = false;
             }
 
             BT::NodeStatus status = GoalState2Status(goal_state);
@@ -111,6 +113,7 @@ class SimpleActionClientNode final : public BT::ActionNodeBase,
         virtual void halt() override
         {
             if(client_) { client_->cancelGoal(); }
+            goal_sent_ = false;
         }
     
     private:
