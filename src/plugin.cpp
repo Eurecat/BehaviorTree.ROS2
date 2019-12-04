@@ -13,7 +13,6 @@
 #include "behavior_tree_ros/decorators/ForEachLoopNode.hpp"
 #include "behavior_tree_ros/actions/ConvertMessageFieldNode.hpp"
 #include "behavior_tree_ros/actions/ConvertRandomMessageFieldNode.hpp"
-//#include "behavior_tree_ros/SimpleActionClientNode.hpp"
 
 namespace BT_ROS
 {
@@ -21,13 +20,6 @@ namespace BT_ROS
     {
         return _input.dump();
     }
-
-    /*
-    std::string goalState2String(const actionlib::SimpleClientGoalSTate& _state)
-    {
-        _state.toString();
-    }
-    */
 }
 
 BT_REGISTER_NODES(factory)
@@ -56,5 +48,4 @@ BT_REGISTER_NODES(factory)
 
     factory.registerTypeConverter<std::string, nlohmann::json>(BT::convertFromString<nlohmann::json>);
     factory.registerTypeConverter<nlohmann::json, std::string>(json2String);
-    //factory.registerTypeConverter<actionlib::SimpleClientGoalState, std::string>(goalState2String);
 }
