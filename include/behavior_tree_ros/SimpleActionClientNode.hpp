@@ -43,7 +43,10 @@ class SimpleActionClientNode final : public BT::ActionNodeBase,
 
             client_ = std::make_unique<SimpleClient>(node_handle_, action.value(), false);
 
+	    std::cout << "Waiting for server" << _name << std::endl;
             client_->waitForServer();
+	    std::cout << "Done" << std::endl;
+
         }
 
         ~SimpleActionClientNode() = default;
