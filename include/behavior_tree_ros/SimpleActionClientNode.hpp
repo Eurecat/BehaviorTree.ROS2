@@ -99,6 +99,7 @@ class SimpleActionClientNode final : public BT::ActionNodeBase,
             {
                 const auto& result_ptr = client_->getResult();
                 result_policy_.onNewMessage(*result_ptr, *this, "result");
+		//std::cout << "Done" << std::endl;
 
                 goal_sent_ = false;
             }
@@ -115,7 +116,13 @@ class SimpleActionClientNode final : public BT::ActionNodeBase,
 
         virtual void halt() override
         {
-            if(client_) { client_->cancelGoal(); }
+	    //std::cout << "Halted" << std::endl;
+            if(client_) { client_->cancelGoal(); 
+		//Get result when cancelling
+		const auto& result_ptr = client_->getResult();
+                result_policy_.onNewMessage(*result_ptr, *this, "result");
+		//std::cout << "Cancelled" << std::endl;
+		}
             goal_sent_ = false;
         }
     
