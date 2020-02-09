@@ -89,6 +89,26 @@ floor_0_door_2_out:
         y: 0
         z: 0.177
         w: 0.984
+floor_0_explore_1:
+    pose:
+        x: 99.0
+        y: 127.0
+        z: 0.0
+    orientation:
+        x: 0
+        y: 0
+        z: 0.177
+        w: 0.984
+floor_0_explore_2:
+    pose:
+        x: 99.0
+        y: 127.0
+        z: 0.0
+    orientation:
+        x: 0
+        y: 0
+        z: 0.177
+        w: 0.984
 floor_1_fire_1:
     pose:
         x: 0.27
