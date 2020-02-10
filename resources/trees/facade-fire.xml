@@ -1,160 +1,163 @@
 <root main_tree_to_execute="BehaviorTree">
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
-        <SubTree ID="CheckFireAndExtinguish" fire="floor_1_fire_1" robot="/firefly1/Make_Plan"/>
+        <SubTree robot="/firefly1" fire="floor_1_fire_1" ID="CheckFireAndExtinguish"/>
     </BehaviorTree>
     <!-- ////////// -->
     <BehaviorTree ID="CheckFireAndExtinguish">
         <Sequence>
-            <Action state="gts" ID="UPOGoToGoalByName" goal_name="${fire}" action="${robot}"/>
-            <Action state="fes" ID="UPOFireExtinguish" serialized_feedback="fef" serialized_result="fer" detect_fire="true" action="/firefly1/fire_extinguisher"/>
+            <Action name="GoToActionName" output="gt_name" first="${robot}" second="/Make_Plan" ID="ConcatenateStrings"/>
+            <Action name="FireExtinguishName" output="act" first="${robot}" second="/fire_extinguisher" ID="ConcatenateStrings"/>
+            <Action action="${gt_name}" goal_name="${fire}" state="gts" ID="UPOGoToGoalByName"/>
+            <Action action="${act}" detect_fire="true" serialized_feedback="fef" state="fes" serialized_result="fer" ID="UPOFireExtinguish"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
     <TreeNodesModel>
         <Condition ID="CheckBool">
-            <input_port type="bool" name="input">Input boolean value</input_port>
+            <input_port name="input" type="bool">Input boolean value</input_port>
         </Condition>
         <SubTree ID="CheckFireAndExtinguish">
+            <input_port name="actextinguish">Extinguish Action Name</input_port>
+            <input_port name="actgoto">GoTo Action Name</input_port>
             <input_port name="fire"/>
-            <input_port name="robot"/>
         </SubTree>
         <Action ID="CheckKey">
-            <input_port type="std::string" name="no_key">Key to determine if key to say 'no' has benn pressed</input_port>
-            <input_port type="std::string" name="yes_key">Key to determine if key to say 'yes' has been pressed</input_port>
+            <input_port name="no_key" type="std::string">Key to determine if key to say 'no' has benn pressed</input_port>
+            <input_port name="yes_key" type="std::string">Key to determine if key to say 'yes' has been pressed</input_port>
         </Action>
         <Condition ID="CompareNumbers">
-            <input_port type="std::string" name="comparison_op">Comparison operator. Valid operators are &lt;, >, &lt;=, >=, == and !=</input_port>
-            <input_port type="double" name="first">First operand</input_port>
-            <input_port type="double" name="second">Second operand</input_port>
+            <input_port name="comparison_op" type="std::string">Comparison operator. Valid operators are &lt;, >, &lt;=, >=, == and !=</input_port>
+            <input_port name="first" type="double">First operand</input_port>
+            <input_port name="second" type="double">Second operand</input_port>
         </Condition>
         <Condition ID="CompareStrings">
-            <input_port type="std::string" name="comparison_op">Comparison operator. Valid operators are &lt;, >, &lt;=, >=, == and !=</input_port>
-            <input_port type="std::string" name="first">First operand</input_port>
-            <input_port type="std::string" name="second">Second operand</input_port>
+            <input_port name="comparison_op" type="std::string">Comparison operator. Valid operators are &lt;, >, &lt;=, >=, == and !=</input_port>
+            <input_port name="first" type="std::string">First operand</input_port>
+            <input_port name="second" type="std::string">Second operand</input_port>
         </Condition>
         <Action ID="ConcatenateStrings">
-            <input_port type="std::string" name="first">First string</input_port>
-            <output_port type="std::string" name="output">Concatenated result string</output_port>
-            <input_port type="std::string" name="second">Second string</input_port>
+            <input_port name="first" type="std::string">First string</input_port>
+            <output_port name="output" type="std::string">Concatenated result string</output_port>
+            <input_port name="second" type="std::string">Second string</input_port>
         </Action>
         <Decorator ID="CooldownMilliseconds">
-            <input_port default="0" type="unsigned int" name="cooldown">Cooldown time</input_port>
+            <input_port name="cooldown" default="0" type="unsigned int">Cooldown time</input_port>
         </Decorator>
         <Decorator ID="CooldownSeconds">
-            <input_port default="0" type="unsigned int" name="cooldown">Cooldown time</input_port>
+            <input_port name="cooldown" default="0" type="unsigned int">Cooldown time</input_port>
         </Decorator>
         <Action ID="FindSubstrings">
-            <input_port type="std::string" name="input">String to look into</input_port>
-            <input_port type="std::vector&lt;std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, std::allocator&lt;std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> > > >" name="substrings">Substrings to look for</input_port>
+            <input_port name="input" type="std::string">String to look into</input_port>
+            <input_port name="substrings" type="std::vector&lt;std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, std::allocator&lt;std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> > > >">Substrings to look for</input_port>
         </Action>
         <Action ID="GetKeyboard">
-            <output_port type="std::string" name="output">String received from keyboard</output_port>
+            <output_port name="output" type="std::string">String received from keyboard</output_port>
         </Action>
         <Action ID="GetTransformDistance">
-            <input_port type="tf::StampedTransform" name="input">TF transform</input_port>
-            <output_port type="double" name="output">Distance form transform origin</output_port>
+            <input_port name="input" type="tf::StampedTransform">TF transform</input_port>
+            <output_port name="output" type="double">Distance form transform origin</output_port>
         </Action>
         <Action ID="GetTransformHorizontalDistance">
-            <input_port type="tf::StampedTransform" name="input">TF transform</input_port>
-            <output_port type="double" name="output">2D distance from TF transform origin</output_port>
+            <input_port name="input" type="tf::StampedTransform">TF transform</input_port>
+            <output_port name="output" type="double">2D distance from TF transform origin</output_port>
         </Action>
         <Action ID="GetTransformOrigin">
-            <input_port type="tf::StampedTransform" name="input">TF transform</input_port>
-            <output_port type="double" name="x">Origin x coordinate</output_port>
-            <output_port type="double" name="y">Origin y coordinate</output_port>
-            <output_port type="double" name="z">Origin z coordinate</output_port>
+            <input_port name="input" type="tf::StampedTransform">TF transform</input_port>
+            <output_port name="x" type="double">Origin x coordinate</output_port>
+            <output_port name="y" type="double">Origin y coordinate</output_port>
+            <output_port name="z" type="double">Origin z coordinate</output_port>
         </Action>
         <Action ID="InterpolateFloat">
-            <input_port type="std::vector&lt;double, std::allocator&lt;double> >" name="input_range">Input value range.</input_port>
-            <input_port type="double" name="input_value">Value to interpolate.</input_port>
-            <input_port type="std::vector&lt;double, std::allocator&lt;double> >" name="output_range">Output value range.</input_port>
-            <output_port type="double" name="output_value">Interpolated value.</output_port>
+            <input_port name="input_range" type="std::vector&lt;double, std::allocator&lt;double> >">Input value range.</input_port>
+            <input_port name="input_value" type="double">Value to interpolate.</input_port>
+            <input_port name="output_range" type="std::vector&lt;double, std::allocator&lt;double> >">Output value range.</input_port>
+            <output_port name="output_value" type="double">Interpolated value.</output_port>
         </Action>
         <Control ID="Interruptible"/>
         <Action ID="LookupTransform">
-            <output_port type="tf::StampedTransform" name="output">Result transform</output_port>
-            <input_port type="std::string" name="source_frame">Origin TF frame</input_port>
-            <input_port type="std::string" name="target_frame">Target TF frame</input_port>
-            <input_port default="0" type="bool" name="use_last_available">Use last available transform?</input_port>
+            <output_port name="output" type="tf::StampedTransform">Result transform</output_port>
+            <input_port name="source_frame" type="std::string">Origin TF frame</input_port>
+            <input_port name="target_frame" type="std::string">Target TF frame</input_port>
+            <input_port name="use_last_available" default="0" type="bool">Use last available transform?</input_port>
         </Action>
         <Decorator ID="Loop"/>
         <Action ID="MathOperationFloat">
-            <input_port type="double" name="first">First operand</input_port>
-            <input_port type="std::string" name="operator">Math operation. Valid operatores are: +, -, / and *</input_port>
-            <output_port type="double" name="output">Operation result</output_port>
-            <input_port type="double" name="second">Second operand</input_port>
+            <input_port name="first" type="double">First operand</input_port>
+            <input_port name="operator" type="std::string">Math operation. Valid operatores are: +, -, / and *</input_port>
+            <output_port name="output" type="double">Operation result</output_port>
+            <input_port name="second" type="double">Second operand</input_port>
         </Action>
         <Action ID="MathOperationInt">
-            <input_port type="int" name="first">First operand</input_port>
-            <input_port type="std::string" name="operator">Math operation. Valid operatores are: +, -, / and *</input_port>
-            <output_port type="int" name="output">Operation result</output_port>
-            <input_port type="int" name="second">Second operand</input_port>
+            <input_port name="first" type="int">First operand</input_port>
+            <input_port name="operator" type="std::string">Math operation. Valid operatores are: +, -, / and *</input_port>
+            <output_port name="output" type="int">Operation result</output_port>
+            <input_port name="second" type="int">Second operand</input_port>
         </Action>
         <Action ID="OStreamNode">
-            <input_port type="std::string" name="message">String to print</input_port>
+            <input_port name="message" type="std::string">String to print</input_port>
         </Action>
         <Decorator ID="OnlyOnce"/>
         <Action ID="RandomFloat">
-            <input_port type="double" name="max">Max range value</input_port>
-            <input_port type="double" name="min">Minimum range value</input_port>
-            <output_port type="double" name="result">Random result value</output_port>
+            <input_port name="max" type="double">Max range value</input_port>
+            <input_port name="min" type="double">Minimum range value</input_port>
+            <output_port name="result" type="double">Random result value</output_port>
         </Action>
         <Action ID="RandomInteger">
-            <input_port type="int" name="max">Max range value</input_port>
-            <input_port type="int" name="min">Minimum range value</input_port>
-            <output_port type="int" name="result">Random result value</output_port>
+            <input_port name="max" type="int">Max range value</input_port>
+            <input_port name="min" type="int">Minimum range value</input_port>
+            <output_port name="result" type="int">Random result value</output_port>
         </Action>
         <Action ID="RandomSequenceValue">
-            <input_port default=";" type="std::string" name="delimiter">Sequence entries delimiter</input_port>
-            <output_port type="std::string" name="output">Result random sequence entry</output_port>
-            <input_port type="std::string" name="sequence">Sequence to randomize</input_port>
+            <input_port name="delimiter" default=";" type="std::string">Sequence entries delimiter</input_port>
+            <output_port name="output" type="std::string">Result random sequence entry</output_port>
+            <input_port name="sequence" type="std::string">Sequence to randomize</input_port>
         </Action>
         <Action ID="SubscribeUPOGoal">
-            <input_port default="0" type="bool" name="consume_msgs">Should messages be consumed?</input_port>
-            <output_port type="upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> >" name="output">Received ROS message [upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> >]</output_port>
-            <input_port default="1" type="unsigned int" name="queue_size">Subscriber callback queue size</input_port>
-            <input_port type="std::string" name="topic">Topic to subscribe</input_port>
+            <input_port name="consume_msgs" default="0" type="bool">Should messages be consumed?</input_port>
+            <output_port name="output" type="upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> >">Received ROS message [upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> >]</output_port>
+            <input_port name="queue_size" default="1" type="unsigned int">Subscriber callback queue size</input_port>
+            <input_port name="topic" type="std::string">Topic to subscribe</input_port>
         </Action>
         <Action ID="UPOFireDetection3D">
-            <input_port type="std::string" name="action">Actionlib action server name</input_port>
-            <input_port type="int" name="duration">Duration</input_port>
-            <output_port type="bool" name="fire_found">Fire Found</output_port>
-            <output_port type="actionlib::SimpleClientGoalState" name="state">Actionlib reported state</output_port>
-            <output_port type="double" name="x">Fire x</output_port>
-            <output_port type="double" name="y">Fire x</output_port>
-            <output_port type="double" name="z">Fire x</output_port>
+            <input_port name="action" type="std::string">Actionlib action server name</input_port>
+            <input_port name="duration" type="int">Duration</input_port>
+            <output_port name="fire_found" type="bool">Fire Found</output_port>
+            <output_port name="state" type="actionlib::SimpleClientGoalState">Actionlib reported state</output_port>
+            <output_port name="x" type="double">Fire x</output_port>
+            <output_port name="y" type="double">Fire x</output_port>
+            <output_port name="z" type="double">Fire x</output_port>
         </Action>
         <Action ID="UPOFireExtinguish">
-            <input_port type="std::string" name="action">Actionlib action server name</input_port>
-            <input_port type="bool" name="detect_fire">Detect Fire</input_port>
-            <output_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="serialized_feedback">Serialized ROS message [upo_actions::FireExtinguishFeedback_&lt;std::allocator&lt;void> >]</output_port>
-            <output_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="serialized_result">Serialized ROS message [upo_actions::FireExtinguishResult_&lt;std::allocator&lt;void> >]</output_port>
-            <output_port type="actionlib::SimpleClientGoalState" name="state">Actionlib reported state</output_port>
+            <input_port name="action" type="std::string">Actionlib action server name</input_port>
+            <input_port name="detect_fire" type="bool">Detect Fire</input_port>
+            <output_port name="serialized_feedback" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>">Serialized ROS message [upo_actions::FireExtinguishFeedback_&lt;std::allocator&lt;void> >]</output_port>
+            <output_port name="serialized_result" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>">Serialized ROS message [upo_actions::FireExtinguishResult_&lt;std::allocator&lt;void> >]</output_port>
+            <output_port name="state" type="actionlib::SimpleClientGoalState">Actionlib reported state</output_port>
         </Action>
         <Action ID="UPOGoToGoal">
-            <input_port type="std::string" name="action">Actionlib action server name</input_port>
-            <input_port type="std::string" name="global_goal.header.frame_id">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
-            <input_port type="unsigned int" name="global_goal.header.seq">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
-            <input_port type="double" name="global_goal.pose.orientation.w">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
-            <input_port type="double" name="global_goal.pose.orientation.x">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
-            <input_port type="double" name="global_goal.pose.orientation.y">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
-            <input_port type="double" name="global_goal.pose.orientation.z">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
-            <input_port type="double" name="global_goal.pose.position.x">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
-            <input_port type="double" name="global_goal.pose.position.y">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
-            <input_port type="double" name="global_goal.pose.position.z">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
-            <output_port type="actionlib::SimpleClientGoalState" name="state">Actionlib reported state</output_port>
+            <input_port name="action" type="std::string">Actionlib action server name</input_port>
+            <input_port name="global_goal.header.frame_id" type="std::string">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
+            <input_port name="global_goal.header.seq" type="unsigned int">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
+            <input_port name="global_goal.pose.orientation.w" type="double">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
+            <input_port name="global_goal.pose.orientation.x" type="double">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
+            <input_port name="global_goal.pose.orientation.y" type="double">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
+            <input_port name="global_goal.pose.orientation.z" type="double">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
+            <input_port name="global_goal.pose.position.x" type="double">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
+            <input_port name="global_goal.pose.position.y" type="double">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
+            <input_port name="global_goal.pose.position.z" type="double">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
+            <output_port name="state" type="actionlib::SimpleClientGoalState">Actionlib reported state</output_port>
         </Action>
         <Action ID="UPOGoToGoalByName">
-            <input_port type="std::string" name="action">Actionlib action server name</input_port>
-            <input_port type="std::string" name="goal_name">Name of goal</input_port>
-            <output_port type="actionlib::SimpleClientGoalState" name="state">Actionlib reported state</output_port>
+            <input_port name="action" type="std::string">Actionlib action server name</input_port>
+            <input_port name="goal_name" type="std::string">Name of goal</input_port>
+            <output_port name="state" type="actionlib::SimpleClientGoalState">Actionlib reported state</output_port>
         </Action>
         <Action ID="WaitMilliseconds">
-            <input_port default="0" type="unsigned int" name="duration">Time to wait</input_port>
+            <input_port name="duration" default="0" type="unsigned int">Time to wait</input_port>
         </Action>
         <Action ID="WaitSeconds">
-            <input_port default="0" type="unsigned int" name="duration">Time to wait</input_port>
+            <input_port name="duration" default="0" type="unsigned int">Time to wait</input_port>
         </Action>
         <Decorator ID="WhileSuccess"/>
     </TreeNodesModel>
