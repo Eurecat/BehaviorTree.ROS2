@@ -1,8 +1,19 @@
+
 siar_home:
     pose:
         x: 100.0
         y: 100.0
         z: 0.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+firefly1_home:
+    pose:
+        x: 100.0
+        y: 100.0
+        z: 3.0
     orientation:
         x: 0.0
         y: 0.0
@@ -14,8 +25,8 @@ floor_0_door_1:
         y: 113.0
         z: 0.0
     orientation:
-        x: 0
-        y: 0
+        x: 0.0
+        y: 0.0
         z: -0.177
         w: 0.984
 floor_0_door_1_in:
@@ -111,6 +122,36 @@ floor_0_explore_2:
         w: 0.984
 floor_1_fire_1:
     pose:
+        x: 93.0
+        y: 113.0
+        z: 2.5
+    orientation:
+        x: 0
+        y: 0
+        z: 0.7071
+        w: 0.7071
+floor_1_fire_2:
+    pose:
+        x: 99.0
+        y: 127.0
+        z: 3.5
+    orientation:
+        x: 0
+        y: 0
+        z: 0.43
+        w: 0.899
+floor_1_fire_3:
+    pose:
+        x: 0.27
+        y: -3.53
+        z: 1.5
+    orientation:
+        x: 0
+        y: 0
+        z: 0.43
+        w: 0.899
+floor_1_fire_4:
+    pose:
         x: 0.27
         y: -3.53
         z: 1.5
@@ -129,3 +170,50 @@ floor_1_win_2:
         y: 0
         z: 0.43
         w: 0.899
+
+m600_home:
+    pose:
+        x: 100.0
+        y: 100.0
+        z: 4.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+
+guillena_wp1:
+    pose:
+        x: 104.0
+        y: 104.0
+        z: 4.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+
+guillena_wp2:
+    pose:
+        x: 106.0
+        y: 106.0
+        z: 4.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+
+guillena_floor_1_fire_1:
+    pose:
+        x: 93.0
+        y: 113.0
+        z: 2.5
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+
+
+
