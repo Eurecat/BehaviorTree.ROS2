@@ -2,20 +2,22 @@
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
         <Sequence>
-            <Action name="GoToWP1" action="/Make_Plan" goal_name="guillena_wp1" state="wp1s" ID="UPOGoToGoalByName"/>
-            <Action name="GoToWP2" action="/Make_Plan" goal_name="guillena_wp2" state="wp2s" ID="UPOGoToGoalByName"/>
+            <Action name="TakeOff" takeoff_height.data="5.0" action="/TakeOff" state="tfs" ID="UPOTakeOff"/>
+            <Action name="GoToWP1" goal_name="guillena_wp1" action="/Make_Plan" state="wp1s" ID="UPOGoToGoalByName"/>
+            <Action name="GoToWP2" goal_name="guillena_wp2" action="/Make_Plan" state="wp2s" ID="UPOGoToGoalByName"/>
             <ForceSuccess>
-                <SubTree fire="guillena_floor_1_fire_1" actgoto="/Make_Plan" actextinguish="/drone_fire_extinguisher_outside" ID="CheckFireAndExtinguish"/>
+                <SubTree actextinguish="/drone_fire_extinguisher_outside" actgoto="/Make_Plan" ID="CheckFireAndExtinguish" fire="guillena_floor_1_fire_1"/>
             </ForceSuccess>
-            <Action name="GoToBackWP2" action="/Make_Plan" goal_name="guillena_wp2" state="wp2outs" ID="UPOGoToGoalByName"/>
-            <Action name="GoToHome" action="/Make_Plan" goal_name="m600_home" state="gths" ID="UPOGoToGoalByName"/>
+            <Action name="GoToBackWP2" goal_name="guillena_wp2" action="/Make_Plan" state="wp2outs" ID="UPOGoToGoalByName"/>
+            <Action name="GoToHome" goal_name="m600_home" action="/Make_Plan" state="gths" ID="UPOGoToGoalByName"/>
+            <Action name="Landing" action="/Landing" land="true" state="ls" ID="UPOLanding"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
     <BehaviorTree ID="CheckFireAndExtinguish">
         <Sequence>
-            <Action action="${actgoto}" goal_name="${fire}" state="gts" ID="UPOGoToGoalByName"/>
-            <Action action="${actextinguish}" detect_fire="true" serialized_feedback="fef" state="fes" serialized_result="fer" ID="UPOFireExtinguish"/>
+            <Action goal_name="${fire}" action="${actgoto}" state="gts" ID="UPOGoToGoalByName"/>
+            <Action serialized_feedback="fef" serialized_result="fer" detect_fire="true" action="${actextinguish}" state="fes" ID="UPOFireExtinguish"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
@@ -48,10 +50,10 @@
             <input_port name="second" type="std::string">Second string</input_port>
         </Action>
         <Decorator ID="CooldownMilliseconds">
-            <input_port name="cooldown" default="0" type="unsigned int">Cooldown time</input_port>
+            <input_port name="cooldown" type="unsigned int" default="0">Cooldown time</input_port>
         </Decorator>
         <Decorator ID="CooldownSeconds">
-            <input_port name="cooldown" default="0" type="unsigned int">Cooldown time</input_port>
+            <input_port name="cooldown" type="unsigned int" default="0">Cooldown time</input_port>
         </Decorator>
         <Action ID="FindSubstrings">
             <input_port name="input" type="std::string">String to look into</input_port>
@@ -85,7 +87,7 @@
             <output_port name="output" type="tf::StampedTransform">Result transform</output_port>
             <input_port name="source_frame" type="std::string">Origin TF frame</input_port>
             <input_port name="target_frame" type="std::string">Target TF frame</input_port>
-            <input_port name="use_last_available" default="0" type="bool">Use last available transform?</input_port>
+            <input_port name="use_last_available" type="bool" default="0">Use last available transform?</input_port>
         </Action>
         <Decorator ID="Loop"/>
         <Action ID="MathOperationFloat">
@@ -115,14 +117,14 @@
             <output_port name="result" type="int">Random result value</output_port>
         </Action>
         <Action ID="RandomSequenceValue">
-            <input_port name="delimiter" default=";" type="std::string">Sequence entries delimiter</input_port>
+            <input_port name="delimiter" type="std::string" default=";">Sequence entries delimiter</input_port>
             <output_port name="output" type="std::string">Result random sequence entry</output_port>
             <input_port name="sequence" type="std::string">Sequence to randomize</input_port>
         </Action>
         <Action ID="SubscribeUPOGoal">
-            <input_port name="consume_msgs" default="0" type="bool">Should messages be consumed?</input_port>
+            <input_port name="consume_msgs" type="bool" default="0">Should messages be consumed?</input_port>
             <output_port name="output" type="upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> >">Received ROS message [upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> >]</output_port>
-            <input_port name="queue_size" default="1" type="unsigned int">Subscriber callback queue size</input_port>
+            <input_port name="queue_size" type="unsigned int" default="1">Subscriber callback queue size</input_port>
             <input_port name="topic" type="std::string">Topic to subscribe</input_port>
         </Action>
         <Action ID="UPOFireDetection3D">
@@ -159,11 +161,30 @@
             <input_port name="goal_name" type="std::string">Name of goal</input_port>
             <output_port name="state" type="actionlib::SimpleClientGoalState">Actionlib reported state</output_port>
         </Action>
+        <Action ID="UPOLanding">
+            <input_port name="action" type="std::string">Actionlib action server name</input_port>
+            <input_port name="land" type="bool">Auto-generated field from upo_actions::LandingGoal_&lt;std::allocator&lt;void> ></input_port>
+            <output_port name="state" type="actionlib::SimpleClientGoalState">Actionlib reported state</output_port>
+        </Action>
+        <Action ID="UPOTakeOff">
+            <input_port name="action" type="std::string">Actionlib action server name</input_port>
+            <output_port name="state" type="actionlib::SimpleClientGoalState">Actionlib reported state</output_port>
+            <input_port name="takeoff_height.data" type="float">Auto-generated field from upo_actions::TakeOffGoal_&lt;std::allocator&lt;void> ></input_port>
+        </Action>
+        <Action ID="UPOWindowDetection">
+            <input_port name="action" type="std::string">Actionlib action server name</input_port>
+            <input_port name="duration" type="int">Duration</input_port>
+            <output_port name="state" type="actionlib::SimpleClientGoalState">Actionlib reported state</output_port>
+            <output_port name="window_present" type="bool">Window Present</output_port>
+            <output_port name="x" type="double">Window x</output_port>
+            <output_port name="y" type="double">Window y</output_port>
+            <output_port name="z" type="double">Window z</output_port>
+        </Action>
         <Action ID="WaitMilliseconds">
-            <input_port name="duration" default="0" type="unsigned int">Time to wait</input_port>
+            <input_port name="duration" type="unsigned int" default="0">Time to wait</input_port>
         </Action>
         <Action ID="WaitSeconds">
-            <input_port name="duration" default="0" type="unsigned int">Time to wait</input_port>
+            <input_port name="duration" type="unsigned int" default="0">Time to wait</input_port>
         </Action>
         <Decorator ID="WhileSuccess"/>
     </TreeNodesModel>
