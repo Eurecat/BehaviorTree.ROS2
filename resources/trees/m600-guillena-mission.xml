@@ -1,15 +1,21 @@
 <root main_tree_to_execute="BehaviorTree">
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
-        <SubTree robot="/firefly1" fire="floor_1_fire_1" ID="CheckFireAndExtinguish"/>
+        <Sequence>
+            <Action name="GoToWP1" action="/Make_Plan" goal_name="guillena_wp1" state="wp1s" ID="UPOGoToGoalByName"/>
+            <Action name="GoToWP2" action="/Make_Plan" goal_name="guillena_wp2" state="wp2s" ID="UPOGoToGoalByName"/>
+            <ForceSuccess>
+                <SubTree fire="guillena_floor_1_fire_1" actgoto="/Make_Plan" actextinguish="/drone_fire_extinguisher_outside" ID="CheckFireAndExtinguish"/>
+            </ForceSuccess>
+            <Action name="GoToBackWP2" action="/Make_Plan" goal_name="guillena_wp2" state="wp2outs" ID="UPOGoToGoalByName"/>
+            <Action name="GoToHome" action="/Make_Plan" goal_name="m600_home" state="gths" ID="UPOGoToGoalByName"/>
+        </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
     <BehaviorTree ID="CheckFireAndExtinguish">
         <Sequence>
-            <Action name="GoToActionName" output="gt_name" first="${robot}" second="/Make_Plan" ID="ConcatenateStrings"/>
-            <Action name="FireExtinguishName" output="act" first="${robot}" second="/fire_extinguisher" ID="ConcatenateStrings"/>
-            <Action action="${gt_name}" goal_name="${fire}" state="gts" ID="UPOGoToGoalByName"/>
-            <Action action="${act}" detect_fire="true" serialized_feedback="fef" state="fes" serialized_result="fer" ID="UPOFireExtinguish"/>
+            <Action action="${actgoto}" goal_name="${fire}" state="gts" ID="UPOGoToGoalByName"/>
+            <Action action="${actextinguish}" detect_fire="true" serialized_feedback="fef" state="fes" serialized_result="fer" ID="UPOFireExtinguish"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->

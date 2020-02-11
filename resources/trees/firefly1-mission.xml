@@ -1,15 +1,23 @@
 <root main_tree_to_execute="BehaviorTree">
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
-        <SubTree robot="/firefly1" fire="floor_1_fire_1" ID="CheckFireAndExtinguish"/>
+        <Sequence>
+            <ForceSuccess>
+                <Fallback>
+                    <SubTree fire="floor_1_fire_1" actgoto="/firefly1/Make_Plan" actextinguish="/firefly1/drone_fire_extinguisher_outside" ID="CheckFireAndExtinguish"/>
+                    <SubTree fire="floor_1_fire_2" actgoto="/firefly1/Make_Plan" actextinguish="/firefly1/drone_fire_extinguisher_outside" ID="CheckFireAndExtinguish"/>
+                    <SubTree fire="floor_1_fire_3" actgoto="/firefly1/Make_Plan" actextinguish="/firefly1/drone_fire_extinguisher_outside" ID="CheckFireAndExtinguish"/>
+                    <SubTree fire="floor_1_fire_4" actgoto="/firefly1/Make_Plan" actextinguish="/firefly1/drone_fire_extinguisher_outside" ID="CheckFireAndExtinguish"/>
+                </Fallback>
+            </ForceSuccess>
+            <Action name="GoToHome" action="/firefly1/Make_Plan" goal_name="firefly1_home" state="gths" ID="UPOGoToGoalByName"/>
+        </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
     <BehaviorTree ID="CheckFireAndExtinguish">
         <Sequence>
-            <Action name="GoToActionName" output="gt_name" first="${robot}" second="/Make_Plan" ID="ConcatenateStrings"/>
-            <Action name="FireExtinguishName" output="act" first="${robot}" second="/fire_extinguisher" ID="ConcatenateStrings"/>
-            <Action action="${gt_name}" goal_name="${fire}" state="gts" ID="UPOGoToGoalByName"/>
-            <Action action="${act}" detect_fire="true" serialized_feedback="fef" state="fes" serialized_result="fer" ID="UPOFireExtinguish"/>
+            <Action action="${actgoto}" goal_name="${fire}" state="gts" ID="UPOGoToGoalByName"/>
+            <Action action="${actextinguish}" detect_fire="true" serialized_feedback="fef" state="fes" serialized_result="fer" ID="UPOFireExtinguish"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
