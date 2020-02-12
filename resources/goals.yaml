@@ -284,8 +284,8 @@ floor_1_explore_2:
 
 m600_home:
     pose:
-        x: 100.0
-        y: 100.0
+        x: 38.0
+        y: 42.0
         z: 4.0
     orientation:
         x: 0.0
@@ -295,20 +295,20 @@ m600_home:
 
 guillena_wp1:
     pose:
-        x: 104.0
-        y: 104.0
-        z: 4.0
+        x: 32.0
+        y: 50.0
+        z: 5.0
     orientation:
         x: 0.0
         y: 0.0
-        z: 0.0
-        w: 1.0
+        z: 0.714
+        w: 0.7
 
 guillena_wp2:
     pose:
-        x: 106.0
-        y: 106.0
-        z: 4.0
+        x: 25.0
+        y: 42.0
+        z: 5.0
     orientation:
         x: 0.0
         y: 0.0
@@ -317,14 +317,14 @@ guillena_wp2:
 
 guillena_floor_1_fire_1:
     pose:
-        x: 93.0
-        y: 113.0
-        z: 2.5
+        x: 35.2
+        y: 43.3
+        z: 4.0
     orientation:
         x: 0.0
         y: 0.0
-        z: 0.0
-        w: 1.0
+        z: 1.0
+        w: 0.0
 
 
 
