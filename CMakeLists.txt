@@ -3,6 +3,10 @@ project(behavior_tree_ros VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 14)
 
+if($ENV{ROS_DISTRO} STREQUAL "melodic" )
+add_definitions(-DMELODIC)
+endif()
+
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()

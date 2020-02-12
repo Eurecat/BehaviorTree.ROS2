@@ -119,9 +119,18 @@ namespace UPO
 
                 if(plugin_description.Error())
                 {
-                    throw std::runtime_error { std::string { "XML file may be ill-formed ( " }
+                    std::string error_msg;
+                    #ifdef MELODIC
+                    error_msg  =std::string { "XML file may be ill-formed ( " }
+                            + plugin_description.ErrorStr() ;
+                    #endif
+
+                    #ifndef MELODIC
+                    error_msg = std::string { "XML file may be ill-formed ( " }
                             + plugin_description.GetErrorStr1() + ". "
-                            + plugin_description.GetErrorStr2() + ")" };
+                            + plugin_description.GetErrorStr2() + ")";
+                    #endif
+                    throw std::runtime_error { error_msg };
                 }
 
                 XMLElement* root_entry = plugin_description.RootElement(); 
