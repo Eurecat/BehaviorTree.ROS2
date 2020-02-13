@@ -282,6 +282,39 @@ floor_1_explore_2:
         z: 0.177
         w: 0.984
 
+outside_explore_1:
+    pose:
+        x: 85.0
+        y: 102.0
+        z: 3.0
+    orientation:
+        x: 0
+        y: 0
+        z: 0.177
+        w: 0.984
+outside_explore_2:
+    pose:
+        x: 77.0
+        y: 102.0
+        z: 3.0
+    orientation:
+        x: 0
+        y: 0
+        z: 0.177
+        w: 0.984
+
+outside_explore_3:
+    pose:
+        x: 77.0
+        y: 107.0
+        z: 3.0
+    orientation:
+        x: 0
+        y: 0
+        z: 0.177
+        w: 0.984
+
+
 m600_home:
     pose:
         x: 38.0
