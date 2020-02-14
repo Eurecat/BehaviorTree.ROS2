@@ -3,13 +3,19 @@
     <BehaviorTree ID="BehaviorTree">
         <Sequence>
             <Action name="TakeOff" takeoff_height.data="5.0" action="/TakeOff" state="tfs" ID="UPOTakeOff"/>
+            <Action ID="WaitSeconds" duration="10"/>
             <Action name="GoToWP1" goal_name="guillena_wp1" action="/Make_Plan" state="wp1s" ID="UPOGoToGoalByName"/>
+            <Action ID="WaitSeconds" duration="3"/>
             <Action name="GoToWP2" goal_name="guillena_wp2" action="/Make_Plan" state="wp2s" ID="UPOGoToGoalByName"/>
+            <Action ID="WaitSeconds" duration="3"/>
             <ForceSuccess>
-                <SubTree actextinguish="/drone_fire_extinguisher_outside" actgoto="/Make_Plan" ID="CheckFireAndExtinguish" fire="guillena_floor_1_fire_1"/>
+                <SubTree actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" ID="CheckFireAndExtinguish" fire="guillena_floor_1_fire_1"/>
             </ForceSuccess>
+            <Action ID="WaitSeconds" duration="3"/>
             <Action name="GoToBackWP2" goal_name="guillena_wp2" action="/Make_Plan" state="wp2outs" ID="UPOGoToGoalByName"/>
+            <Action ID="WaitSeconds" duration="3"/>
             <Action name="GoToHome" goal_name="m600_home" action="/Make_Plan" state="gths" ID="UPOGoToGoalByName"/>
+            <Action ID="WaitSeconds" duration="10"/>
             <Action name="Landing" action="/Landing" land="true" state="ls" ID="UPOLanding"/>
         </Sequence>
     </BehaviorTree>
