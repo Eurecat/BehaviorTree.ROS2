@@ -19,7 +19,7 @@
         <SequenceStar>
             <Parallel threshold="1">
                 <SubTree ID="OutsideExplorationPath"/>
-                <Action name="DetectFire" state="fd_s" ID="UPOFireDetection3D" duration="15" fire_found="fd_found" action="/firedetection3D" y="fd_y" z="fd_z" x="fd_x"/>
+                <Action name="DetectFire" state="fd_s" ID="UPOFireDetection3D" duration="15" fire_found="fd_found" action="/firedetection3D_bottom" y="fd_y" z="fd_z" x="fd_x"/>
             </Parallel>
             <Condition ID="CheckBool" input="${fd_found}"/>
             <Action ID="InfoLog" message="${fd_found}"/>
