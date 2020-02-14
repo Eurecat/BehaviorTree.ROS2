@@ -317,8 +317,8 @@ outside_explore_3:
 
 m600_home:
     pose:
-        x: 38.0
-        y: 42.0
+        x: 39.6
+        y: 38.2
         z: 6.0
     orientation:
         x: 0.0
@@ -345,14 +345,14 @@ guillena_wp2:
     orientation:
         x: 0.0
         y: 0.0
-        z: 0.0
-        w: 1.0
+        z: 1.0
+        w: 0.0
 
 guillena_floor_1_fire_1:
     pose:
-        x: 34.8
-        y: 42.2
-        z: 4.5
+        x: 34.34
+        y: 43.0
+        z: 4.0
     orientation:
         x: 0.0
         y: 0.0
