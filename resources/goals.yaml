@@ -284,47 +284,47 @@ floor_1_explore_2:
 
 outside_explore_1:
     pose:
-        x: 85.0
-        y: 102.0
-        z: 3.0
+        x: 33.0
+        y: 42.0
+        z: 6.0
     orientation:
         x: 0
         y: 0
-        z: 0.177
-        w: 0.984
+        z: 1.0
+        w: 0.0
 outside_explore_2:
     pose:
-        x: 77.0
-        y: 102.0
-        z: 3.0
+        x: 33.0
+        y: 36.0
+        z: 6.0
     orientation:
         x: 0
         y: 0
-        z: 0.177
-        w: 0.984
+        z: 1.0
+        w: 0.0
 
 outside_explore_3:
     pose:
-        x: 77.0
-        y: 107.0
-        z: 3.0
+        x: 37.0
+        y: 41.0
+        z: 6.0
     orientation:
         x: 0
         y: 0
-        z: 0.177
-        w: 0.984
+        z: 1.0
+        w: 0.0
 
 
 m600_home:
     pose:
-        x: 39.6
+        x: 41.6
         y: 38.2
         z: 6.0
     orientation:
         x: 0.0
         y: 0.0
-        z: 0.0
-        w: 1.0
+        z: 1.0
+        w: 0.0
 
 guillena_wp1:
     pose:
