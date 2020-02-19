@@ -7,6 +7,8 @@
 #include <boost/filesystem.hpp>
 #include <tinyxml2.h>
 
+#include <std_msgs/String.h>
+
 #include "BehaviorTreeNode.hpp"
 
 namespace UPO
@@ -21,6 +23,12 @@ namespace UPO
         get_loaded_plugins_srv_ = node_handle_.advertiseService("behavior_tree/get_loaded_plugins", &BehaviorTreeNode::GetLoadedPluginsService, this);
         load_tree_srv_          = node_handle_.advertiseService("behavior_tree/load_tree", &BehaviorTreeNode::LoadTree, this);
         stop_tree_srv_          = node_handle_.advertiseService("behavior_tree/stop_tree", &BehaviorTreeNode::StopTree, this);
+
+	if(node_handle_.param("enable_rostopic_log", false))
+        { 
+		bt_status_publisher_ =
+          		node_handle_.advertise<std_msgs::String>("bt_status", 1);
+	}
     }
 
     void BehaviorTreeNode::Loop()
@@ -288,6 +296,13 @@ namespace UPO
             bt_logger_file_ = std::make_unique<BT::FileLogger>(*tree_, log_file.c_str());
         }
 
+	if(node_handle_.param("enable_rostopic_log", false))
+        { 
+            //bt_logger_rostopic_ = std::make_unique<BT_ROS::RosTopicLogger>(*tree_,node_handle_);
+	      bt_logger_rostopic_ = std::make_unique<BT_ROS::RosTopicLogger>(*tree_,bt_status_publisher_);
+        }
+
+
         if(node_handle_.param("enable_zmq_log", false))
         {
             #ifdef BEHAVIOR_TREE_CPP_ZMQ
@@ -297,6 +312,7 @@ namespace UPO
             #endif
         }
 
+	
     }
 
     void BehaviorTreeNode::ResetLoggers()
@@ -304,8 +320,12 @@ namespace UPO
         bt_logger_cout_.reset();
         bt_logger_trace_.reset();
         bt_logger_file_.reset();
+	bt_logger_rostopic_.reset();
+
         #ifdef BEHAVIOR_TREE_CPP_ZMQ
         bt_logger_zmq_.reset();
         #endif
+
+	
     }
 }

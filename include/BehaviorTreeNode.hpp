@@ -21,6 +21,9 @@
 #include <behaviortree_cpp/loggers/bt_zmq_publisher.h>
 #endif
 
+#include "bt_rostopic_logger.h"
+
+
 namespace UPO
 {
     class BehaviorTreeNode final
@@ -61,6 +64,8 @@ namespace UPO
             ros::ServiceServer load_tree_srv_;
             ros::ServiceServer stop_tree_srv_;
 
+	    ros::Publisher bt_status_publisher_;
+
             std::unique_ptr<BT::Tree> tree_;
             BT::BehaviorTreeFactory bt_factory_;
 
@@ -70,6 +75,8 @@ namespace UPO
             #ifdef BEHAVIOR_TREE_CPP_ZMQ
             std::unique_ptr<BT::PublisherZMQ>    bt_logger_zmq_;
             #endif
+
+	    std::unique_ptr<BT_ROS::RosTopicLogger> bt_logger_rostopic_;
 
             std::set<std::string> loaded_plugins_;
             std::string trees_folder_;
