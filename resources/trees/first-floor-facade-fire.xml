@@ -10,7 +10,7 @@
                     </Inverter>
                     <Action ID="InfoLog" message="${is_reset}"/>
                     <SequenceStar>
-                        <Action ID="UPOGoToGoalByName" goal_name="floor_2_approach" name="ApproachFloor2" action="/Make_Plan" state="gts"/>
+                        <Action ID="UPOGoToGoalByName" goal_name="floor_1_approach" name="ApproachFloor1" action="/Make_Plan" state="gts"/>
                         <ForceSuccess>
                             <SubTree fire_found="fire_wp" ID="ExtinguishFacadeFire"/>
                         </ForceSuccess>
@@ -19,7 +19,7 @@
                 </ReactiveSequence>
             </ForceSuccess>
             <ForceSuccess>
-                <Action ID="UPOGoToGoalByName" goal_name="floor_2_retreat" name="RetreatFromFloor2" action="/Make_Plan" state="f2rs"/>
+                <Action ID="UPOGoToGoalByName" goal_name="floor_1_retreat" name="RetreatFromFloor1" action="/Make_Plan" state="f2rs"/>
             </ForceSuccess>
             <RetryUntilSuccesful num_attempts="2">
                 <Sequence>
@@ -52,14 +52,14 @@
         <Sequence>
             <SetBlackboard output_key="fire_found" value="none"/>
             <Fallback>
-                <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_2_fire_1"/>
-                <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_2_fire_2"/>
-                <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_2_fire_3"/>
-                <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_2_fire_4"/>
-		<SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_2_fire_5"/>
-                <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_2_fire_6"/>
-                <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_2_fire_7"/>
-                <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_2_fire_8"/>
+                <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_1_fire_1"/>
+                <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_1_fire_2"/>
+                <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_1_fire_3"/>
+                <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_1_fire_4"/>
+		<SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_1_fire_5"/>
+                <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_1_fire_6"/>
+                <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_1_fire_7"/>
+                <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_1_fire_8"/>
             </Fallback>
         </Sequence>
     </BehaviorTree>
