@@ -73,6 +73,12 @@ target_compile_options(${PROJECT_NAME}_node PRIVATE -Wall -Werror -Wfatal-errors
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_node)
 
+add_executable(${PROJECT_NAME}_action_node src/behavior_tree_action_node.cpp src/BehaviorTreeActionNode.cpp src/bt_rostopic_logger.cpp)
+target_include_directories(${PROJECT_NAME}_action_node PRIVATE include ${catkin_INCLUDE_DIRS} ${TinyXML2_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME}_action_node PRIVATE ${catkin_LIBRARIES} ${TinyXML2_LIBRARIES})
+target_compile_options(${PROJECT_NAME}_action_node PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
+add_dependencies(${PROJECT_NAME}_action_node ${${PROJECT_NAME}_EXPORTED_TARGETS})
+list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_action_node)
 
 
 install(TARGETS ${${PROJECT_NAME}_targets}

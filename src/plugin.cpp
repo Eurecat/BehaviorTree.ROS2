@@ -14,6 +14,10 @@
 #include "behavior_tree_ros/actions/ConvertMessageFieldNode.hpp"
 #include "behavior_tree_ros/actions/ConvertRandomMessageFieldNode.hpp"
 
+#include "behavior_tree_ros/SimpleActionClientNode.hpp"
+
+#include <behavior_tree_ros/BehaviorTreeAction.h>
+
 namespace BT_ROS
 {
     std::string json2String(const nlohmann::json& _input)
@@ -48,4 +52,9 @@ BT_REGISTER_NODES(factory)
 
     factory.registerTypeConverter<std::string, nlohmann::json>(BT::convertFromString<nlohmann::json>);
     factory.registerTypeConverter<nlohmann::json, std::string>(json2String);
+
+    factory.registerNodeType<SimpleActionClientNode<behavior_tree_ros::BehaviorTreeAction,
+                                                    AutomaticDeserialization,
+                                                    EmptySerialization,
+                                                    EmptySerialization>>("ExecuteRemoteTree");
 }
