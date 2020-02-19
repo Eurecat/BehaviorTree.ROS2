@@ -54,12 +54,6 @@
             <Fallback>
                 <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_0_fire_1"/>
                 <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_0_fire_2"/>
-                <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_0_fire_3"/>
-                <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_0_fire_4"/>
-		<SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_0_fire_5"/>
-                <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_0_fire_6"/>
-                <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_0_fire_7"/>
-                <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" actgoto="/Make_Plan" actextinguish="/wall_fire_extinguisher" fire="floor_0_fire_8"/>
             </Fallback>
         </Sequence>
     </BehaviorTree>

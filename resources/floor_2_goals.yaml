@@ -65,6 +65,50 @@ floor_2_fire_4:
         z: 0.43
         w: 0.899
 
+floor_2_fire_5:
+    pose:
+        x: 93.0
+        y: 113.0
+        z: 2.5
+    orientation:
+        x: 0
+        y: 0
+        z: 0.7071
+        w: 0.7071
+
+floor_2_fire_6:
+    pose:
+        x: 99.0
+        y: 127.0
+        z: 3.5
+    orientation:
+        x: 0
+        y: 0
+        z: 0.43
+        w: 0.899
+
+floor_2_fire_7:
+    pose:
+        x: 0.27
+        y: -3.53
+        z: 1.5
+    orientation:
+        x: 0
+        y: 0
+        z: 0.43
+        w: 0.899
+
+floor_2_fire_8:
+    pose:
+        x: 0.27
+        y: -3.53
+        z: 1.5
+    orientation:
+        x: 0
+        y: 0
+        z: 0.43
+        w: 0.899
+
 floor_2_win_1:
     pose:
         x: 96.66

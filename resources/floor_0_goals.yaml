@@ -102,5 +102,28 @@ floor_0_explore_2:
         w: 0.984
 
 
+floor_0_fire_1:
+    pose:
+        x: 93.0
+        y: 113.0
+        z: 2.5
+    orientation:
+        x: 0
+        y: 0
+        z: 0.7071
+        w: 0.7071
+
+floor_0_fire_2:
+    pose:
+        x: 99.0
+        y: 127.0
+        z: 3.5
+    orientation:
+        x: 0
+        y: 0
+        z: 0.43
+        w: 0.899
+
+
 
 
