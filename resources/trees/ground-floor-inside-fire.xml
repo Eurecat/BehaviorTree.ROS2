@@ -3,8 +3,8 @@
     <BehaviorTree ID="BehaviorTree">
         <SequenceStar>
             <Fallback>
-                <SubTree door="floor_0_door_1" action="/Make_Plan" ID="CheckDoorandEnter" out_door="door_out" detection_action="/window_detector"/>
-                <SubTree door="floor_0_door_2" action="/Make_Plan" ID="CheckDoorandEnter" out_door="door_out" detection_action="/window_detector"/>
+                <SubTree door="floor_0_door_1" action="siar/Make_Plan" ID="CheckDoorandEnter" out_door="door_out" detection_action="/window_detector"/>
+                <SubTree door="floor_0_door_2" action="siar/Make_Plan" ID="CheckDoorandEnter" out_door="door_out" detection_action="/window_detector"/>
             </Fallback>
             <Action ID="InfoLog" message="${door_out}"/>
             <ForceSuccess>
@@ -57,14 +57,14 @@
         <SequenceStar>
             <SetBlackboard value="none" output_key="fire_found"/>
             <Fallback>
-                <SubTree fire="floor_0_fire_1" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/inside_fire_extinguisher" found_fire="fire_found"/>
-                <SubTree fire="floor_0_fire_2" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/inside_fire_extinguisher" found_fire="fire_found"/>
-                <SubTree fire="floor_0_fire_3" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/inside_fire_extinguisher" found_fire="fire_found"/>
-                <SubTree fire="floor_0_fire_4" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/inside_fire_extinguisher" found_fire="fire_found"/>
-                <SubTree fire="floor_0_fire_5" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/inside_fire_extinguisher" found_fire="fire_found"/>
-                <SubTree fire="floor_0_fire_6" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/inside_fire_extinguisher" found_fire="fire_found"/>
-                <SubTree fire="floor_0_fire_7" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/inside_fire_extinguisher" found_fire="fire_found"/>
-                <SubTree fire="floor_0_fire_8" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/inside_fire_extinguisher" found_fire="fire_found"/>
+                <SubTree fire="floor_0_fire_1" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/siar_fire_extinguisher" found_fire="fire_found"/>
+                <SubTree fire="floor_0_fire_2" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/siar_fire_extinguisher" found_fire="fire_found"/>
+                <SubTree fire="floor_0_fire_3" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/siar_fire_extinguisher" found_fire="fire_found"/>
+                <SubTree fire="floor_0_fire_4" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/siar_fire_extinguisher" found_fire="fire_found"/>
+                <SubTree fire="floor_0_fire_5" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/siar_fire_extinguisher" found_fire="fire_found"/>
+                <SubTree fire="floor_0_fire_6" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/siar_fire_extinguisher" found_fire="fire_found"/>
+                <SubTree fire="floor_0_fire_7" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/siar_fire_extinguisher" found_fire="fire_found"/>
+                <SubTree fire="floor_0_fire_8" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/siar_fire_extinguisher" found_fire="fire_found"/>
             </Fallback>
             <Action ID="InfoLog" message="${fire_found}"/>
         </SequenceStar>
