@@ -6,63 +6,63 @@ floor_0_door_1:
     orientation:
         x: 0.0
         y: 0.0
-        z: -0.177
-        w: 0.984
+        z: 0.68555262376
+        w: 0.728023076596
 floor_0_door_1_in:
     pose:
-        x: 93.5
+        x: 96.0
         y: 117.5
         z: 0.0
     orientation:
         x: 0
         y: 0
-        z: -0.177
-        w: 0.984
+        z: 0.702403465156
+        w: 0.711779019174
 floor_0_door_1_in_to_out:
     pose:
-        x: 97.5
+        x: 96.0
         y: 117.5
         z: 0.0
     orientation:
         x: 0
         y: 0
-        z: 0.177
-        w: 0.984
+        z: -0.702403465156
+        w: 0.711779019174
 floor_0_door_1_out:
     pose:
-        x: 98.0
-        y: 115.0
+        x: 93.0
+        y: 113g.0
         z: 0.0
     orientation:
         x: 0
         y: 0
-        z: 0.177
-        w: 0.984
+        z: -0.678650893062
+        w: 0.734461003285gg
 
 floor_0_door_2:
     pose:
-        x: 99.0
-        y: 127.0
+        x: 95.7985687256
+        y: 117.72517395
         z: 0.0
     orientation:
         x: 0
         y: 0
-        z: -0.177
-        w: 0.984
+        z: -0.678650893062
+        w: 0.734461003285
 floor_0_door_2_in:
     pose:
-        x: 98.5
-        y: 122.5
+        x: 96.0
+        y: 123.5
         z: 0.0
     orientation:
         x: 0
         y: 0
-        z: -0.177
-        w: 0.984
+        z: 0.75230710703
+        w: 0.658812580869
 floor_0_door_2_in_to_out:
     pose:
-        x: 98.5
-        y: 122.5
+        x: 96.0
+        y: 123.5
         z: 0.0
     orientation:
         x: 0
@@ -71,14 +71,14 @@ floor_0_door_2_in_to_out:
         w: 0.984
 floor_0_door_2_out:
     pose:
-        x: 99.0
-        y: 127.0
+        x: 95.7985687256
+        y: 117.72517395
         z: 0.0
     orientation:
         x: 0
         y: 0
-        z: 0.177
-        w: 0.984
+        z: 0.75230710703
+        w: 0.658812580869g
 
 floor_0_explore_1:
     pose:
@@ -93,19 +93,19 @@ floor_0_explore_1:
 floor_0_explore_2:
     pose:
         x: 99.0
-        y: 127.0
+        y: 117.0
         z: 0.0
     orientation:
         x: 0
         y: 0
-        z: 0.177
-        w: 0.984
+        z: -0.11542374981
+        w: 0.993316343357
 
 
 floor_0_fire_1:
     pose:
-        x: 93.0
-        y: 113.0
+        x: 102.239242554
+        y: 119.381454468
         z: 2.5
     orientation:
         x: 0
@@ -126,30 +126,30 @@ floor_0_fire_2:
 
 floor_0_fire_3:
     pose:
-        x: 93.0
-        y: 113.0
+        x: 101.8
+        y: 122.3
         z: 2.5
     orientation:
         x: 0
         y: 0
-        z: 0.7071
-        w: 0.7071
+        z: 0.926062133413
+        w: 0.377371070775
 
 floor_0_fire_4:
     pose:
-        x: 99.0
-        y: 127.0
+        x: 99.6
+        y: 122.6
         z: 3.5
     orientation:
         x: 0
         y: 0
-        z: 0.43
-        w: 0.899
+        z: 0.996
+        w: 0.0918
 
 floor_0_fire_5:
     pose:
-        x: 93.0
-        y: 113.0
+        x: 102.239242554
+        y: 119.381454468
         z: 2.5
     orientation:
         x: 0
@@ -170,26 +170,24 @@ floor_0_fire_6:
 
 floor_0_fire_7:
     pose:
-        x: 93.0
-        y: 113.0
+        x: 101.8
+        y: 122.3
         z: 2.5
     orientation:
         x: 0
         y: 0
-        z: 0.7071
-        w: 0.7071
+        z: 0.926062133413
+        w: 0.377371070775
 
 floor_0_fire_8:
     pose:
-        x: 99.0
-        y: 127.0
+        x: 99.6
+        y: 122.6
         z: 3.5
     orientation:
         x: 0
         y: 0
-        z: 0.43
-        w: 0.899
-
-
+        z: 0.996
+        w: 0.0918
 
 
