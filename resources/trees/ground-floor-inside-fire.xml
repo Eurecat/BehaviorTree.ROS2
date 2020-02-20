@@ -1,83 +1,73 @@
 <root main_tree_to_execute="BehaviorTree">
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
-        <Decorator ID="WhileSuccess">
-            <Inverter>
-                <Fallback>
-                    <ReactiveSequence>
-                        <Inverter>
-                            <SubTree ID="CheckResetRequest" reset_requested="is_reset"/>
-                        </Inverter>
-                        <SequenceStar>
-                            <Fallback>
-                                <SubTree ID="CheckWindowandEnter" window="floor_1_win_1" detection_action="/window_detector" out_win="window_out" action="/Make_Plan"/>
-                    		<SubTree ID="CheckWindowandEnter" window="floor_1_win_2" detection_action="/window_detector" out_win="window_out" action="/Make_Plan"/>
-                            </Fallback>
-                            <Action ID="InfoLog" message="${window_out}"/>
-                            <ForceSuccess>
-                                <SubTree ID="Floor0ExploreAndExtinguish"/>
-                            </ForceSuccess>
-                            <RetryUntilSuccesful num_attempts="2">
-                                <SubTree ID="ExitBuilding" window="${window_out}" robot_action="/Make_Plan"/>
-                            </RetryUntilSuccesful>
-                            <Action ID="UPOGoToGoalByName" name="GoToHome" action="/Make_Plan" goal_name="siar_home" state="gth_s"/>
-                        </SequenceStar>
-                    </ReactiveSequence>
-                    <Decorator ID="WhileSuccess">
-                        <SubTree ID="CheckResetRequest" reset_requested="is_reset"/>
-                    </Decorator>
-                </Fallback>
-            </Inverter>
-        </Decorator>
+        <SequenceStar>
+            <Fallback>
+                <SubTree door="floor_0_door_1" action="/Make_Plan" ID="CheckDoorandEnter" out_door="door_out" detection_action="/window_detector"/>
+                <SubTree door="floor_0_door_2" action="/Make_Plan" ID="CheckDoorandEnter" out_door="door_out" detection_action="/window_detector"/>
+            </Fallback>
+            <Action ID="InfoLog" message="${door_out}"/>
+            <ForceSuccess>
+                <SubTree ID="Floor0SurveyAndExtinguish"/>
+            </ForceSuccess>
+            <RetryUntilSuccesful num_attempts="2">
+                <SubTree robot_action="/siar/Make_Plan" ID="ExitBuilding" window="${door_out}"/>
+            </RetryUntilSuccesful>
+            <Action action="/siar/Make_Plan" name="GoToHome" goal_name="siar_home" state="gth_s" ID="UPOGoToGoalByName"/>
+        </SequenceStar>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="CheckDoorandEnter">
+        <Sequence>
+            <Action action="${action}" name="GoToWindow" goal_name="${door}" state="dummy" ID="UPOGoToGoalByName"/>
+            <Action output="goal_in" name="GetGoalInside" second="_in" ID="ConcatenateStrings" first="${door}"/>
+            <Action action="${action}" name="EnterThroughDoor" goal_name="${goal_in}" state="dummy" ID="UPOGoToGoalByName"/>
+            <SetBlackboard value="${door}" name="WriteToMemory" output_key="out_door"/>
+        </Sequence>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="CheckFireAndExtinguish">
+        <Sequence>
+            <Action action="${actgoto}" goal_name="${fire}" state="gts" ID="UPOGoToGoalByName"/>
+            <Action action="${actextinguish}" serialized_result="fer" detect_fire="true" state="fes" serialized_feedback="fef" ID="UPOFireExtinguish"/>
+            <SetBlackboard value="${fire}" output_key="found_fire"/>
+        </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
     <BehaviorTree ID="CheckResetRequest">
         <Sequence>
-            <SetBlackboard output_key="reset_requested" value="false"/>
-            <Action serialized_output="m_reset" ID="MonitorStdBool" consume_msgs="true" queue_size="1" topic="/reset"/>
-            <Action input="${m_reset}" ID="ConvertMessageField" field="/data" output="mission_reset"/>
-            <Action message="${mission_reset}" ID="InfoLog"/>
-            <Condition input="${mission_reset}" ID="CheckBool"/>
-        </Sequence>
-    </BehaviorTree>
-    <!-- ////////// -->
-    <BehaviorTree ID="CheckWindowandEnter">
-        <Sequence>
-            <Action goal_name="${window}" ID="UPOGoToGoalByName" state="dummy" name="GoToWindow" action="${action}"/>
-            <Action y="da_y" ID="UPOWindowDetection" state="da_s" window_present="da_wp" duration="5" x="da_x" action="${detection_action}" z="da_z"/>
-            <Action first="${window}" ID="ConcatenateStrings" output="goal_in" name="GetGoalInside" second="_in"/>
-            <Action goal_name="${goal_in}" ID="UPOGoToGoalByName" state="dummy" name="EnterThroughWindow" action="${action}"/>
-            <SetBlackboard output_key="out_win" value="${window}" name="WriteToMemory"/>
+            <SetBlackboard value="false" output_key="reset_requested"/>
+            <Action topic="/reset" queue_size="1" serialized_output="m_reset" ID="MonitorStdBool" consume_msgs="true"/>
+            <Action field="/data" output="mission_reset" ID="ConvertMessageField" input="${m_reset}"/>
+            <Action ID="InfoLog" message="${mission_reset}"/>
+            <Condition ID="CheckBool" input="${mission_reset}"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
     <BehaviorTree ID="ExitBuilding">
         <SequenceStar>
-            <Action first="${window}" ID="ConcatenateStrings" output="goal_to_exit" name="PrepareToExit" second="_in_to_out"/>
-            <Action goal_name="${goal_to_exit}" ID="UPOGoToGoalByName" state="gtwo_result" name="GoToWindowOut" action="${robot_action}"/>
-            <Action first="${window}" ID="ConcatenateStrings" output="goal_outside" second="_out"/>
-            <Action goal_name="${goal_outside}" ID="UPOGoToGoalByName" state="gte_result" name="GoToExit" action="${robot_action}"/>
+            <Action output="goal_to_exit" name="PrepareToExit" second="_in_to_out" ID="ConcatenateStrings" first="${window}"/>
+            <Action action="${robot_action}" name="GoToWindowOut" goal_name="${goal_to_exit}" state="gtwo_result" ID="UPOGoToGoalByName"/>
+            <Action output="goal_outside" second="_out" ID="ConcatenateStrings" first="${window}"/>
+            <Action action="${robot_action}" name="GoToExit" goal_name="${goal_outside}" state="gte_result" ID="UPOGoToGoalByName"/>
         </SequenceStar>
     </BehaviorTree>
     <!-- ////////// -->
-    <BehaviorTree ID="Floor0ExplorationPath">
-        <Sequence>
-            <Action ID="UPOGoToGoalByName" name="GoToGoal1" action="/Make_Plan" goal_name="floor_0_explore_1" state="gtg1s"/>
-            <Action ID="UPOGoToGoalByName" name="GoToGoal2" action="/Make_Plan" goal_name="floor_0_explore_2" state="gtg2s"/>
-        </Sequence>
-    </BehaviorTree>
-    <!-- ////////// -->
-    <BehaviorTree ID="Floor0ExploreAndExtinguish">
-        <Sequence>
-            <Parallel threshold="1">
-                <SubTree ID="Floor0ExplorationPath"/>
-                <Action ID="UPOFireDetection3D" y="fd_y" name="DetectFire" x="fd_x" duration="15" fire_found="fd_found" action="/firedetection3D" state="fd_s" z="fd_z"/>
-            </Parallel>
-            <Condition input="${fd_found}" ID="CheckBool"/>
-            <Action ID="InfoLog" message="${fd_found}"/>
-            <Action ID="UPOGoToGoal" global_goal.pose.position.z="${fd_z}" global_goal.header.seq="1" name="GoToFire" global_goal.pose.position.y="${fd_y}" global_goal.pose.orientation.y="0.0" global_goal.pose.orientation.z="0.0" global_goal.header.frame_id="/world" global_goal.pose.orientation.w="1.0" action="/Make_Plan" state="gtfs" global_goal.pose.position.x="${fd_x}" global_goal.pose.orientation.x="0.0"/>
-            <Action ID="UPOFireExtinguish" serialized_result="ef_r" name="ExtinguishFire" serialized_feedback="ef_f" detect_fire="true" action="/inside_fire_extinguisher" state="ef_s"/>
-        </Sequence>
+    <BehaviorTree ID="Floor0SurveyAndExtinguish">
+        <SequenceStar>
+            <SetBlackboard value="none" output_key="fire_found"/>
+            <Fallback>
+                <SubTree fire="floor_0_fire_1" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/inside_fire_extinguisher" found_fire="fire_found"/>
+                <SubTree fire="floor_0_fire_2" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/inside_fire_extinguisher" found_fire="fire_found"/>
+                <SubTree fire="floor_0_fire_3" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/inside_fire_extinguisher" found_fire="fire_found"/>
+                <SubTree fire="floor_0_fire_4" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/inside_fire_extinguisher" found_fire="fire_found"/>
+                <SubTree fire="floor_0_fire_5" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/inside_fire_extinguisher" found_fire="fire_found"/>
+                <SubTree fire="floor_0_fire_6" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/inside_fire_extinguisher" found_fire="fire_found"/>
+                <SubTree fire="floor_0_fire_7" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/inside_fire_extinguisher" found_fire="fire_found"/>
+                <SubTree fire="floor_0_fire_8" ID="CheckFireAndExtinguish" actgoto="/siar/Make_Plan" actextinguish="/siar/inside_fire_extinguisher" found_fire="fire_found"/>
+            </Fallback>
+            <Action ID="InfoLog" message="${fire_found}"/>
+        </SequenceStar>
     </BehaviorTree>
     <!-- ////////// -->
     <TreeNodesModel>
@@ -87,6 +77,12 @@
         <Condition ID="CheckBool">
             <input_port type="bool" name="input">Input boolean value</input_port>
         </Condition>
+        <SubTree ID="CheckDoorandEnter">
+            <input_port name="action"/>
+            <input_port name="detection_action"/>
+            <input_port name="door"/>
+            <output_port name="out_door"/>
+        </SubTree>
         <SubTree ID="CheckFireAndExtinguish">
             <input_port name="actextinguish">Extinguish Action Name</input_port>
             <input_port name="actgoto">GoTo Action Name</input_port>
@@ -99,12 +95,6 @@
         </Action>
         <SubTree ID="CheckResetRequest">
             <output_port name="reset_requested"/>
-        </SubTree>
-        <SubTree ID="CheckWindowandEnter">
-            <input_port name="action"/>
-            <input_port name="detection_action"/>
-            <output_port name="out_win"/>
-            <input_port name="window"/>
         </SubTree>
         <Condition ID="CompareNumbers">
             <input_port type="std::string" name="comparison_op">Comparison operator. Valid operators are &lt;, >, &lt;=, >=, == and !=</input_port>
@@ -183,8 +173,7 @@
             <input_port type="std::string" name="input">String to look into</input_port>
             <input_port type="std::vector&lt;std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, std::allocator&lt;std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> > > >" name="substrings">Substrings to look for</input_port>
         </Action>
-        <SubTree ID="Floor0ExplorationPath"/>
-        <SubTree ID="Floor0ExploreAndExtinguish"/>
+        <SubTree ID="Floor0SurveyAndExtinguish"/>
         <Decorator ID="ForEachLoop">
             <input_port type="bool" name="break_on_child_failure">Break loop on child failure?</input_port>
             <input_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="input">Input sequence</input_port>

@@ -124,6 +124,72 @@ floor_0_fire_2:
         z: 0.43
         w: 0.899
 
+floor_0_fire_3:
+    pose:
+        x: 93.0
+        y: 113.0
+        z: 2.5
+    orientation:
+        x: 0
+        y: 0
+        z: 0.7071
+        w: 0.7071
+
+floor_0_fire_4:
+    pose:
+        x: 99.0
+        y: 127.0
+        z: 3.5
+    orientation:
+        x: 0
+        y: 0
+        z: 0.43
+        w: 0.899
+
+floor_0_fire_5:
+    pose:
+        x: 93.0
+        y: 113.0
+        z: 2.5
+    orientation:
+        x: 0
+        y: 0
+        z: 0.7071
+        w: 0.7071
+
+floor_0_fire_6:
+    pose:
+        x: 99.0
+        y: 127.0
+        z: 3.5
+    orientation:
+        x: 0
+        y: 0
+        z: 0.43
+        w: 0.899
+
+floor_0_fire_7:
+    pose:
+        x: 93.0
+        y: 113.0
+        z: 2.5
+    orientation:
+        x: 0
+        y: 0
+        z: 0.7071
+        w: 0.7071
+
+floor_0_fire_8:
+    pose:
+        x: 99.0
+        y: 127.0
+        z: 3.5
+    orientation:
+        x: 0
+        y: 0
+        z: 0.43
+        w: 0.899
+
 
 
 
