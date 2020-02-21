@@ -9,7 +9,7 @@ siar_home:
         z: 0.164
         w: 0.986
 
-m210_floor_1_home:
+m210_home:
     pose:
         x: 12.9
         y: 51.6
@@ -20,7 +20,7 @@ m210_floor_1_home:
         z: 0.651
         w: 0.759
 
-m210_floor_2_home:
+m210_red_home:
     pose:
         x: 13.2
         y: 47.0
@@ -32,16 +32,6 @@ m210_floor_2_home:
         w: 0.674
 
 
-m210_home:
-    pose:
-        x: 40,63
-        y: 57,6
-        z: 6.0
-    orientation:
-        x: 0.0
-        y: 0.0
-        z: -0,753
-        w:  0,658
 
 m600_home:
     pose:
@@ -154,5 +144,27 @@ right_facade_retreat:
         y: 0.0
         z: 0.685
         w: 0.728
+
+test_goal_1:
+    pose:
+        x: 29.0
+        y: 24.0
+        z: 0.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+
+test_goal_2:
+    pose:
+        x: 20.0
+        y: 30.0
+        z: 0.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
 
 

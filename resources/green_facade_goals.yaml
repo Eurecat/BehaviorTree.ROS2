@@ -1,0 +1,107 @@
+green_facade_approach_1:
+    pose:
+        x: 15.5
+        y: 55.3
+        z: 6.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: -0.739
+        w: 0.674
+
+green_facade_approach_2:
+    pose:
+        x: 38.7
+        y: 53.8
+        z: 6.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: -0.739
+        w: 0.674
+
+green_facade_approach_3:
+    pose:
+        x: 40.1
+        y: 39.3
+        z: 6.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+green_facade_retreat:
+    pose:
+        x: 40.1
+        y: 39.3
+        z: 6.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+
+green_fire_5:
+    pose:
+        x: 35.9
+        y: 48.3
+        z: 13
+    orientation:
+        x: 0
+        y: 0
+        z: 1.0
+        w: 0.020
+
+green_fire_3:
+    pose:
+        x: 35.7
+        y: 42.7
+        z: 10.65
+    orientation:
+        x: 0
+        y: 0
+        z: 0.999
+        w: 0.038
+
+green_fire_4:
+    pose:
+        x: 34.7
+        y: 37.0
+        z: 13
+    orientation:
+        x: 0
+        y: 0
+        z: 0.999
+        w: 0.032
+
+green_fire_2:
+    pose:
+        x: 35.9
+        y: 48.3
+        z: 6
+    orientation:
+        x: 0
+        y: 0
+        z: 1.0
+        w: 0.0
+
+green_fire_1:
+    pose:
+        x: 34.7
+        y: 36.0
+        z: 2
+    orientation:
+        x: 0
+        y: 0
+        z: 0.999
+        w: 0.039
+
+
+
+
+
+
+
+

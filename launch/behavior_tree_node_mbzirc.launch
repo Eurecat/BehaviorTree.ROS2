@@ -6,6 +6,9 @@
 	<rosparam command="load" file="$(find behavior_tree_ros)/resources/floor_1_goals.yaml" />
 	<rosparam command="load" file="$(find behavior_tree_ros)/resources/floor_2_goals.yaml" />
 	<rosparam command="load" file="$(find behavior_tree_ros)/resources/outside_goals.yaml" />
+	<rosparam command="load" file="$(find behavior_tree_ros)/resources/red_facade_goals.yaml" />
+	<rosparam command="load" file="$(find behavior_tree_ros)/resources/green_facade_goals.yaml" />
+	<rosparam command="load" file="$(find behavior_tree_ros)/resources/blue_facade_goals.yaml" />
 
     <param name="trees_folder"       type="string" value="$(find behavior_tree_ros)/resources/trees"   />
     <param name="import_from_folder" type="bool"   value="false" />

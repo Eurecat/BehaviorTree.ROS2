@@ -106,7 +106,7 @@ floor_2_fire_8:
     orientation:
         x: 0
         y: 0
-        z: 0.0.703
+        z: 0.703
         w: 0.711
 
 floor_2_fire_9:

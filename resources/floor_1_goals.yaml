@@ -66,12 +66,6 @@ floor_1_fire_4:
         w: 0.720
 
 
-    orientation:
-        x: 0
-        y: 0
-        z: 0.43
-        w: 0.899
-
 
 floor_1_win_1:
     pose:

@@ -1,0 +1,84 @@
+
+blue_facade_approach_1:
+    pose:
+        x: 27.4
+        y: 55.5
+        z: 6.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: -0.741
+        w: 0.672
+
+
+blue_facade_retreat:
+    pose:
+        x: 27.4
+        y: 55.5
+        z: 6.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: -0.741
+        w: 0.672
+
+
+
+blue_fire_5:
+    pose:
+        x: 20.5
+        y: 53.1
+        z: 13
+    orientation:
+        x: 0
+        y: 0
+        z: -0.721
+        w:  0.693
+
+blue_fire_3:
+    pose:
+        x: 28.8
+        y: 52.3
+        z: 10.65
+    orientation:
+        x: 0
+        y: 0
+        z: -0.764
+        w: 0.646
+
+blue_fire_4:
+    pose:
+        x: 31.2
+        y: 52.1
+        z: 10.65
+    orientation:
+        x: 0
+        y: 0
+        z: -0.727
+        w: 0.687
+
+blue_fire_2:
+    pose:
+        x: 20.5
+        y: 53.1
+        z: 6
+    orientation:
+        x: 0
+        y: 0
+        z: -0.721
+        w: 0.693
+
+blue_fire_1:
+    pose:
+        x: 31.3
+        y: 52.1
+        z: 3
+    orientation:
+        x: 0
+        y: 0
+        z: -0.727
+        w: 0.687
+
+
+
+

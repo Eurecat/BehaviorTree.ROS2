@@ -56,18 +56,18 @@
         <Sequence>
             <SetBlackboard value="none" output_key="fire_found"/>
             <ForceSuccess>
-                <SubTree actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" fire="floor_1_fire_1" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
+                <SubTree actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" fire="blue_fire_2" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
             </ForceSuccess>
-            <Action goal_name="left_facade_retreat" state="lfrs" ID="UPOGoToGoalByName" action="/Make_Plan" name="GoToRetreat1"/>
+            <Action goal_name="blue_facade_retreat" state="lfrs" ID="UPOGoToGoalByName" action="/Make_Plan" name="GoToRetreat1"/>
             <Fallback>
-                <SubTree actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" fire="floor_2_fire_1" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
+                <SubTree actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" fire="blue_fire_5" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
                 <Sequence>
-                    <Action goal_name="left_facade_retreat" state="lfr2s" ID="UPOGoToGoalByName" action="/Make_Plan" name="GoToRetreat2"/>
-                    <SubTree actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" fire="floor_2_fire_2" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
+                    <Action goal_name="blue_facade_retreat" state="lfr2s" ID="UPOGoToGoalByName" action="/Make_Plan" name="GoToRetreat2"/>
+                    <SubTree actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" fire="blue_fire_3" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
                 </Sequence>
                 <Sequence>
-                    <Action goal_name="left_facade_retreat" state="lfr3s" ID="UPOGoToGoalByName" action="/Make_Plan"/>
-                    <SubTree actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" fire="floor_2_fire_3" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
+                    <Action goal_name="blue_facade_retreat" state="lfr3s" ID="UPOGoToGoalByName" action="/Make_Plan"/>
+                    <SubTree actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" fire="blue_fire_4" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
                 </Sequence>
             </Fallback>
         </Sequence>
@@ -93,14 +93,14 @@
     <!-- ////////// -->
     <BehaviorTree ID="LeftFacadeMission">
         <SequenceStar>
-            <Action goal_name="left_facade_approach_1" state="gts" ID="UPOGoToGoalByName" action="/Make_Plan" name="ApproachLeftFacade"/>
+            <Action goal_name="blue_facade_approach_1" state="gts" ID="UPOGoToGoalByName" action="/Make_Plan" name="ApproachBlueFacade"/>
             <Action ID="WaitSeconds" duration="3"/>
             <ForceSuccess>
                 <SubTree fire_found="fire_wp" ID="ExtinguishFacadeFire"/>
             </ForceSuccess>
             <Action message="${fire_wp}" ID="InfoLog"/>
             <Action ID="WaitSeconds" duration="3"/>
-            <Action goal_name="left_facade_retreat" state="f2rs" ID="UPOGoToGoalByName" action="/Make_Plan" name="RetreatFromLeftFacade"/>
+            <Action goal_name="blue_facade_retreat" state="f2rs" ID="UPOGoToGoalByName" action="/Make_Plan" name="RetreatFromBlueFacade"/>
         </SequenceStar>
     </BehaviorTree>
     <!-- ////////// -->

@@ -1,0 +1,74 @@
+<root main_tree_to_execute="BehaviorTree">
+    <!-- ////////// -->
+    <BehaviorTree ID="BehaviorTree">
+        <Sequence>
+            <Action goal_name="test_goal_1" action="/siar/Make_Plan" state="gt1s" ID="UPOGoToGoalByName"/>
+            <Action goal_name="test_goal_2" action="/siar/Make_Plan" state="gt2s" ID="UPOGoToGoalByName"/>
+            <Action serialized_result="extr" detect_fire="true" action="/siar/siar_fire_extinguisher" state="exts" serialized_feedback="extf" ID="UPOFireExtinguish"/>
+        </Sequence>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <TreeNodesModel>
+        <Action ID="SubscribeUPOGoal">
+            <input_port type="bool" default="0" name="consume_msgs">Should messages be consumed?</input_port>
+            <output_port type="upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> >" name="output">Received ROS message [upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> >]</output_port>
+            <input_port type="unsigned int" default="1" name="queue_size">Subscriber callback queue size</input_port>
+            <input_port type="std::string" name="topic">Topic to subscribe</input_port>
+        </Action>
+        <Action ID="UPOFireDetection3D">
+            <input_port type="std::string" name="action">Actionlib action server name</input_port>
+            <input_port type="int" name="duration">Duration</input_port>
+            <output_port type="bool" name="fire_found">Fire Found</output_port>
+            <output_port type="actionlib::SimpleClientGoalState" name="state">Actionlib reported state</output_port>
+            <output_port type="double" name="x">Fire x</output_port>
+            <output_port type="double" name="y">Fire x</output_port>
+            <output_port type="double" name="z">Fire x</output_port>
+        </Action>
+        <Action ID="UPOFireExtinguish">
+            <input_port type="std::string" name="action">Actionlib action server name</input_port>
+            <input_port type="bool" name="detect_fire">Detect Fire</input_port>
+            <output_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="serialized_feedback">Serialized ROS message [upo_actions::FireExtinguishFeedback_&lt;std::allocator&lt;void> >]</output_port>
+            <output_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="serialized_result">Serialized ROS message [upo_actions::FireExtinguishResult_&lt;std::allocator&lt;void> >]</output_port>
+            <output_port type="actionlib::SimpleClientGoalState" name="state">Actionlib reported state</output_port>
+        </Action>
+        <Action ID="UPOGoToGoal">
+            <input_port type="std::string" name="action">Actionlib action server name</input_port>
+            <input_port type="std::string" name="global_goal.header.frame_id">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
+            <input_port type="unsigned int" name="global_goal.header.seq">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
+            <input_port type="double" name="global_goal.pose.orientation.w">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
+            <input_port type="double" name="global_goal.pose.orientation.x">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
+            <input_port type="double" name="global_goal.pose.orientation.y">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
+            <input_port type="double" name="global_goal.pose.orientation.z">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
+            <input_port type="double" name="global_goal.pose.position.x">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
+            <input_port type="double" name="global_goal.pose.position.y">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
+            <input_port type="double" name="global_goal.pose.position.z">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> ></input_port>
+            <output_port type="actionlib::SimpleClientGoalState" name="state">Actionlib reported state</output_port>
+        </Action>
+        <Action ID="UPOGoToGoalByName">
+            <input_port type="std::string" name="action">Actionlib action server name</input_port>
+            <input_port type="std::string" name="goal_name">Name of goal</input_port>
+            <output_port type="actionlib::SimpleClientGoalState" name="state">Actionlib reported state</output_port>
+        </Action>
+        <Action ID="UPOLanding">
+            <input_port type="std::string" name="action">Actionlib action server name</input_port>
+            <input_port type="bool" name="land">Auto-generated field from upo_actions::LandingGoal_&lt;std::allocator&lt;void> ></input_port>
+            <output_port type="actionlib::SimpleClientGoalState" name="state">Actionlib reported state</output_port>
+        </Action>
+        <Action ID="UPOTakeOff">
+            <input_port type="std::string" name="action">Actionlib action server name</input_port>
+            <output_port type="actionlib::SimpleClientGoalState" name="state">Actionlib reported state</output_port>
+            <input_port type="float" name="takeoff_height.data">Auto-generated field from upo_actions::TakeOffGoal_&lt;std::allocator&lt;void> ></input_port>
+        </Action>
+        <Action ID="UPOWindowDetection">
+            <input_port type="std::string" name="action">Actionlib action server name</input_port>
+            <input_port type="int" name="duration">Duration</input_port>
+            <output_port type="actionlib::SimpleClientGoalState" name="state">Actionlib reported state</output_port>
+            <output_port type="bool" name="window_present">Window Present</output_port>
+            <output_port type="double" name="x">Window x</output_port>
+            <output_port type="double" name="y">Window y</output_port>
+            <output_port type="double" name="z">Window z</output_port>
+        </Action>
+    </TreeNodesModel>
+    <!-- ////////// -->
+</root>
+
