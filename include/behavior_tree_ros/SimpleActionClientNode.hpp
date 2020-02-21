@@ -49,7 +49,7 @@ class SimpleActionClientNode final : public BT::ActionNodeBase,
 
         }
 
-        ~SimpleActionClientNode() = default;
+        ~SimpleActionClientNode(){ halt();}
 
         static BT::PortsList providedPorts()
         {
@@ -117,7 +117,7 @@ class SimpleActionClientNode final : public BT::ActionNodeBase,
         virtual void halt() override
         {
 	    //std::cout << "Halted" << std::endl;
-            if(client_) { client_->cancelGoal(); 
+            if(client_ && status() == BT::NodeStatus::RUNNING) { client_->cancelGoal(); 
 		//Get result when cancelling
 		const auto& result_ptr = client_->getResult();
                 result_policy_.onNewMessage(*result_ptr, *this, "result");
