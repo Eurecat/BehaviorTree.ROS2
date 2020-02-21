@@ -1,13 +1,13 @@
 siar_home:
     pose:
-        x: 100.0
-        y: 100.0
+        x: 41.0
+        y: 16.7
         z: 0.0
     orientation:
         x: 0.0
         y: 0.0
-        z: 0.0
-        w: 1.0
+        z: 0.164
+        w: 0.986
 
 m210_floor_1_home:
     pose:
@@ -34,14 +34,14 @@ m210_floor_2_home:
 
 m210_home:
     pose:
-        x: 41.6
-        y: 38.2
+        x: 40,63
+        y: 57,6
         z: 6.0
     orientation:
         x: 0.0
         y: 0.0
-        z: 1.0
-        w: 0.0
+        z: -0,753
+        w:  0,658
 
 m600_home:
     pose:

@@ -23,86 +23,49 @@ floor_1_retreat:
 
 floor_1_fire_1:
     pose:
-        x: 93.0
-        y: 113.0
-        z: 2.5
+        x: 20.5
+        y: 53.1
+        z: 6
     orientation:
         x: 0
         y: 0
-        z: 0.7071
-        w: 0.7071
+        z: -0.721
+        w: 0.693
 
 floor_1_fire_2:
     pose:
-        x: 99.0
-        y: 127.0
-        z: 3.5
+        x: 35.9
+        y: 48.3
+        z: 6
     orientation:
         x: 0
         y: 0
-        z: 0.43
-        w: 0.899
+        z: 1.0
+        w: 0.02
 
 floor_1_fire_3:
     pose:
-        x: 0.27
-        y: -3.53
-        z: 1.5
+        x: 30.0
+        y: 32.6
+        z: 6
     orientation:
         x: 0
         y: 0
-        z: 0.43
-        w: 0.899
+        z: 0.693
+        w: 0.721
 
 floor_1_fire_4:
     pose:
-        x: 0.27
-        y: -3.53
-        z: 1.5
+        x: 20.0
+        y: 33.5
+        z: 8.4
     orientation:
         x: 0
         y: 0
-        z: 0.43
-        w: 0.899
+        z: 0.694
+        w: 0.720
 
-floor_1_fire_5:
-    pose:
-        x: 93.0
-        y: 113.0
-        z: 2.5
-    orientation:
-        x: 0
-        y: 0
-        z: 0.7071
-        w: 0.7071
 
-floor_1_fire_6:
-    pose:
-        x: 99.0
-        y: 127.0
-        z: 3.5
-    orientation:
-        x: 0
-        y: 0
-        z: 0.43
-        w: 0.899
-
-floor_1_fire_7:
-    pose:
-        x: 0.27
-        y: -3.53
-        z: 1.5
-    orientation:
-        x: 0
-        y: 0
-        z: 0.43
-        w: 0.899
-
-floor_1_fire_8:
-    pose:
-        x: 0.27
-        y: -3.53
-        z: 1.5
     orientation:
         x: 0
         y: 0

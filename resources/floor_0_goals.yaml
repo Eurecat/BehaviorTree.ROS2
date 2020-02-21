@@ -1,84 +1,84 @@
 floor_0_door_1:
     pose:
-        x: 93.0
-        y: 113.0
+        x: 60.2
+        y: 18.1
         z: 0.0
     orientation:
         x: 0.0
         y: 0.0
-        z: 0.68555262376
-        w: 0.728023076596
+        z: 0.552
+        w: 0.834
 floor_0_door_1_in:
     pose:
-        x: 96.0
-        y: 117.5
+        x: 61.1
+        y: 23.0
         z: 0.0
     orientation:
         x: 0
         y: 0
-        z: 0.702403465156
-        w: 0.711779019174
+        z: 0.578
+        w: 0.816
 floor_0_door_1_in_to_out:
     pose:
-        x: 96.0
-        y: 117.5
+        x: 61.3
+        y: 23.4
         z: 0.0
     orientation:
         x: 0
         y: 0
-        z: -0.702403465156
-        w: 0.711779019174
+        z: -0.815
+        w: 0.580
 floor_0_door_1_out:
     pose:
-        x: 93.0
-        y: 113g.0
+        x: 59.7
+        y: 18.5
         z: 0.0
     orientation:
         x: 0
         y: 0
-        z: -0.678650893062
-        w: 0.734461003285
+        z: -0.803
+        w: 0.596
 
 floor_0_door_2:
     pose:
-        x: 95.7985687256
-        y: 117.72517395
+        x: 65.8
+        y: 36.3
         z: 0.0
     orientation:
         x: 0
         y: 0
-        z: -0.678650893062
-        w: 0.734461003285
+        z: -0.818
+        w: 0.575
 floor_0_door_2_in:
     pose:
-        x: 96.0
-        y: 123.5
+        x: 64.0
+        y: 31.2
         z: 0.0
     orientation:
         x: 0
         y: 0
-        z: 0.75230710703
-        w: 0.658812580869
+        z: -0.825
+        w: 0.565
 floor_0_door_2_in_to_out:
     pose:
-        x: 96.0
-        y: 123.5
+        x: 63.9
+        y: 30.8
         z: 0.0
     orientation:
         x: 0
         y: 0
-        z: 0.177
-        w: 0.984
+        z: 0.573
+        w: 0.820
 floor_0_door_2_out:
     pose:
-        x: 95.7985687256
-        y: 117.72517395
+        x: 65.8
+        y: 36.4
         z: 0.0
     orientation:
         x: 0
         y: 0
-        z: 0.75230710703
-        w: 0.658812580869
+        z: 0.571
+        w: 0.821
 
 floor_0_explore_1:
     pose:
@@ -104,90 +104,89 @@ floor_0_explore_2:
 
 floor_0_fire_1:
     pose:
-        x: 102.239242554
-        y: 119.381454468
-        z: 2.5
+        x: 61.3
+        y: 27.8
+        z: 0
     orientation:
         x: 0
         y: 0
-        z: 0.7071
-        w: 0.7071
+        z: 0.987
+        w: 0.163
 
 floor_0_fire_2:
     pose:
-        x: 99.0
-        y: 127.0
-        z: 3.5
+        x: 59.6
+        y: 32.6
+        z: 0
     orientation:
         x: 0
         y: 0
-        z: 0.43
-        w: 0.899
+        z: -0.814
+        w: 0.581
 
 floor_0_fire_3:
     pose:
-        x: 101.8
-        y: 122.3
-        z: 2.5
+        x: 56.2
+        y: 31.5
+        z: 0
     orientation:
         x: 0
         y: 0
-        z: 0.926062133413
-        w: 0.377371070775
+        z: 0.987
+        w: 0.160
 
 floor_0_fire_4:
     pose:
-        x: 99.6
-        y: 122.6
-        z: 3.5
+        x: 55.8
+        y: 31.5
+        z: 0
     orientation:
         x: 0
         y: 0
-        z: 0.996
-        w: 0.0918
+        z: -0.177
+        w: 0.984
 
 floor_0_fire_5:
     pose:
-        x: 102.239242554
-        y: 119.381454468
-        z: 2.5
+        x: 55.0
+        y: 28.7
+        z: 0
     orientation:
         x: 0
         y: 0
-        z: 0.7071
-        w: 0.7071
+        z: 0.986
+        w: 0.164
 
 floor_0_fire_6:
     pose:
-        x: 99.0
-        y: 127.0
-        z: 3.5
+        x: 57.2
+        y: 25.8
+        z: 0
     orientation:
         x: 0
         y: 0
-        z: 0.43
-        w: 0.899
+        z: 0.584
+        w: 0.812
 
-floor_0_fire_7:
+floor_0_fire_outside_1:
     pose:
-        x: 101.8
-        y: 122.3
-        z: 2.5
+        x: 31.3
+        y: 52.1
+        z: 3
     orientation:
         x: 0
         y: 0
-        z: 0.926062133413
-        w: 0.377371070775
+        z: -0.727
+        w: 0.687
 
-floor_0_fire_8:
+floor_0_fire_outside_2:
     pose:
-        x: 99.6
-        y: 122.6
-        z: 3.5
+        x: 34.7
+        y: 36.0
+        z: 1
     orientation:
         x: 0
         y: 0
-        z: 0.996
-        w: 0.0918
-
+        z: 0.999
+        w: 0.039
 
