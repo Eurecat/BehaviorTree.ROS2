@@ -79,7 +79,7 @@ floor_2_fire_5:
 floor_2_fire_6:
     pose:
         x: 34.7
-        y: 35.0
+        y: 37.0
         z: 13
     orientation:
         x: 0

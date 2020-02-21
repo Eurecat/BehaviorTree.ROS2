@@ -11,25 +11,25 @@ siar_home:
 
 m210_floor_1_home:
     pose:
-        x: 100.0
-        y: 100.0
-        z: 3.0
+        x: 12.9
+        y: 51.6
+        z: 0.0
     orientation:
         x: 0.0
         y: 0.0
-        z: 0.0
-        w: 1.0
+        z: 0.651
+        w: 0.759
 
 m210_floor_2_home:
     pose:
-        x: 100.0
-        y: 100.0
-        z: 3.0
+        x: 13.2
+        y: 47.0
+        z: 0.0
     orientation:
         x: 0.0
         y: 0.0
-        z: 0.0
-        w: 1.0
+        z: -0.739
+        w: 0.674
 
 
 m210_home:
@@ -45,80 +45,114 @@ m210_home:
 
 m600_home:
     pose:
-        x: 41.6
-        y: 38.2
-        z: 6.0
+        x: 9.9
+        y: 52.4
+        z: 0.0
     orientation:
         x: 0.0
         y: 0.0
-        z: 1.0
-        w: 0.0
+        z: 0.678
+        w: 0.735
 
 opp_facade_approach_1:
     pose:
-        x: 41.6
-        y: 38.2
+        x: 15.5
+        y: 55.3
         z: 6.0
     orientation:
         x: 0.0
         y: 0.0
-        z: 1.0
-        w: 0.0
+        z: -0.739
+        w: 0.674
 
 opp_facade_approach_2:
     pose:
-        x: 41.6
-        y: 38.2
+        x: 38.7
+        y: 53.8
+        z: 6.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: -0.739
+        w: 0.674
+
+opp_facade_approach_3:
+    pose:
+        x: 40.1
+        y: 39.3
         z: 6.0
     orientation:
         x: 0.0
         y: 0.0
         z: 1.0
-        w: 0.0
+        w: 0.03
 
 opp_facade_retreat:
     pose:
-        x: 41.6
-        y: 38.2
+        x: 40.1
+        y: 39.3
         z: 6.0
     orientation:
         x: 0.0
         y: 0.0
         z: 1.0
-        w: 0.0
+        w: 0.03
 
 
 left_facade_approach_1:
     pose:
-        x: 41.6
-        y: 38.2
+        x: 27.4
+        y: 55.5
         z: 6.0
     orientation:
         x: 0.0
         y: 0.0
-        z: 1.0
-        w: 0.0
+        z: -0.741
+        w: 0.672
 
-left_facade_approach_2:
-    pose:
-        x: 41.6
-        y: 38.2
-        z: 6.0
-    orientation:
-        x: 0.0
-        y: 0.0
-        z: 1.0
-        w: 0.0
 
 left_facade_retreat:
     pose:
-        x: 41.6
-        y: 38.2
+        x: 27.4
+        y: 55.5
         z: 6.0
     orientation:
         x: 0.0
         y: 0.0
-        z: 1.0
-        w: 0.0
+        z: -0.741
+        w: 0.672
+
+right_facade_approach_1:
+    pose:
+        x: 13.9
+        y: 30.2
+        z: 6.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.651
+        w: 0.759
+
+right_facade_approach_2:
+    pose:
+        x: 25.7
+        y: 29.2
+        z: 6.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.685
+        w: 0.728
+
+right_facade_retreat:
+    pose:
+        x: 25.7
+        y: 29.2
+        z: 6.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.685
+        w: 0.728
 
 

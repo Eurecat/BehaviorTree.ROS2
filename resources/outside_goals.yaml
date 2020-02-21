@@ -7,8 +7,8 @@ outside_explore_1:
     orientation:
         x: 0
         y: 0
-        z: -0.720
-        w: 0.694
+        z: 0.678
+        w: 0.735
 
 outside_explore_2:
     pose:
@@ -18,8 +18,8 @@ outside_explore_2:
     orientation:
         x: 0
         y: 0
-        z: -0.021
-        w: 1.0
+        z: 0.678
+        w: 0.735
 
 outside_explore_3:
     pose:
@@ -29,8 +29,8 @@ outside_explore_3:
     orientation:
         x: 0
         y: 0
-        z: 0.689
-        w: 0.725
+        z: 0.678
+        w: 0.735
 
 outside_explore_4:
     pose:
@@ -40,8 +40,8 @@ outside_explore_4:
     orientation:
         x: 0
         y: 0
-        z: 0.0
-        w: 1.0
+        z: 0.678
+        w: 0.735
 
 outside_explore_5:
     pose:
@@ -51,8 +51,8 @@ outside_explore_5:
     orientation:
         x: 0
         y: 0
-        z: -0.727
-        w: 0.711
+        z: 0.678
+        w: 0.735
 
 outside_explore_6:
     pose:
@@ -62,8 +62,8 @@ outside_explore_6:
     orientation:
         x: 0
         y: 0
-        z: 0.695
-        w: 0.719
+        z: 0.678
+        w: 0.735
 
 outside_explore_7:
     pose:
@@ -73,8 +73,8 @@ outside_explore_7:
     orientation:
         x: 0
         y: 0
-        z: -0.006
-        w: 0.711
+        z: 0.678
+        w: 0.735
 
 outside_explore_8:
     pose:
@@ -84,8 +84,8 @@ outside_explore_8:
     orientation:
         x: 0
         y: 0
-        z: -0.703
-        w: 0.711
+        z: 0.678
+        w: 0.735
 
 
 

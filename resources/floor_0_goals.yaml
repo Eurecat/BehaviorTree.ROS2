@@ -183,7 +183,7 @@ floor_0_fire_outside_2:
     pose:
         x: 34.7
         y: 36.0
-        z: 1
+        z: 2
     orientation:
         x: 0
         y: 0
