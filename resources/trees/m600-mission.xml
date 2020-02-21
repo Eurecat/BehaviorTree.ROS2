@@ -2,26 +2,15 @@
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
         <Sequence>
-            <Action action="/TakeOff" takeoff_height.data="5.0" ID="UPOTakeOff" state="tos"/>
-            <Action duration="3" ID="WaitSeconds"/>
+            <Action takeoff_height.data="6.0" state="tos" ID="UPOTakeOff" action="/TakeOff"/>
+            <Action ID="WaitSeconds" duration="3"/>
             <ForceSuccess>
-                <SequenceStar>
-                    <Action action="/Make_Plan" goal_name="outside_explore_1" ID="UPOGoToGoalByName" name="GoToEntryPoint" state="g1s"/>
-                    <ForceSuccess>
-                        <SubTree ID="BlanketExploreAndExtinguish"/>
-                    </ForceSuccess>
-                    <Action duration="5" ID="WaitSeconds"/>
-                </SequenceStar>
+                <SubTree ID="FireOutsideMission"/>
             </ForceSuccess>
             <ForceSuccess>
-                <SequenceStar>
-                    <ForceSuccess>
-                        <SubTree fire_found="fire_wp" ID="ExtinguishFacadeFire"/>
-                    </ForceSuccess>
-                    <Action message="${fire_wp}" ID="InfoLog"/>
-                    <Action duration="3" ID="WaitSeconds"/>
-                </SequenceStar>
+                <SubTree ID="LeftFacadeMission"/>
             </ForceSuccess>
+            <Action ID="WaitSeconds" duration="3"/>
             <RetryUntilSuccesful num_attempts="2">
                 <SubTree waypoint="m600_home" ID="GoToAndLand"/>
             </RetryUntilSuccesful>
@@ -32,32 +21,32 @@
         <SequenceStar>
             <Parallel threshold="1">
                 <SubTree ID="OutsideExplorationPath"/>
-                <Action action="/firedetection3D_bottom" fire_found="fd_found" duration="120" z="fd_z" x="fd_x" ID="UPOFireDetection3D" name="DetectFire" state="fd_s" y="fd_y"/>
+                <Action x="fd_x" y="fd_y" fire_found="fd_found" z="fd_z" state="fd_s" ID="UPOFireDetection3D" action="/firedetection3D_bottom" duration="120" name="DetectFire"/>
             </Parallel>
             <Condition input="${fd_found}" ID="CheckBool"/>
             <Action message="${fd_found}" ID="InfoLog"/>
-            <Action first="${fd_z}" operator="+" ID="MathOperationFloat" output="final_z" second="3.0"/>
-            <Action duration="3" ID="WaitSeconds"/>
-            <Action global_goal.pose.orientation.z="0.0" global_goal.pose.position.x="${fd_x}" global_goal.pose.position.y="${fd_y}" action="/Make_Plan" global_goal.pose.orientation.y="0.0" global_goal.header.frame_id="/world" global_goal.pose.position.z="${final_z}" ID="UPOGoToGoal" name="GoToFire" global_goal.header.seq="1" global_goal.pose.orientation.x="0.0" state="gtfs" global_goal.pose.orientation.w="1.0"/>
-            <Action duration="3" ID="WaitSeconds"/>
-            <Action action="/blanket_fire_extinguisher" detect_fire="true" serialized_result="ef_r" serialized_feedback="ef_f" ID="UPOFireExtinguish" name="ExtinguishFire" state="ef_s"/>
+            <Action operator="+" output="final_z" second="3.0" first="${fd_z}" ID="MathOperationFloat"/>
+            <Action ID="WaitSeconds" duration="3"/>
+            <Action global_goal.pose.position.y="${fd_y}" global_goal.pose.orientation.w="1.0" global_goal.pose.orientation.y="0.0" global_goal.pose.orientation.z="0.0" global_goal.pose.position.x="${fd_x}" state="gtfs" global_goal.pose.position.z="${final_z}" ID="UPOGoToGoal" action="/Make_Plan" global_goal.header.frame_id="/world" name="GoToFire" global_goal.header.seq="1" global_goal.pose.orientation.x="0.0"/>
+            <Action ID="WaitSeconds" duration="3"/>
+            <Action detect_fire="true" state="ef_s" serialized_feedback="ef_f" serialized_result="ef_r" ID="UPOFireExtinguish" action="/blanket_fire_extinguisher" name="ExtinguishFire"/>
         </SequenceStar>
     </BehaviorTree>
     <!-- ////////// -->
     <BehaviorTree ID="CheckFireAndExtinguish">
         <Sequence>
-            <Action duration="3" ID="WaitSeconds"/>
-            <Action action="${actgoto}" goal_name="${fire}" ID="UPOGoToGoalByName" name="GoToFire" state="gts"/>
-            <Action action="${actextinguish}" detect_fire="true" serialized_result="fer" serialized_feedback="fef" ID="UPOFireExtinguish" name="ExtinguishFire" state="fes"/>
-            <SetBlackboard output_key="found_fire" value="${fire}"/>
+            <Action ID="WaitSeconds" duration="3"/>
+            <Action goal_name="${fire}" state="gts" ID="UPOGoToGoalByName" action="${actgoto}" name="GoToFire"/>
+            <Action detect_fire="true" state="fes" serialized_feedback="fef" serialized_result="fer" ID="UPOFireExtinguish" action="${actextinguish}" name="ExtinguishFire"/>
+            <SetBlackboard value="${fire}" output_key="found_fire"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
     <BehaviorTree ID="CheckResetRequest">
         <Sequence>
-            <SetBlackboard output_key="reset_requested" value="false"/>
-            <Action consume_msgs="true" queue_size="1" topic="/reset" serialized_output="m_reset" ID="MonitorStdBool"/>
-            <Action input="${m_reset}" ID="ConvertMessageField" field="/data" output="mission_reset"/>
+            <SetBlackboard value="false" output_key="reset_requested"/>
+            <Action topic="/reset" consume_msgs="true" ID="MonitorStdBool" queue_size="1" serialized_output="m_reset"/>
+            <Action output="mission_reset" input="${m_reset}" ID="ConvertMessageField" field="/data"/>
             <Action message="${mission_reset}" ID="InfoLog"/>
             <Condition input="${mission_reset}" ID="CheckBool"/>
         </Sequence>
@@ -65,40 +54,70 @@
     <!-- ////////// -->
     <BehaviorTree ID="ExtinguishFacadeFire">
         <Sequence>
-            <SetBlackboard output_key="fire_found" value="none"/>
+            <SetBlackboard value="none" output_key="fire_found"/>
             <ForceSuccess>
-                <SubTree found_fire="fire_found" fire="floor_1_fire_1" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" ID="CheckFireAndExtinguish"/>
+                <SubTree actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" fire="floor_1_fire_1" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
             </ForceSuccess>
+            <Action goal_name="left_facade_retreat" state="lfrs" ID="UPOGoToGoalByName" action="/Make_Plan" name="GoToRetreat1"/>
             <Fallback>
-                <SubTree found_fire="fire_found" fire="floor_2_fire_1" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" ID="CheckFireAndExtinguish"/>
-                <SubTree found_fire="fire_found" fire="floor_2_fire_2" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" ID="CheckFireAndExtinguish"/>
-                <SubTree found_fire="fire_found" fire="floor_2_fire_3" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" ID="CheckFireAndExtinguish"/>
+                <SubTree actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" fire="floor_2_fire_1" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
+                <Sequence>
+                    <Action goal_name="left_facade_retreat" state="lfr2s" ID="UPOGoToGoalByName" action="/Make_Plan" name="GoToRetreat2"/>
+                    <SubTree actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" fire="floor_2_fire_2" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
+                </Sequence>
+                <Sequence>
+                    <Action goal_name="left_facade_retreat" state="lfr3s" ID="UPOGoToGoalByName" action="/Make_Plan"/>
+                    <SubTree actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" fire="floor_2_fire_3" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
+                </Sequence>
             </Fallback>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
+    <BehaviorTree ID="FireOutsideMission">
+        <SequenceStar>
+            <Action goal_name="outside_explore_1" state="g1s" ID="UPOGoToGoalByName" action="/Make_Plan" name="GoToEntryPoint"/>
+            <ForceSuccess>
+                <SubTree ID="BlanketExploreAndExtinguish"/>
+            </ForceSuccess>
+            <Action ID="WaitSeconds" duration="5"/>
+        </SequenceStar>
+    </BehaviorTree>
+    <!-- ////////// -->
     <BehaviorTree ID="GoToAndLand">
         <SequenceStar>
-            <Action action="/Make_Plan" goal_name="${waypoint}" ID="UPOGoToGoalByName" name="GoToPointForLanding" state="g1s"/>
-            <Action duration="5" ID="WaitSeconds"/>
-            <Action action="/Landing" land="true" ID="UPOLanding" name="Land" state="lds"/>
+            <Action goal_name="${waypoint}" state="g1s" ID="UPOGoToGoalByName" action="/Make_Plan" name="GoToPointForLanding"/>
+            <Action ID="WaitSeconds" duration="5"/>
+            <Action state="lds" land="true" ID="UPOLanding" action="/Landing" name="Land"/>
+        </SequenceStar>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="LeftFacadeMission">
+        <SequenceStar>
+            <Action goal_name="left_facade_approach_1" state="gts" ID="UPOGoToGoalByName" action="/Make_Plan" name="ApproachLeftFacade"/>
+            <Action ID="WaitSeconds" duration="3"/>
+            <ForceSuccess>
+                <SubTree fire_found="fire_wp" ID="ExtinguishFacadeFire"/>
+            </ForceSuccess>
+            <Action message="${fire_wp}" ID="InfoLog"/>
+            <Action ID="WaitSeconds" duration="3"/>
+            <Action goal_name="left_facade_retreat" state="f2rs" ID="UPOGoToGoalByName" action="/Make_Plan" name="RetreatFromLeftFacade"/>
         </SequenceStar>
     </BehaviorTree>
     <!-- ////////// -->
     <BehaviorTree ID="OutsideExplorationPath">
         <Sequence>
-            <Action duration="3" ID="WaitSeconds"/>
-            <Action action="/Make_Plan" goal_name="outside_explore_2" ID="UPOGoToGoalByName" name="GoToGoal2" state="gtg2s"/>
-            <Action duration="3" ID="WaitSeconds"/>
-            <Action action="/Make_Plan" goal_name="outside_explore_3" ID="UPOGoToGoalByName" name="GoToGoal3" state="gtg3s"/>
-            <Action duration="3" ID="WaitSeconds"/>
-            <Action action="/Make_Plan" goal_name="outside_explore_4" ID="UPOGoToGoalByName" name="GoToGoal4" state="gtg4s"/>
-            <Action duration="3" ID="WaitSeconds"/>
-            <Action action="/Make_Plan" goal_name="outside_explore_5" ID="UPOGoToGoalByName" name="GoToGoal5" state="gtg5s"/>
-            <Action duration="3" ID="WaitSeconds"/>
-            <Action action="/Make_Plan" goal_name="outside_explore_6" ID="UPOGoToGoalByName" name="GoToGoal6" state="gtg6s"/>
-            <Action duration="3" ID="WaitSeconds"/>
-            <Action action="/Make_Plan" goal_name="outside_explore_7" ID="UPOGoToGoalByName" name="GoToGoal7" state="gtg7s"/>
+            <Action ID="WaitSeconds" duration="3"/>
+            <Action goal_name="outside_explore_2" state="gtg2s" ID="UPOGoToGoalByName" action="/Make_Plan" name="GoToGoal2"/>
+            <Action ID="WaitSeconds" duration="3"/>
+            <Action goal_name="outside_explore_3" state="gtg3s" ID="UPOGoToGoalByName" action="/Make_Plan" name="GoToGoal3"/>
+            <Action ID="WaitSeconds" duration="3"/>
+            <Action goal_name="outside_explore_4" state="gtg4s" ID="UPOGoToGoalByName" action="/Make_Plan" name="GoToGoal4"/>
+            <Action ID="WaitSeconds" duration="3"/>
+            <Action goal_name="outside_explore_5" state="gtg5s" ID="UPOGoToGoalByName" action="/Make_Plan" name="GoToGoal5"/>
+            <Action ID="WaitSeconds" duration="3"/>
+            <Action goal_name="outside_explore_6" state="gtg6s" ID="UPOGoToGoalByName" action="/Make_Plan" name="GoToGoal6"/>
+            <Action ID="WaitSeconds" duration="3"/>
+            <Action goal_name="outside_explore_7" state="gtg7s" ID="UPOGoToGoalByName" action="/Make_Plan" name="GoToGoal7"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
@@ -196,6 +215,7 @@
             <input_port type="std::string" name="input">String to look into</input_port>
             <input_port type="std::vector&lt;std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, std::allocator&lt;std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> > > >" name="substrings">Substrings to look for</input_port>
         </Action>
+        <SubTree ID="FireOutsideMission"/>
         <Decorator ID="ForEachLoop">
             <input_port type="bool" name="break_on_child_failure">Break loop on child failure?</input_port>
             <input_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="input">Input sequence</input_port>
@@ -249,6 +269,7 @@
             <output_port type="double" name="output_value">Interpolated value.</output_port>
         </Action>
         <Control ID="Interruptible"/>
+        <SubTree ID="LeftFacadeMission"/>
         <Action ID="LookupTransform">
             <output_port type="tf::StampedTransform" name="output">Result transform</output_port>
             <input_port type="std::string" name="source_frame">Origin TF frame</input_port>
