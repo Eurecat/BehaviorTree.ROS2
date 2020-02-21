@@ -1,58 +1,73 @@
 <root main_tree_to_execute="BehaviorTree">
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
-        <Sequence>
+        <SequenceStar>
             <Fallback>
-                <SubTree window="floor_0_door_1" action="/siar/Make_Plan" ID="CheckWindowandEnter" out_win="window_out"/>
-                <SubTree window="floor_0_door_2" action="/siar/Make_Plan" ID="CheckWindowandEnter" out_win="window_out"/>
+                <SubTree detection_action="/window_detector" out_door="door_out" action="siar/Make_Plan" door="floor_0_door_1" ID="CheckDoorandEnter"/>
+                <SubTree detection_action="/window_detector" out_door="door_out" action="siar/Make_Plan" door="floor_0_door_2" ID="CheckDoorandEnter"/>
             </Fallback>
-            <Action message="${window_out}" ID="InfoLog"/>
+            <Action message="${door_out}" ID="InfoLog"/>
             <ForceSuccess>
-                <SubTree ID="Floor0ExploreAndExtinguish"/>
+                <SubTree ID="Floor0SurveyAndExtinguish"/>
             </ForceSuccess>
             <RetryUntilSuccesful num_attempts="2">
-                <SubTree window="${window_out}" ID="ExitBuilding" robot_action="/siar/Make_Plan"/>
+                <SubTree robot_action="/siar/Make_Plan" window="${door_out}" ID="ExitBuilding"/>
             </RetryUntilSuccesful>
-            <Action state="gth_s" action="/siar/Make_Plan" goal_name="siar_home" ID="UPOGoToGoalByName" name="GoToHome"/>
+            <Action state="gth_s" action="/siar/Make_Plan" ID="UPOGoToGoalByName" goal_name="siar_home" name="GoToHome"/>
+        </SequenceStar>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="CheckDoorandEnter">
+        <Sequence>
+            <Action state="dummy" action="${action}" ID="UPOGoToGoalByName" goal_name="${door}" name="GoToWindow"/>
+            <Action first="${door}" ID="ConcatenateStrings" name="GetGoalInside" second="_in" output="goal_in"/>
+            <Action state="dummy" action="${action}" ID="UPOGoToGoalByName" goal_name="${goal_in}" name="EnterThroughDoor"/>
+            <SetBlackboard output_key="out_door" value="${door}" name="WriteToMemory"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
-    <BehaviorTree ID="CheckWindowandEnter">
+    <BehaviorTree ID="CheckFireAndExtinguish">
         <Sequence>
-            <Action state="dummy" action="${action}" goal_name="${window}" ID="UPOGoToGoalByName"/>
-            <Action output="goal_in" second="_in" ID="ConcatenateStrings" first="${window}"/>
-            <Action state="dummy" action="${action}" goal_name="${goal_in}" ID="UPOGoToGoalByName"/>
-            <SetBlackboard value="${window}" output_key="out_win"/>
+            <Action state="gts" action="${actgoto}" ID="UPOGoToGoalByName" goal_name="${fire}"/>
+            <Action state="fes" action="${actextinguish}" serialized_result="fer" ID="UPOFireExtinguish" serialized_feedback="fef" detect_fire="true"/>
+            <SetBlackboard output_key="found_fire" value="${fire}"/>
+        </Sequence>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="CheckResetRequest">
+        <Sequence>
+            <SetBlackboard output_key="reset_requested" value="false"/>
+            <Action queue_size="1" serialized_output="m_reset" topic="/reset" ID="MonitorStdBool" consume_msgs="true"/>
+            <Action input="${m_reset}" field="/data" ID="ConvertMessageField" output="mission_reset"/>
+            <Action message="${mission_reset}" ID="InfoLog"/>
+            <Condition input="${mission_reset}" ID="CheckBool"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
     <BehaviorTree ID="ExitBuilding">
         <SequenceStar>
-            <Action output="goal_to_exit" second="_in_to_out" ID="ConcatenateStrings" name="PrepareToExit" first="${window}"/>
-            <Action state="gtwo_result" action="${robot_action}" goal_name="${goal_to_exit}" ID="UPOGoToGoalByName" name="GoToWindowOut"/>
-            <Action output="goal_outside" second="_out" ID="ConcatenateStrings" first="${window}"/>
-            <Action state="gte_result" action="${robot_action}" goal_name="${goal_outside}" ID="UPOGoToGoalByName" name="GoToExit"/>
+            <Action first="${window}" ID="ConcatenateStrings" name="PrepareToExit" second="_in_to_out" output="goal_to_exit"/>
+            <Action state="gtwo_result" action="${robot_action}" ID="UPOGoToGoalByName" goal_name="${goal_to_exit}" name="GoToWindowOut"/>
+            <Action first="${window}" ID="ConcatenateStrings" second="_out" output="goal_outside"/>
+            <Action state="gte_result" action="${robot_action}" ID="UPOGoToGoalByName" goal_name="${goal_outside}" name="GoToExit"/>
         </SequenceStar>
     </BehaviorTree>
     <!-- ////////// -->
-    <BehaviorTree ID="Floor0ExplorationPath">
-        <Sequence>
-            <Action state="gtg1s" action="/siar/Make_Plan" goal_name="floor_0_explore_1" ID="UPOGoToGoalByName" name="GoToGoal1"/>
-            <Action state="gtg2s" action="/siar/Make_Plan" goal_name="floor_0_explore_2" ID="UPOGoToGoalByName" name="GoToGoal2"/>
-        </Sequence>
-    </BehaviorTree>
-    <!-- ////////// -->
-    <BehaviorTree ID="Floor0ExploreAndExtinguish">
-        <Sequence>
-            <Parallel threshold="1">
-                <SubTree ID="Floor0ExplorationPath"/>
-                <Action x="fd_x" z="fd_z" fire_found="fd_found" y="fd_y" state="fd_s" action="/siar/firedetection3D" ID="UPOFireDetection3D" duration="15" name="DetectFire"/>
-            </Parallel>
-            <Condition input="${fd_found}" ID="CheckBool"/>
-            <Action message="${fd_found}" ID="InfoLog"/>
-            <Action global_goal.header.frame_id="/world" global_goal.header.seq="1" global_goal.pose.orientation.y="0.0" global_goal.pose.orientation.x="0.0" global_goal.pose.position.y="${fd_y}" global_goal.pose.orientation.z="0.0" global_goal.pose.position.z="${fd_z}" state="gtfs" action="/siar/Make_Plan" ID="UPOGoToGoal" global_goal.pose.position.x="${fd_x}" name="GoToFire" global_goal.pose.orientation.w="1.0"/>
-            <Action state="ef_s" action="/siar/fire_extinguisher" serialized_result="ef_r" ID="UPOFireExtinguish" serialized_feedback="ef_f" name="ExtinguishFire" detect_fire="true"/>
-        </Sequence>
+    <BehaviorTree ID="Floor0SurveyAndExtinguish">
+        <SequenceStar>
+            <SetBlackboard output_key="fire_found" value="none"/>
+            <Fallback>
+                <SubTree fire="floor_0_fire_1" actgoto="/siar/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/siar/siar_fire_extinguisher"/>
+                <SubTree fire="floor_0_fire_2" actgoto="/siar/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/siar/siar_fire_extinguisher"/>
+                <SubTree fire="floor_0_fire_3" actgoto="/siar/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/siar/siar_fire_extinguisher"/>
+                <SubTree fire="floor_0_fire_4" actgoto="/siar/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/siar/siar_fire_extinguisher"/>
+                <SubTree fire="floor_0_fire_5" actgoto="/siar/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/siar/siar_fire_extinguisher"/>
+                <SubTree fire="floor_0_fire_6" actgoto="/siar/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/siar/siar_fire_extinguisher"/>
+                <SubTree fire="floor_0_fire_7" actgoto="/siar/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/siar/siar_fire_extinguisher"/>
+                <SubTree fire="floor_0_fire_8" actgoto="/siar/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/siar/siar_fire_extinguisher"/>
+            </Fallback>
+            <Action message="${fire_found}" ID="InfoLog"/>
+        </SequenceStar>
     </BehaviorTree>
     <!-- ////////// -->
     <TreeNodesModel>
@@ -62,14 +77,24 @@
         <Condition ID="CheckBool">
             <input_port type="bool" name="input">Input boolean value</input_port>
         </Condition>
+        <SubTree ID="CheckDoorandEnter">
+            <input_port name="action"/>
+            <input_port name="detection_action"/>
+            <input_port name="door"/>
+            <output_port name="out_door"/>
+        </SubTree>
+        <SubTree ID="CheckFireAndExtinguish">
+            <input_port name="actextinguish">Extinguish Action Name</input_port>
+            <input_port name="actgoto">GoTo Action Name</input_port>
+            <input_port name="fire">Fire waypoint</input_port>
+            <output_port name="found_fire">Name of the Fire WP if found</output_port>
+        </SubTree>
         <Action ID="CheckKey">
             <input_port type="std::string" name="no_key">Key to determine if key to say 'no' has benn pressed</input_port>
             <input_port type="std::string" name="yes_key">Key to determine if key to say 'yes' has been pressed</input_port>
         </Action>
-        <SubTree ID="CheckWindowandEnter">
-            <input_port name="action"/>
-            <output_port name="out_win"/>
-            <input_port name="window"/>
+        <SubTree ID="CheckResetRequest">
+            <output_port name="reset_requested"/>
         </SubTree>
         <Condition ID="CompareNumbers">
             <input_port type="std::string" name="comparison_op">Comparison operator. Valid operators are &lt;, >, &lt;=, >=, == and !=</input_port>
@@ -113,10 +138,10 @@
             <output_port type="void" name="output">Output variable</output_port>
         </Action>
         <Decorator ID="CooldownMilliseconds">
-            <input_port default="0" type="unsigned int" name="cooldown">Cooldown time</input_port>
+            <input_port type="unsigned int" default="0" name="cooldown">Cooldown time</input_port>
         </Decorator>
         <Decorator ID="CooldownSeconds">
-            <input_port default="0" type="unsigned int" name="cooldown">Cooldown time</input_port>
+            <input_port type="unsigned int" default="0" name="cooldown">Cooldown time</input_port>
         </Decorator>
         <Action ID="CopyJson">
             <input_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="input">Input variable</input_port>
@@ -132,6 +157,9 @@
             <input_port name="robot_action">Action Service Interface</input_port>
             <input_port name="window">Window to Exit</input_port>
         </SubTree>
+        <SubTree ID="ExtinguishFacadeFire">
+            <output_port name="fire_found">WP where fire is found, none otherwise</output_port>
+        </SubTree>
         <Action ID="FatalLog">
             <input_port type="std::string" name="message">Message to log</input_port>
         </Action>
@@ -145,8 +173,7 @@
             <input_port type="std::string" name="input">String to look into</input_port>
             <input_port type="std::vector&lt;std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, std::allocator&lt;std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> > > >" name="substrings">Substrings to look for</input_port>
         </Action>
-        <SubTree ID="Floor0ExplorationPath"/>
-        <SubTree ID="Floor0ExploreAndExtinguish"/>
+        <SubTree ID="Floor0SurveyAndExtinguish"/>
         <Decorator ID="ForEachLoop">
             <input_port type="bool" name="break_on_child_failure">Break loop on child failure?</input_port>
             <input_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="input">Input sequence</input_port>
@@ -201,7 +228,7 @@
             <output_port type="tf::StampedTransform" name="output">Result transform</output_port>
             <input_port type="std::string" name="source_frame">Origin TF frame</input_port>
             <input_port type="std::string" name="target_frame">Target TF frame</input_port>
-            <input_port default="0" type="bool" name="use_last_available">Use last available transform?</input_port>
+            <input_port type="bool" default="0" name="use_last_available">Use last available transform?</input_port>
         </Action>
         <Decorator ID="Loop"/>
         <Action ID="MathOperationFloat">
@@ -217,20 +244,20 @@
             <input_port type="int" name="second">Second operand</input_port>
         </Action>
         <Action ID="MonitorStdBool">
-            <input_port default="0" type="bool" name="consume_msgs">Should messages be consumed?</input_port>
-            <input_port default="1" type="unsigned int" name="queue_size">Subscriber callback queue size</input_port>
+            <input_port type="bool" default="0" name="consume_msgs">Should messages be consumed?</input_port>
+            <input_port type="unsigned int" default="1" name="queue_size">Subscriber callback queue size</input_port>
             <output_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="serialized_output">Serialized ROS message [std_msgs::Bool_&lt;std::allocator&lt;void> >]</output_port>
             <input_port type="std::string" name="topic">Topic to subscribe</input_port>
         </Action>
         <Action ID="MonitorStdFloat64">
-            <input_port default="0" type="bool" name="consume_msgs">Should messages be consumed?</input_port>
-            <input_port default="1" type="unsigned int" name="queue_size">Subscriber callback queue size</input_port>
+            <input_port type="bool" default="0" name="consume_msgs">Should messages be consumed?</input_port>
+            <input_port type="unsigned int" default="1" name="queue_size">Subscriber callback queue size</input_port>
             <output_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="serialized_output">Serialized ROS message [std_msgs::Float64_&lt;std::allocator&lt;void> >]</output_port>
             <input_port type="std::string" name="topic">Topic to subscribe</input_port>
         </Action>
         <Action ID="MonitorStdInt32">
-            <input_port default="0" type="bool" name="consume_msgs">Should messages be consumed?</input_port>
-            <input_port default="1" type="unsigned int" name="queue_size">Subscriber callback queue size</input_port>
+            <input_port type="bool" default="0" name="consume_msgs">Should messages be consumed?</input_port>
+            <input_port type="unsigned int" default="1" name="queue_size">Subscriber callback queue size</input_port>
             <output_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="serialized_output">Serialized ROS message [std_msgs::Int32_&lt;std::allocator&lt;void> >]</output_port>
             <input_port type="std::string" name="topic">Topic to subscribe</input_port>
         </Action>
@@ -240,8 +267,8 @@
         <Decorator ID="OnlyOnce"/>
         <Action ID="PublishStdString">
             <input_port type="std::string" name="data">Auto-generated field from std_msgs::String_&lt;std::allocator&lt;void> ></input_port>
-            <input_port default="0" type="bool" name="latch">Latch messages?</input_port>
-            <input_port default="1" type="unsigned int" name="queue_size">Internal publisher queue size</input_port>
+            <input_port type="bool" default="0" name="latch">Latch messages?</input_port>
+            <input_port type="unsigned int" default="1" name="queue_size">Internal publisher queue size</input_port>
             <input_port type="std::string" name="topic">Topic to publish to</input_port>
         </Action>
         <Action ID="RandomFloat">
@@ -255,14 +282,14 @@
             <output_port type="int" name="result">Random result value</output_port>
         </Action>
         <Action ID="RandomSequenceValue">
-            <input_port default=";" type="std::string" name="delimiter">Sequence entries delimiter</input_port>
+            <input_port type="std::string" default=";" name="delimiter">Sequence entries delimiter</input_port>
             <output_port type="std::string" name="output">Result random sequence entry</output_port>
             <input_port type="std::string" name="sequence">Sequence to randomize</input_port>
         </Action>
         <Action ID="SubscribeUPOGoal">
-            <input_port default="0" type="bool" name="consume_msgs">Should messages be consumed?</input_port>
+            <input_port type="bool" default="0" name="consume_msgs">Should messages be consumed?</input_port>
             <output_port type="upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> >" name="output">Received ROS message [upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> >]</output_port>
-            <input_port default="1" type="unsigned int" name="queue_size">Subscriber callback queue size</input_port>
+            <input_port type="unsigned int" default="1" name="queue_size">Subscriber callback queue size</input_port>
             <input_port type="std::string" name="topic">Topic to subscribe</input_port>
         </Action>
         <Action ID="UPOFireDetection3D">
@@ -299,11 +326,30 @@
             <input_port type="std::string" name="goal_name">Name of goal</input_port>
             <output_port type="actionlib::SimpleClientGoalState" name="state">Actionlib reported state</output_port>
         </Action>
+        <Action ID="UPOLanding">
+            <input_port type="std::string" name="action">Actionlib action server name</input_port>
+            <input_port type="bool" name="land">Auto-generated field from upo_actions::LandingGoal_&lt;std::allocator&lt;void> ></input_port>
+            <output_port type="actionlib::SimpleClientGoalState" name="state">Actionlib reported state</output_port>
+        </Action>
+        <Action ID="UPOTakeOff">
+            <input_port type="std::string" name="action">Actionlib action server name</input_port>
+            <output_port type="actionlib::SimpleClientGoalState" name="state">Actionlib reported state</output_port>
+            <input_port type="float" name="takeoff_height.data">Auto-generated field from upo_actions::TakeOffGoal_&lt;std::allocator&lt;void> ></input_port>
+        </Action>
+        <Action ID="UPOWindowDetection">
+            <input_port type="std::string" name="action">Actionlib action server name</input_port>
+            <input_port type="int" name="duration">Duration</input_port>
+            <output_port type="actionlib::SimpleClientGoalState" name="state">Actionlib reported state</output_port>
+            <output_port type="bool" name="window_present">Window Present</output_port>
+            <output_port type="double" name="x">Window x</output_port>
+            <output_port type="double" name="y">Window y</output_port>
+            <output_port type="double" name="z">Window z</output_port>
+        </Action>
         <Action ID="WaitMilliseconds">
-            <input_port default="0" type="unsigned int" name="duration">Time to wait</input_port>
+            <input_port type="unsigned int" default="0" name="duration">Time to wait</input_port>
         </Action>
         <Action ID="WaitSeconds">
-            <input_port default="0" type="unsigned int" name="duration">Time to wait</input_port>
+            <input_port type="unsigned int" default="0" name="duration">Time to wait</input_port>
         </Action>
         <Action ID="WarnLog">
             <input_port type="std::string" name="message">Message to log</input_port>

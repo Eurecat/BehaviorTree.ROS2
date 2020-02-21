@@ -20,7 +20,6 @@ m210_floor_1_home:
         z: 0.0
         w: 1.0
 
-
 m210_floor_2_home:
     pose:
         x: 100.0
@@ -31,6 +30,18 @@ m210_floor_2_home:
         y: 0.0
         z: 0.0
         w: 1.0
+
+
+m210_home:
+    pose:
+        x: 41.6
+        y: 38.2
+        z: 6.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
 
 m600_home:
     pose:
@@ -43,7 +54,71 @@ m600_home:
         z: 1.0
         w: 0.0
 
+opp_facade_approach_1:
+    pose:
+        x: 41.6
+        y: 38.2
+        z: 6.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+opp_facade_approach_2:
+    pose:
+        x: 41.6
+        y: 38.2
+        z: 6.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+opp_facade_retreat:
+    pose:
+        x: 41.6
+        y: 38.2
+        z: 6.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
 
 
+left_facade_approach_1:
+    pose:
+        x: 41.6
+        y: 38.2
+        z: 6.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+left_facade_approach_2:
+    pose:
+        x: 41.6
+        y: 38.2
+        z: 6.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+left_facade_retreat:
+    pose:
+        x: 41.6
+        y: 38.2
+        z: 6.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
 
 

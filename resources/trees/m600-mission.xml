@@ -2,64 +2,112 @@
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
         <Sequence>
-            <Action state="toffs" takeoff_height.data="5.0" ID="UPOTakeOff" action="/TakeOff" name="TakeOff"/>
-            <Action ID="WaitSeconds" duration="3"/>
+            <Action action="/TakeOff" takeoff_height.data="5.0" ID="UPOTakeOff" state="tos"/>
+            <Action duration="3" ID="WaitSeconds"/>
             <ForceSuccess>
                 <SequenceStar>
-                    <Action state="gts" ID="UPOGoToGoalByName" goal_name="opp_facade_approach_1" action="/Make_Plan" name="ApproachOppositeFacade"/>
-                    <Action ID="WaitSeconds" duration="3"/>
-                    <Action state="gt2s" ID="UPOGoToGoalByName" goal_name="opp_facade_approach_2" action="/Make_Plan"/>
+                    <Action action="/Make_Plan" goal_name="outside_explore_1" ID="UPOGoToGoalByName" name="GoToEntryPoint" state="g1s"/>
                     <ForceSuccess>
-                        <SubTree ID="ExtinguishFacadeFire" fire_found="fire_wp"/>
+                        <SubTree ID="BlanketExploreAndExtinguish"/>
                     </ForceSuccess>
-                    <Action ID="InfoLog" message="${fire_wp}"/>
-                    <Action ID="WaitSeconds" duration="3"/>
-                    <Action state="f2rs" ID="UPOGoToGoalByName" goal_name="opp_facade_retreat" action="/Make_Plan" name="RetreatFromOppositeFacade"/>
+                    <Action duration="5" ID="WaitSeconds"/>
+                </SequenceStar>
+            </ForceSuccess>
+            <ForceSuccess>
+                <SequenceStar>
+                    <Action action="/Make_Plan" goal_name="left_facade_approach_1" ID="UPOGoToGoalByName" name="ApproachLeftFacade" state="gts"/>
+                    <Action duration="3" ID="WaitSeconds"/>
+                    <Action action="/Make_Plan" goal_name="left_facade_approach_2" ID="UPOGoToGoalByName" state="gt2s"/>
+                    <ForceSuccess>
+                        <SubTree fire_found="fire_wp" ID="ExtinguishFacadeFire"/>
+                    </ForceSuccess>
+                    <Action message="${fire_wp}" ID="InfoLog"/>
+                    <Action duration="3" ID="WaitSeconds"/>
+                    <Action action="/Make_Plan" goal_name="left_facade_retreat" ID="UPOGoToGoalByName" name="RetreatFromLeftFacade" state="f2rs"/>
                 </SequenceStar>
             </ForceSuccess>
             <RetryUntilSuccesful num_attempts="2">
-                <SequenceStar>
-                    <Action state="gths" ID="UPOGoToGoalByName" goal_name="m210_home" action="/Make_Plan" name="GoToHome"/>
-                    <Action state="ls" land="true" ID="UPOLanding" action="/Landing"/>
-                </SequenceStar>
+                <SubTree waypoint="m600_home" ID="GoToAndLand"/>
             </RetryUntilSuccesful>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
+    <BehaviorTree ID="BlanketExploreAndExtinguish">
+        <SequenceStar>
+            <Parallel threshold="1">
+                <SubTree ID="OutsideExplorationPath"/>
+                <Action action="/firedetection3D_bottom" fire_found="fd_found" duration="120" z="fd_z" x="fd_x" ID="UPOFireDetection3D" name="DetectFire" state="fd_s" y="fd_y"/>
+            </Parallel>
+            <Condition input="${fd_found}" ID="CheckBool"/>
+            <Action message="${fd_found}" ID="InfoLog"/>
+            <Action first="${fd_z}" operator="+" ID="MathOperationFloat" output="final_z" second="3.0"/>
+            <Action duration="3" ID="WaitSeconds"/>
+            <Action global_goal.pose.orientation.z="0.0" global_goal.pose.position.x="${fd_x}" global_goal.pose.position.y="${fd_y}" action="/Make_Plan" global_goal.pose.orientation.y="0.0" global_goal.header.frame_id="/world" global_goal.pose.position.z="${final_z}" ID="UPOGoToGoal" name="GoToFire" global_goal.header.seq="1" global_goal.pose.orientation.x="0.0" state="gtfs" global_goal.pose.orientation.w="1.0"/>
+            <Action duration="3" ID="WaitSeconds"/>
+            <Action action="/blanket_fire_extinguisher" detect_fire="true" serialized_result="ef_r" serialized_feedback="ef_f" ID="UPOFireExtinguish" name="ExtinguishFire" state="ef_s"/>
+        </SequenceStar>
+    </BehaviorTree>
+    <!-- ////////// -->
     <BehaviorTree ID="CheckFireAndExtinguish">
         <Sequence>
-            <Action ID="WaitSeconds" duration="3"/>
-            <Action state="gts" ID="UPOGoToGoalByName" goal_name="${fire}" action="${actgoto}" name="GoToFire"/>
-            <Action state="fes" ID="UPOFireExtinguish" detect_fire="true" serialized_feedback="fef" serialized_result="fer" action="${actextinguish}" name="ExtinguishFire"/>
-            <SetBlackboard value="${fire}" output_key="found_fire"/>
+            <Action duration="3" ID="WaitSeconds"/>
+            <Action action="${actgoto}" goal_name="${fire}" ID="UPOGoToGoalByName" name="GoToFire" state="gts"/>
+            <Action action="${actextinguish}" detect_fire="true" serialized_result="fer" serialized_feedback="fef" ID="UPOFireExtinguish" name="ExtinguishFire" state="fes"/>
+            <SetBlackboard output_key="found_fire" value="${fire}"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
     <BehaviorTree ID="CheckResetRequest">
         <Sequence>
-            <SetBlackboard value="false" output_key="reset_requested"/>
-            <Action ID="MonitorStdBool" consume_msgs="true" serialized_output="m_reset" queue_size="1" topic="/reset"/>
-            <Action input="${m_reset}" field="/data" ID="ConvertMessageField" output="mission_reset"/>
-            <Action ID="InfoLog" message="${mission_reset}"/>
+            <SetBlackboard output_key="reset_requested" value="false"/>
+            <Action consume_msgs="true" queue_size="1" topic="/reset" serialized_output="m_reset" ID="MonitorStdBool"/>
+            <Action input="${m_reset}" ID="ConvertMessageField" field="/data" output="mission_reset"/>
+            <Action message="${mission_reset}" ID="InfoLog"/>
             <Condition input="${mission_reset}" ID="CheckBool"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
     <BehaviorTree ID="ExtinguishFacadeFire">
         <Sequence>
-            <SetBlackboard value="none" output_key="fire_found"/>
+            <SetBlackboard output_key="fire_found" value="none"/>
             <ForceSuccess>
-                <SubTree ID="CheckFireAndExtinguish" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" found_fire="fire_found" fire="floor_1_fire_2"/>
+                <SubTree found_fire="fire_found" fire="floor_1_fire_1" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" ID="CheckFireAndExtinguish"/>
             </ForceSuccess>
             <Fallback>
-                <SubTree ID="CheckFireAndExtinguish" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" found_fire="fire_found" fire="floor_2_fire_4"/>
-                <SubTree ID="CheckFireAndExtinguish" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" found_fire="fire_found" fire="floor_2_fire_5"/>
-                <SubTree ID="CheckFireAndExtinguish" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" found_fire="fire_found" fire="floor_2_fire_6"/>
+                <SubTree found_fire="fire_found" fire="floor_2_fire_1" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" ID="CheckFireAndExtinguish"/>
+                <SubTree found_fire="fire_found" fire="floor_2_fire_2" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" ID="CheckFireAndExtinguish"/>
+                <SubTree found_fire="fire_found" fire="floor_2_fire_3" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" ID="CheckFireAndExtinguish"/>
             </Fallback>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
+    <BehaviorTree ID="GoToAndLand">
+        <SequenceStar>
+            <Action action="/Make_Plan" goal_name="${waypoint}" ID="UPOGoToGoalByName" name="GoToPointForLanding" state="g1s"/>
+            <Action duration="5" ID="WaitSeconds"/>
+            <Action action="/Landing" land="true" ID="UPOLanding" name="Land" state="lds"/>
+        </SequenceStar>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <BehaviorTree ID="OutsideExplorationPath">
+        <Sequence>
+            <Action duration="3" ID="WaitSeconds"/>
+            <Action action="/Make_Plan" goal_name="outside_explore_2" ID="UPOGoToGoalByName" name="GoToGoal2" state="gtg2s"/>
+            <Action duration="3" ID="WaitSeconds"/>
+            <Action action="/Make_Plan" goal_name="outside_explore_3" ID="UPOGoToGoalByName" name="GoToGoal3" state="gtg3s"/>
+            <Action duration="3" ID="WaitSeconds"/>
+            <Action action="/Make_Plan" goal_name="outside_explore_4" ID="UPOGoToGoalByName" name="GoToGoal4" state="gtg4s"/>
+            <Action duration="3" ID="WaitSeconds"/>
+            <Action action="/Make_Plan" goal_name="outside_explore_5" ID="UPOGoToGoalByName" name="GoToGoal5" state="gtg5s"/>
+            <Action duration="3" ID="WaitSeconds"/>
+            <Action action="/Make_Plan" goal_name="outside_explore_6" ID="UPOGoToGoalByName" name="GoToGoal6" state="gtg6s"/>
+            <Action duration="3" ID="WaitSeconds"/>
+            <Action action="/Make_Plan" goal_name="outside_explore_7" ID="UPOGoToGoalByName" name="GoToGoal7" state="gtg7s"/>
+        </Sequence>
+    </BehaviorTree>
+    <!-- ////////// -->
     <TreeNodesModel>
+        <SubTree ID="BlanketExploreAndExtinguish"/>
         <Action ID="CallEmptyService">
             <input_port type="std::string" name="service">ROS service name</input_port>
         </Action>
@@ -121,10 +169,10 @@
             <output_port type="void" name="output">Output variable</output_port>
         </Action>
         <Decorator ID="CooldownMilliseconds">
-            <input_port default="0" type="unsigned int" name="cooldown">Cooldown time</input_port>
+            <input_port type="unsigned int" default="0" name="cooldown">Cooldown time</input_port>
         </Decorator>
         <Decorator ID="CooldownSeconds">
-            <input_port default="0" type="unsigned int" name="cooldown">Cooldown time</input_port>
+            <input_port type="unsigned int" default="0" name="cooldown">Cooldown time</input_port>
         </Decorator>
         <Action ID="CopyJson">
             <input_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="input">Input variable</input_port>
@@ -189,6 +237,9 @@
             <output_port type="double" name="y">Origin y coordinate</output_port>
             <output_port type="double" name="z">Origin z coordinate</output_port>
         </Action>
+        <SubTree ID="GoToAndLand">
+            <input_port name="waypoint">Point to land</input_port>
+        </SubTree>
         <Action ID="InfoLog">
             <input_port type="std::string" name="message">Message to log</input_port>
         </Action>
@@ -206,7 +257,7 @@
             <output_port type="tf::StampedTransform" name="output">Result transform</output_port>
             <input_port type="std::string" name="source_frame">Origin TF frame</input_port>
             <input_port type="std::string" name="target_frame">Target TF frame</input_port>
-            <input_port default="0" type="bool" name="use_last_available">Use last available transform?</input_port>
+            <input_port type="bool" default="0" name="use_last_available">Use last available transform?</input_port>
         </Action>
         <Decorator ID="Loop"/>
         <Action ID="MathOperationFloat">
@@ -222,20 +273,20 @@
             <input_port type="int" name="second">Second operand</input_port>
         </Action>
         <Action ID="MonitorStdBool">
-            <input_port default="0" type="bool" name="consume_msgs">Should messages be consumed?</input_port>
-            <input_port default="1" type="unsigned int" name="queue_size">Subscriber callback queue size</input_port>
+            <input_port type="bool" default="0" name="consume_msgs">Should messages be consumed?</input_port>
+            <input_port type="unsigned int" default="1" name="queue_size">Subscriber callback queue size</input_port>
             <output_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="serialized_output">Serialized ROS message [std_msgs::Bool_&lt;std::allocator&lt;void> >]</output_port>
             <input_port type="std::string" name="topic">Topic to subscribe</input_port>
         </Action>
         <Action ID="MonitorStdFloat64">
-            <input_port default="0" type="bool" name="consume_msgs">Should messages be consumed?</input_port>
-            <input_port default="1" type="unsigned int" name="queue_size">Subscriber callback queue size</input_port>
+            <input_port type="bool" default="0" name="consume_msgs">Should messages be consumed?</input_port>
+            <input_port type="unsigned int" default="1" name="queue_size">Subscriber callback queue size</input_port>
             <output_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="serialized_output">Serialized ROS message [std_msgs::Float64_&lt;std::allocator&lt;void> >]</output_port>
             <input_port type="std::string" name="topic">Topic to subscribe</input_port>
         </Action>
         <Action ID="MonitorStdInt32">
-            <input_port default="0" type="bool" name="consume_msgs">Should messages be consumed?</input_port>
-            <input_port default="1" type="unsigned int" name="queue_size">Subscriber callback queue size</input_port>
+            <input_port type="bool" default="0" name="consume_msgs">Should messages be consumed?</input_port>
+            <input_port type="unsigned int" default="1" name="queue_size">Subscriber callback queue size</input_port>
             <output_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="serialized_output">Serialized ROS message [std_msgs::Int32_&lt;std::allocator&lt;void> >]</output_port>
             <input_port type="std::string" name="topic">Topic to subscribe</input_port>
         </Action>
@@ -243,10 +294,11 @@
             <input_port type="std::string" name="message">String to print</input_port>
         </Action>
         <Decorator ID="OnlyOnce"/>
+        <SubTree ID="OutsideExplorationPath"/>
         <Action ID="PublishStdString">
             <input_port type="std::string" name="data">Auto-generated field from std_msgs::String_&lt;std::allocator&lt;void> ></input_port>
-            <input_port default="0" type="bool" name="latch">Latch messages?</input_port>
-            <input_port default="1" type="unsigned int" name="queue_size">Internal publisher queue size</input_port>
+            <input_port type="bool" default="0" name="latch">Latch messages?</input_port>
+            <input_port type="unsigned int" default="1" name="queue_size">Internal publisher queue size</input_port>
             <input_port type="std::string" name="topic">Topic to publish to</input_port>
         </Action>
         <Action ID="RandomFloat">
@@ -260,14 +312,14 @@
             <output_port type="int" name="result">Random result value</output_port>
         </Action>
         <Action ID="RandomSequenceValue">
-            <input_port default=";" type="std::string" name="delimiter">Sequence entries delimiter</input_port>
+            <input_port type="std::string" default=";" name="delimiter">Sequence entries delimiter</input_port>
             <output_port type="std::string" name="output">Result random sequence entry</output_port>
             <input_port type="std::string" name="sequence">Sequence to randomize</input_port>
         </Action>
         <Action ID="SubscribeUPOGoal">
-            <input_port default="0" type="bool" name="consume_msgs">Should messages be consumed?</input_port>
+            <input_port type="bool" default="0" name="consume_msgs">Should messages be consumed?</input_port>
             <output_port type="upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> >" name="output">Received ROS message [upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> >]</output_port>
-            <input_port default="1" type="unsigned int" name="queue_size">Subscriber callback queue size</input_port>
+            <input_port type="unsigned int" default="1" name="queue_size">Subscriber callback queue size</input_port>
             <input_port type="std::string" name="topic">Topic to subscribe</input_port>
         </Action>
         <Action ID="UPOFireDetection3D">
@@ -324,10 +376,10 @@
             <output_port type="double" name="z">Window z</output_port>
         </Action>
         <Action ID="WaitMilliseconds">
-            <input_port default="0" type="unsigned int" name="duration">Time to wait</input_port>
+            <input_port type="unsigned int" default="0" name="duration">Time to wait</input_port>
         </Action>
         <Action ID="WaitSeconds">
-            <input_port default="0" type="unsigned int" name="duration">Time to wait</input_port>
+            <input_port type="unsigned int" default="0" name="duration">Time to wait</input_port>
         </Action>
         <Action ID="WarnLog">
             <input_port type="std::string" name="message">Message to log</input_port>
