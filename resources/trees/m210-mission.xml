@@ -6,15 +6,12 @@
             <Action ID="WaitSeconds" duration="3"/>
             <ForceSuccess>
                 <SequenceStar>
-                    <Action state="gts" ID="UPOGoToGoalByName" goal_name="opp_facade_approach_1" action="/Make_Plan" name="ApproachOppositeFacade"/>
-                    <Action ID="WaitSeconds" duration="3"/>
-                    <Action state="gt2s" ID="UPOGoToGoalByName" goal_name="opp_facade_approach_2" action="/Make_Plan"/>
                     <ForceSuccess>
                         <SubTree ID="ExtinguishFacadeFire" fire_found="fire_wp"/>
                     </ForceSuccess>
                     <Action ID="InfoLog" message="${fire_wp}"/>
                     <Action ID="WaitSeconds" duration="3"/>
-                    <Action state="f2rs" ID="UPOGoToGoalByName" goal_name="opp_facade_retreat" action="/Make_Plan" name="RetreatFromOppositeFacade"/>
+                    
                 </SequenceStar>
             </ForceSuccess>
             <RetryUntilSuccesful num_attempts="2">
