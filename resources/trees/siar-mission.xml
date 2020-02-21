@@ -2,10 +2,7 @@
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
         <SequenceStar>
-            <Fallback>
-                <SubTree detection_action="/window_detector" out_door="door_out" action="siar/Make_Plan" door="floor_0_door_1" ID="CheckDoorandEnter"/>
-                <SubTree detection_action="/window_detector" out_door="door_out" action="siar/Make_Plan" door="floor_0_door_2" ID="CheckDoorandEnter"/>
-            </Fallback>
+            <SubTree detection_action="/window_detector" out_door="door_out" action="siar/Make_Plan" door="floor_0_door_1" ID="CheckDoorandEnter"/>
             <Action message="${door_out}" ID="InfoLog"/>
             <ForceSuccess>
                 <SubTree ID="Floor0SurveyAndExtinguish"/>
@@ -59,12 +56,6 @@
             <Fallback>
                 <SubTree fire="floor_0_fire_1" actgoto="/siar/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/siar/siar_fire_extinguisher"/>
                 <SubTree fire="floor_0_fire_2" actgoto="/siar/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/siar/siar_fire_extinguisher"/>
-                <SubTree fire="floor_0_fire_3" actgoto="/siar/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/siar/siar_fire_extinguisher"/>
-                <SubTree fire="floor_0_fire_4" actgoto="/siar/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/siar/siar_fire_extinguisher"/>
-                <SubTree fire="floor_0_fire_5" actgoto="/siar/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/siar/siar_fire_extinguisher"/>
-                <SubTree fire="floor_0_fire_6" actgoto="/siar/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/siar/siar_fire_extinguisher"/>
-                <SubTree fire="floor_0_fire_7" actgoto="/siar/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/siar/siar_fire_extinguisher"/>
-                <SubTree fire="floor_0_fire_8" actgoto="/siar/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/siar/siar_fire_extinguisher"/>
             </Fallback>
             <Action message="${fire_found}" ID="InfoLog"/>
         </SequenceStar>

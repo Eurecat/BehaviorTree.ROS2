@@ -15,15 +15,11 @@
             </ForceSuccess>
             <ForceSuccess>
                 <SequenceStar>
-                    <Action action="/Make_Plan" goal_name="left_facade_approach_1" ID="UPOGoToGoalByName" name="ApproachLeftFacade" state="gts"/>
-                    <Action duration="3" ID="WaitSeconds"/>
-                    <Action action="/Make_Plan" goal_name="left_facade_approach_2" ID="UPOGoToGoalByName" state="gt2s"/>
                     <ForceSuccess>
                         <SubTree fire_found="fire_wp" ID="ExtinguishFacadeFire"/>
                     </ForceSuccess>
                     <Action message="${fire_wp}" ID="InfoLog"/>
                     <Action duration="3" ID="WaitSeconds"/>
-                    <Action action="/Make_Plan" goal_name="left_facade_retreat" ID="UPOGoToGoalByName" name="RetreatFromLeftFacade" state="f2rs"/>
                 </SequenceStar>
             </ForceSuccess>
             <RetryUntilSuccesful num_attempts="2">
