@@ -17,8 +17,8 @@ m210_home:
     orientation:
         x: 0.0
         y: 0.0
-        z: 0.995
-        w: -0.095
+        z: -0.024
+        w: 1.000
 
 m210_red_home:
     pose:
@@ -28,8 +28,8 @@ m210_red_home:
     orientation:
         x: 0.0
         y: 0.0
-        z: 1.000
-        w: 0.029
+        z: -0.024
+        w: 1.000
 
 
 
@@ -41,8 +41,8 @@ m600_home:
     orientation:
         x: 0.0
         y: 0.0
-        z: -0.646
-        w: 0.763
+        z: -0.024
+        w: 1.000
 
 opp_facade_approach_1:
     pose:

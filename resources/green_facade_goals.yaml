@@ -6,8 +6,8 @@ green_facade_approach_1:
     orientation:
         x: 0.0
         y: 0.0
-        z: -0.739
-        w: 0.674
+        z: -0.024
+        w: 1.000
 
 green_facade_approach_2:
     pose:
@@ -17,8 +17,8 @@ green_facade_approach_2:
     orientation:
         x: 0.0
         y: 0.0
-        z: -0.739
-        w: 0.674
+        z: -0.024
+        w: 1.000
 
 green_facade_approach_3:
     pose:

@@ -6,8 +6,8 @@ red_facade_approach_1:
     orientation:
         x: 0.0
         y: 0.0
-        z: 0.651
-        w: 0.759
+        z: -0.024
+        w: 1.000
 
 red_facade_approach_2:
     pose:
