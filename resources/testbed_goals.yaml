@@ -1,0 +1,33 @@
+testbed_home:
+    pose:
+        x: 16.3
+        y: 20.3
+        z: 2.5
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+testbed_goal_1:
+    pose:
+        x: 22.1
+        y: 20.3
+        z: 2.5
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+testbed_goal_2:
+    pose:
+        x: 22.1
+        y: 28.1
+        z: 2.5
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
