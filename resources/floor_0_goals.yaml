@@ -148,6 +148,17 @@ floor_0_fire_4:
 
 floor_0_fire_5:
     pose:
+        x: 55.7
+        y: 30.2
+        z: 0
+    orientation:
+        x: 0
+        y: 0
+        z: 0.987
+        w: 0.159
+
+floor_0_fire_6:
+    pose:
         x: 55.0
         y: 28.7
         z: 0
@@ -157,7 +168,7 @@ floor_0_fire_5:
         z: 0.986
         w: 0.164
 
-floor_0_fire_6:
+floor_0_fire_7:
     pose:
         x: 57.2
         y: 25.8
