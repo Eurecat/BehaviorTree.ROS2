@@ -2,7 +2,7 @@ red_facade_approach_1:
     pose:
         x: 13.9
         y: 30.2
-        z: 6.0
+        z: 7.0
     orientation:
         x: 0.0
         y: 0.0
@@ -13,7 +13,7 @@ red_facade_approach_2:
     pose:
         x: 25.7
         y: 29.2
-        z: 6.0
+        z: 7.0
     orientation:
         x: 0.0
         y: 0.0
@@ -24,7 +24,7 @@ red_facade_retreat:
     pose:
         x: 25.7
         y: 29.2
-        z: 6.0
+        z: 7.0
     orientation:
         x: 0.0
         y: 0.0

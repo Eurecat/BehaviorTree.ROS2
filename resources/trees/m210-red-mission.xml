@@ -48,10 +48,7 @@
     <BehaviorTree ID="ExtinguishFacadeFire">
         <SequenceStar>
             <SetBlackboard output_key="fire_found" value="none"/>
-            <ForceSuccess>
-                <SubTree actgoto="/Make_Plan" fire="red_fire_2" actextinguish="/wall_fire_extinguisher" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
-            </ForceSuccess>
-            <Action state="gtrs" goal_name="red_facade_retreat" name="GoToRetreat" action="/Make_Plan" ID="UPOGoToGoalByName"/>
+	    <ForceSuccess>
             <Fallback>
                 <SubTree actgoto="/Make_Plan" fire="red_fire_4" actextinguish="/wall_fire_extinguisher" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
                 <Sequence>
@@ -63,6 +60,8 @@
                     <SubTree actgoto="/Make_Plan" fire="red_fire_5" actextinguish="/wall_fire_extinguisher" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
                 </Sequence>
             </Fallback>
+	    </ForceSuccess>
+	    <SubTree actgoto="/Make_Plan" fire="red_fire_2" actextinguish="/wall_fire_extinguisher" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
         </SequenceStar>
     </BehaviorTree>
     <!-- ////////// -->
