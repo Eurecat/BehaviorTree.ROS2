@@ -56,7 +56,7 @@
             <Action ID="UPOGoToGoalByName" action="/Make_Plan" name="GoToRetreat" goal_name="green_facade_retreat" state="gfrt4"/>
             <ForceSuccess>
                 <Fallback>
-                    <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" fire="green_fire_4" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan"/>
+                    <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" fire="green_fire_5" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan"/>
                     <Sequence>
                         <Action ID="UPOGoToGoalByName" action="/Make_Plan" name="GoToRetreat3" goal_name="green_facade_retreat" state="gtr2s"/>
                         <Action ID="WaitSeconds" duration="3"/>
@@ -64,7 +64,7 @@
                     </Sequence>
                     <Sequence>
                         <Action ID="UPOGoToGoalByName" action="/Make_Plan" goal_name="green_facade_retreat" state="gtr3s"/>
-                        <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" fire="green_fire_5" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan"/>
+                        <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" fire="green_fire_4" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan"/>
                     </Sequence>
                 </Fallback>
             </ForceSuccess>
