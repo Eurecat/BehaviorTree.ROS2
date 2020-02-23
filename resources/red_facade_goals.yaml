@@ -7,7 +7,7 @@ red_facade_approach_1:
         x: 0.0
         y: 0.0
         z: 0.0
-        w: 1.000
+        w: 1.0
 
 red_facade_approach_2:
     pose:
@@ -30,7 +30,6 @@ red_facade_retreat:
         y: 0.0
         z: 0.685
         w: 0.728
-
 
 
 red_fire_5:
