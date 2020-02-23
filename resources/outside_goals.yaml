@@ -5,9 +5,9 @@ outside_explore_1:
         y: 72.3
         z: 6.0
     orientation:
-        x: 0
-        y: 0
-        z: -0.024
+        x: 0.0
+        y: 0.0
+        z: 0.0
         w: 1.000
 
 outside_explore_2:
@@ -16,9 +16,9 @@ outside_explore_2:
         y: 58.5
         z: 6.0
     orientation:
-        x: 0
-        y: 0
-        z: -0.024
+        x: 0.0
+        y: 0.0
+        z: 0.0
         w: 1.000
 
 outside_explore_3:
@@ -27,9 +27,9 @@ outside_explore_3:
         y: 57.8
         z: 6.0
     orientation:
-        x: 0
-        y: 0
-        z: -0.024
+        x: 0.0
+        y: 0.0
+        z: 0.0
         w: 1.000
 
 outside_explore_4:
@@ -38,9 +38,9 @@ outside_explore_4:
         y: 71.0
         z: 6.0
     orientation:
-        x: 0
-        y: 0
-        z: -0.024
+        x: 0.0
+        y: 0.0
+        z: 0.0
         w: 1.000
 
 outside_explore_5:
@@ -49,9 +49,9 @@ outside_explore_5:
         y: 70.9
         z: 6.0
     orientation:
-        x: 0
-        y: 0
-        z: -0.024
+        x: 0.0
+        y: 0.0
+        z: 0.0
         w: 1.000
 
 outside_explore_6:
@@ -60,9 +60,9 @@ outside_explore_6:
         y: 57.8
         z: 6.0
     orientation:
-        x: 0
-        y: 0
-        z: -0.024
+        x: 0.0
+        y: 0.0
+        z: 0.0
         w: 1.000
 
 outside_explore_7:
@@ -71,9 +71,9 @@ outside_explore_7:
         y: 58.2
         z: 6.0
     orientation:
-        x: 0
-        y: 0
-        z: -0.024
+        x: 0.0
+        y: 0.0
+        z: 0.0
         w: 1.000
 
 outside_explore_8:
@@ -82,20 +82,20 @@ outside_explore_8:
         y: 70.6
         z: 6.0
     orientation:
-        x: 0
-        y: 0
-        z: -0.024
+        x: 0.0
+        y: 0.0
+        z: 0.0
         w: 1.000
 
 outside_fire_1:
     pose:
         x: 16.8
         y: 65.1
-        z: 6.0
+        z: 3.0
     orientation:
-        x: 0
-        y: 0
-        z: -0.024
+        x: 0.0
+        y: 0.0
+        z: 0.0
         w: 1.000
 
 outside_fire_2:
@@ -104,9 +104,9 @@ outside_fire_2:
         y: 58.4
         z: 6.0
     orientation:
-        x: 0
-        y: 0
-        z: -0.024
+        x: 0.0
+        y: 0.0
+        z: 0.0
         w: 1.000
 
 outside_fire_3:
@@ -115,9 +115,9 @@ outside_fire_3:
         y: 68.2
         z: 6.0
     orientation:
-        x: 0
-        y: 0
-        z: -0.024
+        x: 0.0
+        y: 0.0
+        z: 0.0
         w: 1.000
 
 outside_fire_4:
@@ -126,9 +126,9 @@ outside_fire_4:
         y: 72.7
         z: 6.0
     orientation:
-        x: 0
-        y: 0
-        z: -0.024
+        x: 0.0
+        y: 0.0
+        z: 0.0
         w: 1.000
 
 

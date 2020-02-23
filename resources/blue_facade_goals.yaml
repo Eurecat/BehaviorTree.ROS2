@@ -3,7 +3,7 @@ blue_facade_approach_1:
     pose:
         x: 27.4
         y: 55.5
-        z: 6.0
+        z: 5.0
     orientation:
         x: 0.0
         y: 0.0
@@ -30,10 +30,10 @@ blue_fire_5:
         y: 53.1
         z: 13
     orientation:
-        x: 0
-        y: 0
+        x: 0.0
+        y: 0.0
         z: -0.721
-        w:  0.693
+        w: 0.693
 
 blue_fire_3:
     pose:

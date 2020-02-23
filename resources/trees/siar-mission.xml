@@ -2,34 +2,31 @@
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
         <SequenceStar>
-            <Fallback>
-                <SubTree out_door="door_out" action="/siar/Make_Plan" door="floor_0_door_1" detection_action="/window_detector" ID="CheckDoorandEnter"/>
-                <SubTree out_door="door_out" action="/siar/Make_Plan" door="floor_0_door_2" detection_action="/window_detector" ID="CheckDoorandEnter"/>
-            </Fallback>
+            <SubTree out_door="door_out" ID="CheckDoorandEnter" action="/siar/Make_Plan" detection_action="/window_detector" door="floor_0_door_1"/>
             <Action message="${door_out}" ID="InfoLog"/>
             <ForceSuccess>
                 <SubTree ID="Floor0SurveyAndExtinguish"/>
             </ForceSuccess>
             <RetryUntilSuccesful num_attempts="2">
-                <SubTree ID="ExitBuilding" robot_action="/siar/Make_Plan" window="${door_out}"/>
+                <SubTree robot_action="/siar/Make_Plan" window="${door_out}" ID="ExitBuilding"/>
             </RetryUntilSuccesful>
-            <Action name="GoToHome" action="/siar/Make_Plan" state="gth_s" goal_name="siar_home" ID="UPOGoToGoalByName"/>
+            <Action goal_name="siar_home" state="gth_s" ID="UPOGoToGoalByName" name="GoToHome" action="/siar/Make_Plan"/>
         </SequenceStar>
     </BehaviorTree>
     <!-- ////////// -->
     <BehaviorTree ID="CheckDoorandEnter">
         <Sequence>
-            <Action name="GoToDoor" action="${action}" state="dummy" goal_name="${door}" ID="UPOGoToGoalByName"/>
-            <Action name="GetGoalInside" second="_in" output="goal_in" ID="ConcatenateStrings" first="${door}"/>
-            <Action name="EnterThroughDoor" action="${action}" state="dummy" goal_name="${goal_in}" ID="UPOGoToGoalByName"/>
-            <SetBlackboard name="WriteToMemory" output_key="out_door" value="${door}"/>
+            <Action goal_name="${door}" state="dummy" ID="UPOGoToGoalByName" name="GoToDoor" action="${action}"/>
+            <Action first="${door}" second="_in" output="goal_in" ID="ConcatenateStrings" name="GetGoalInside"/>
+            <Action goal_name="${goal_in}" state="dummy" ID="UPOGoToGoalByName" name="EnterThroughDoor" action="${action}"/>
+            <SetBlackboard output_key="out_door" value="${door}" name="WriteToMemory"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
     <BehaviorTree ID="CheckFireAndExtinguish">
         <Sequence>
-            <Action name="GoToFire" action="${actgoto}" state="gts" goal_name="${fire}" ID="UPOGoToGoalByName"/>
-            <Action name="ExtinguishFire" serialized_feedback="fef" action="${actextinguish}" state="fes" serialized_result="fer" detect_fire="true" ID="UPOFireExtinguish"/>
+            <Action goal_name="${fire}" state="gts" ID="UPOGoToGoalByName" name="GoToFire" action="${actgoto}"/>
+            <Action detect_fire="true" serialized_result="fer" serialized_feedback="fef" state="fes" ID="UPOFireExtinguish" name="ExtinguishFire" action="${actextinguish}"/>
             <SetBlackboard output_key="found_fire" value="${fire}"/>
         </Sequence>
     </BehaviorTree>
@@ -37,7 +34,7 @@
     <BehaviorTree ID="CheckResetRequest">
         <Sequence>
             <SetBlackboard output_key="reset_requested" value="false"/>
-            <Action queue_size="1" serialized_output="m_reset" consume_msgs="true" topic="/reset" ID="MonitorStdBool"/>
+            <Action serialized_output="m_reset" topic="/reset" queue_size="1" consume_msgs="true" ID="MonitorStdBool"/>
             <Action input="${m_reset}" output="mission_reset" ID="ConvertMessageField" field="/data"/>
             <Action message="${mission_reset}" ID="InfoLog"/>
             <Condition input="${mission_reset}" ID="CheckBool"/>
@@ -46,39 +43,26 @@
     <!-- ////////// -->
     <BehaviorTree ID="ExitBuilding">
         <SequenceStar>
-            <Action name="PrepareToExit" second="_in_to_out" output="goal_to_exit" ID="ConcatenateStrings" first="${window}"/>
-            <Action name="GoToDoorOut" action="${robot_action}" state="gtwo_result" goal_name="${goal_to_exit}" ID="UPOGoToGoalByName"/>
-            <Action second="_out" output="goal_outside" ID="ConcatenateStrings" first="${window}"/>
-            <Action name="GoToExit" action="${robot_action}" state="gte_result" goal_name="${goal_outside}" ID="UPOGoToGoalByName"/>
+            <Action first="${window}" second="_in_to_out" output="goal_to_exit" ID="ConcatenateStrings" name="PrepareToExit"/>
+            <Action goal_name="${goal_to_exit}" state="gtwo_result" ID="UPOGoToGoalByName" name="GoToDoorOut" action="${robot_action}"/>
+            <Action first="${window}" second="_out" output="goal_outside" ID="ConcatenateStrings"/>
+            <Action goal_name="${goal_outside}" state="gte_result" ID="UPOGoToGoalByName" name="GoToExit" action="${robot_action}"/>
         </SequenceStar>
     </BehaviorTree>
     <!-- ////////// -->
     <BehaviorTree ID="Floor0SurveyAndExtinguish">
-        <SequenceStar>
-            <SetBlackboard output_key="fire_found" value="none"/>
-            <ForceSuccess>
-                <SubTree actgoto="/siar/Make_Plan" actextinguish="/siar/siar_fire_extinguisher" fire="floor_0_fire_7" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
-            </ForceSuccess>
-            <ForceSuccess>
-                <SubTree actgoto="/siar/Make_Plan" actextinguish="/siar/siar_fire_extinguisher" fire="floor_0_fire_5" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
-            </ForceSuccess>
-            <ForceSuccess>
-                <SubTree actgoto="/siar/Make_Plan" actextinguish="/siar/siar_fire_extinguisher" fire="floor_0_fire_3" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
-            </ForceSuccess>
-            <ForceSuccess>
-                <SubTree actgoto="/siar/Make_Plan" actextinguish="/siar/siar_fire_extinguisher" fire="floor_0_fire_2" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
-            </ForceSuccess>
-            <ForceSuccess>
-                <SubTree actgoto="/siar/Make_Plan" actextinguish="/siar/siar_fire_extinguisher" fire="floor_0_fire_1" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
-            </ForceSuccess>
-            <ForceSuccess>
-                <SubTree actgoto="/siar/Make_Plan" actextinguish="/siar/siar_fire_extinguisher" fire="floor_0_fire_6" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
-            </ForceSuccess>
-            <ForceSuccess>
-                <SubTree actgoto="/siar/Make_Plan" actextinguish="/siar/siar_fire_extinguisher" fire="floor_0_fire_4" ID="CheckFireAndExtinguish" found_fire="fire_found"/>
-            </ForceSuccess>
-            <Action message="${fire_found}" ID="InfoLog"/>
-        </SequenceStar>
+        <Repeat num_cycles="3">
+            <SequenceStar>
+                <SetBlackboard output_key="fire_found" value="none"/>
+                <ForceSuccess>
+                    <SubTree actgoto="/siar/Make_Plan" found_fire="fire_found" actextinguish="/siar/siar_fire_extinguisher" fire="floor_0_fire_1" ID="CheckFireAndExtinguish"/>
+                </ForceSuccess>
+                <ForceSuccess>
+                    <SubTree actgoto="/siar/Make_Plan" found_fire="fire_found" actextinguish="/siar/siar_fire_extinguisher" fire="floor_0_fire_2" ID="CheckFireAndExtinguish"/>
+                </ForceSuccess>
+                <Action message="${fire_found}" ID="InfoLog"/>
+            </SequenceStar>
+        </Repeat>
     </BehaviorTree>
     <!-- ////////// -->
     <TreeNodesModel>
@@ -149,10 +133,10 @@
             <output_port name="output" type="void">Output variable</output_port>
         </Action>
         <Decorator ID="CooldownMilliseconds">
-            <input_port name="cooldown" default="0" type="unsigned int">Cooldown time</input_port>
+            <input_port default="0" name="cooldown" type="unsigned int">Cooldown time</input_port>
         </Decorator>
         <Decorator ID="CooldownSeconds">
-            <input_port name="cooldown" default="0" type="unsigned int">Cooldown time</input_port>
+            <input_port default="0" name="cooldown" type="unsigned int">Cooldown time</input_port>
         </Decorator>
         <Action ID="CopyJson">
             <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>">Input variable</input_port>
@@ -239,7 +223,7 @@
             <output_port name="output" type="tf::StampedTransform">Result transform</output_port>
             <input_port name="source_frame" type="std::string">Origin TF frame</input_port>
             <input_port name="target_frame" type="std::string">Target TF frame</input_port>
-            <input_port name="use_last_available" default="0" type="bool">Use last available transform?</input_port>
+            <input_port default="0" name="use_last_available" type="bool">Use last available transform?</input_port>
         </Action>
         <Decorator ID="Loop"/>
         <Action ID="MathOperationFloat">
@@ -255,20 +239,20 @@
             <input_port name="second" type="int">Second operand</input_port>
         </Action>
         <Action ID="MonitorStdBool">
-            <input_port name="consume_msgs" default="0" type="bool">Should messages be consumed?</input_port>
-            <input_port name="queue_size" default="1" type="unsigned int">Subscriber callback queue size</input_port>
+            <input_port default="0" name="consume_msgs" type="bool">Should messages be consumed?</input_port>
+            <input_port default="1" name="queue_size" type="unsigned int">Subscriber callback queue size</input_port>
             <output_port name="serialized_output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>">Serialized ROS message [std_msgs::Bool_&lt;std::allocator&lt;void> >]</output_port>
             <input_port name="topic" type="std::string">Topic to subscribe</input_port>
         </Action>
         <Action ID="MonitorStdFloat64">
-            <input_port name="consume_msgs" default="0" type="bool">Should messages be consumed?</input_port>
-            <input_port name="queue_size" default="1" type="unsigned int">Subscriber callback queue size</input_port>
+            <input_port default="0" name="consume_msgs" type="bool">Should messages be consumed?</input_port>
+            <input_port default="1" name="queue_size" type="unsigned int">Subscriber callback queue size</input_port>
             <output_port name="serialized_output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>">Serialized ROS message [std_msgs::Float64_&lt;std::allocator&lt;void> >]</output_port>
             <input_port name="topic" type="std::string">Topic to subscribe</input_port>
         </Action>
         <Action ID="MonitorStdInt32">
-            <input_port name="consume_msgs" default="0" type="bool">Should messages be consumed?</input_port>
-            <input_port name="queue_size" default="1" type="unsigned int">Subscriber callback queue size</input_port>
+            <input_port default="0" name="consume_msgs" type="bool">Should messages be consumed?</input_port>
+            <input_port default="1" name="queue_size" type="unsigned int">Subscriber callback queue size</input_port>
             <output_port name="serialized_output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>">Serialized ROS message [std_msgs::Int32_&lt;std::allocator&lt;void> >]</output_port>
             <input_port name="topic" type="std::string">Topic to subscribe</input_port>
         </Action>
@@ -278,8 +262,8 @@
         <Decorator ID="OnlyOnce"/>
         <Action ID="PublishStdString">
             <input_port name="data" type="std::string">Auto-generated field from std_msgs::String_&lt;std::allocator&lt;void> ></input_port>
-            <input_port name="latch" default="0" type="bool">Latch messages?</input_port>
-            <input_port name="queue_size" default="1" type="unsigned int">Internal publisher queue size</input_port>
+            <input_port default="0" name="latch" type="bool">Latch messages?</input_port>
+            <input_port default="1" name="queue_size" type="unsigned int">Internal publisher queue size</input_port>
             <input_port name="topic" type="std::string">Topic to publish to</input_port>
         </Action>
         <Action ID="RandomFloat">
@@ -293,14 +277,14 @@
             <output_port name="result" type="int">Random result value</output_port>
         </Action>
         <Action ID="RandomSequenceValue">
-            <input_port name="delimiter" default=";" type="std::string">Sequence entries delimiter</input_port>
+            <input_port default=";" name="delimiter" type="std::string">Sequence entries delimiter</input_port>
             <output_port name="output" type="std::string">Result random sequence entry</output_port>
             <input_port name="sequence" type="std::string">Sequence to randomize</input_port>
         </Action>
         <Action ID="SubscribeUPOGoal">
-            <input_port name="consume_msgs" default="0" type="bool">Should messages be consumed?</input_port>
+            <input_port default="0" name="consume_msgs" type="bool">Should messages be consumed?</input_port>
             <output_port name="output" type="upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> >">Received ROS message [upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> >]</output_port>
-            <input_port name="queue_size" default="1" type="unsigned int">Subscriber callback queue size</input_port>
+            <input_port default="1" name="queue_size" type="unsigned int">Subscriber callback queue size</input_port>
             <input_port name="topic" type="std::string">Topic to subscribe</input_port>
         </Action>
         <Action ID="UPOFireDetection3D">
@@ -357,10 +341,10 @@
             <output_port name="z" type="double">Window z</output_port>
         </Action>
         <Action ID="WaitMilliseconds">
-            <input_port name="duration" default="0" type="unsigned int">Time to wait</input_port>
+            <input_port default="0" name="duration" type="unsigned int">Time to wait</input_port>
         </Action>
         <Action ID="WaitSeconds">
-            <input_port name="duration" default="0" type="unsigned int">Time to wait</input_port>
+            <input_port default="0" name="duration" type="unsigned int">Time to wait</input_port>
         </Action>
         <Action ID="WarnLog">
             <input_port name="message" type="std::string">Message to log</input_port>
