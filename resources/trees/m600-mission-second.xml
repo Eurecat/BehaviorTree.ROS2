@@ -8,13 +8,14 @@
             <ForceSuccess>
                 <SubTree ID="FireOutsideMission"/>
             </ForceSuccess>
-            <Action ID="PublishBool" latch="0" data="false" queue_size="1" topic="/unroll"/>
-            <Action ID="PublishBool" latch="0" data="false" queue_size="1" topic="/drop"/>
+            <Action ID="PublishBool" latch="0" data="false" queue_size="1" topic="/unroll_blanquet"/>
+	    <Action ID="WaitSeconds" duration="1"/>
+            <Action ID="PublishBool" latch="0" data="false" queue_size="1" topic="/drop_blanquet"/>
             <ForceSuccess>
                 <SubTree ID="LeftFacadeMission"/>
             </ForceSuccess>
-            <Action ID="PublishBool" latch="0" data="true" queue_size="1" topic="/unroll"/>
-            <Action ID="PublishBool" latch="0" data="true" queue_size="1" topic="/drop"/>
+            <Action ID="PublishBool" latch="0" data="true" queue_size="1" topic="/unroll_blanquet"/>
+            <Action ID="PublishBool" latch="0" data="true" queue_size="1" topic="/drop_blanquet"/>
             <Action ID="WaitSeconds" duration="3"/>
             <RetryUntilSuccesful num_attempts="2">
                 <SubTree ID="GoToAndLand" waypoint="m600_home"/>
@@ -101,8 +102,6 @@
     <!-- ////////// -->
     <BehaviorTree ID="LeftFacadeMission">
         <SequenceStar>
-            <Action ID="UPOGoToGoalByName" name="ApproachBlueFacade" goal_name="blue_facade_approach_1" state="gts" action="/Make_Plan"/>
-            <Action ID="WaitSeconds" duration="3"/>
             <ForceSuccess>
                 <SubTree ID="ExtinguishFacadeFire" fire_found="fire_wp"/>
             </ForceSuccess>
@@ -115,11 +114,11 @@
     <BehaviorTree ID="OutsideExplorationPath">
         <Sequence>
             <Action ID="WaitSeconds" duration="3"/>
-            <Action ID="UPOGoToGoalByName" name="GoToGoal2" goal_name="outside_fire_4" state="gtg2s" action="/Make_Plan"/>
+            <Action ID="UPOGoToGoalByName" name="GoToGoal4" goal_name="outside_fire_4" state="gtg2s" action="/Make_Plan"/>
             <Action ID="WaitSeconds" duration="3"/>
             <Action ID="UPOGoToGoalByName" name="GoToGoal3" goal_name="outside_fire_3" state="gtg3s" action="/Make_Plan"/>
             <Action ID="WaitSeconds" duration="3"/>
-            <Action ID="UPOGoToGoalByName" name="GoToGoal4" goal_name="outside_fire_2" state="gtg4s" action="/Make_Plan"/>
+            <Action ID="UPOGoToGoalByName" name="GoToGoal2" goal_name="outside_fire_2" state="gtg4s" action="/Make_Plan"/>
             <Action ID="WaitSeconds" duration="3"/>
         </Sequence>
     </BehaviorTree>

@@ -102,7 +102,7 @@ outside_fire_2:
     pose:
         x: 24.8
         y: 58.4
-        z: 7.2
+        z: 6.0
     orientation:
         x: 0
         y: 0
@@ -113,7 +113,7 @@ outside_fire_3:
     pose:
         x: 24.8
         y: 68.2
-        z: 7.2
+        z: 6.0
     orientation:
         x: 0
         y: 0
@@ -124,7 +124,7 @@ outside_fire_4:
     pose:
         x: 30.0
         y: 72.7
-        z: 7.2
+        z: 6.0
     orientation:
         x: 0
         y: 0

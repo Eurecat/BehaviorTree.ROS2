@@ -8,13 +8,14 @@
             <ForceSuccess>
                 <SubTree ID="FireOutsideMission"/>
             </ForceSuccess>
-            <Action data="false" ID="PublishBool" latch="0" topic="/unroll" queue_size="1"/>
-            <Action data="false" ID="PublishBool" latch="0" topic="/drop" queue_size="1"/>
+            <Action data="false" ID="PublishBool" latch="0" topic="/unroll_blanquet" queue_size="1"/>
+	    <Action ID="WaitSeconds" duration="1"/>
+            <Action data="false" ID="PublishBool" latch="0" topic="/drop_blanquet" queue_size="1"/>
             <ForceSuccess>
                 <SubTree ID="LeftFacadeMission"/>
             </ForceSuccess>
-            <Action data="true" ID="PublishBool" latch="0" topic="/unroll" queue_size="1"/>
-            <Action data="true" ID="PublishBool" latch="0" topic="/drop" queue_size="1"/>
+            <Action data="true" ID="PublishBool" latch="0" topic="/unroll_blanquet" queue_size="1"/>
+            <Action data="true" ID="PublishBool" latch="0" topic="/drop_blanquet" queue_size="1"/>
             <Action ID="WaitSeconds" duration="3"/>
             <RetryUntilSuccesful num_attempts="2">
                 <SubTree ID="GoToAndLand" waypoint="m600_home"/>

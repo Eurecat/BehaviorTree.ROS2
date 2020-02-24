@@ -3,11 +3,8 @@
     <BehaviorTree ID="BehaviorTree">
         <Sequence>
             <Action ID="UPOTakeOff" action="/TakeOff" name="TakeOff" state="toffs" takeoff_height.data="7.0"/>
-            <Action ID="WaitSeconds" duration="3"/>
             <ForceSuccess>
                 <SequenceStar>
-                    <Action ID="UPOGoToGoalByName" action="/Make_Plan" name="ApproachGreenFacade" goal_name="green_facade_approach_1" state="gts"/>
-                    <Action ID="WaitSeconds" duration="3"/>
                     <Action ID="UPOGoToGoalByName" action="/Make_Plan" name="GoToFacade" goal_name="green_facade_approach_2" state="gt2s"/>
                     <Action ID="WaitSeconds" duration="3"/>
                     <Action ID="UPOGoToGoalByName" action="/Make_Plan" name="OrientToFacade" goal_name="green_facade_approach_3" state="gt3s"/>
@@ -56,7 +53,7 @@
             <Action ID="UPOGoToGoalByName" action="/Make_Plan" name="GoToRetreat" goal_name="green_facade_retreat" state="gfrt4"/>
             <ForceSuccess>
                 <Fallback>
-                    <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" fire="green_fire_5" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan"/>
+                    <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" fire="green_fire_4" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan"/>
                     <Sequence>
                         <Action ID="UPOGoToGoalByName" action="/Make_Plan" name="GoToRetreat3" goal_name="green_facade_retreat" state="gtr2s"/>
                         <Action ID="WaitSeconds" duration="3"/>
@@ -64,7 +61,7 @@
                     </Sequence>
                     <Sequence>
                         <Action ID="UPOGoToGoalByName" action="/Make_Plan" goal_name="green_facade_retreat" state="gtr3s"/>
-                        <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" fire="green_fire_4" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan"/>
+                        <SubTree found_fire="fire_found" ID="CheckFireAndExtinguish" fire="green_fire_5" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan"/>
                     </Sequence>
                 </Fallback>
             </ForceSuccess>
