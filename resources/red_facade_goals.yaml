@@ -1,13 +1,13 @@
 red_facade_approach_1:
     pose:
-        x: 13.9
-        y: 30.2
+        x: 13.0
+        y: 29.0
         z: 8.0
     orientation:
         x: 0.0
         y: 0.0
-        z: 0.0
-        w: 1.0
+        z: 0.340
+        w: 0.940
 
 red_facade_approach_2:
     pose:
