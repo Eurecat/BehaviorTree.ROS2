@@ -9,9 +9,8 @@
                     <Action ID="WaitSeconds" duration="3"/>
                     <Action action="/Make_Plan" goal_name="red_facade_approach_2" state="gt2s" name="OrientToFacade" ID="UPOGoToGoalByName"/>
                     <ForceSuccess>
-                        <SubTree fire_found="fire_wp" ID="ExtinguishFacadeFire"/>
+                        <SubTree actgoto="/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/wall_fire_extinguisher" fire="red_fire_2"/>
                     </ForceSuccess>
-                    <Action message="${fire_wp}" ID="InfoLog"/>
                     <Action ID="WaitSeconds" duration="3"/>
                     <Action action="/Make_Plan" goal_name="red_facade_retreat" state="f2rs" name="RetreatFromRedFacade" ID="UPOGoToGoalByName"/>
                 </SequenceStar>

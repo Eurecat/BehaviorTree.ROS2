@@ -2,16 +2,16 @@
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
         <Sequence>
-            <Action action="/TakeOff" ID="UPOTakeOff" state="toffs" name="TakeOff" takeoff_height.data="7.0"/>
+	    <Action duration="15" ID="WaitSeconds"/>
+            <Action action="/TakeOff" ID="UPOTakeOff" takeoff_height.data="4.0" state="tos"/>
             <ForceSuccess>
                 <SequenceStar>
                     <Action action="/Make_Plan" ID="UPOGoToGoalByName" state="gt2s" name="GoToFacade" goal_name="green_facade_approach_2"/>
                     <Action ID="WaitSeconds" duration="3"/>
                     <Action action="/Make_Plan" ID="UPOGoToGoalByName" state="gt3s" name="OrientToFacade" goal_name="green_facade_approach_3"/>
                     <ForceSuccess>
-                        <SubTree ID="ExtinguishFacadeFire" fire_found="fire_wp"/>
+                         <SubTree ID="CheckFireAndExtinguish" found_fire="fire_found" actextinguish="/wall_fire_extinguisher" actgoto="/Make_Plan" fire="green_fire_4"/>
                     </ForceSuccess>
-                    <Action ID="InfoLog" message="${fire_wp}"/>
                     <Action ID="WaitSeconds" duration="3"/>
                     <Action action="/Make_Plan" ID="UPOGoToGoalByName" state="f2rs" name="RetreatFromGreenFacade" goal_name="green_facade_retreat"/>
                 </SequenceStar>

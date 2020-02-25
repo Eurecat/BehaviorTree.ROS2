@@ -2,7 +2,8 @@
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
         <Sequence>
-            <Action takeoff_height.data="7.0" action="/TakeOff" state="toffs" name="TakeOff" ID="UPOTakeOff"/>
+	    <Action duration="15" ID="WaitSeconds"/>
+            <Action takeoff_height.data="4.0" action="/TakeOff" state="toffs" name="TakeOff" ID="UPOTakeOff"/>
             <ForceSuccess>
                 <SequenceStar>
                     <Action action="/Make_Plan" goal_name="red_facade_approach_1" state="gts" name="ApproachRedFacade" ID="UPOGoToGoalByName"/>
