@@ -47,9 +47,12 @@
     <BehaviorTree ID="ExtinguishFacadeFire">
         <SequenceStar>
             <SetBlackboard output_key="fire_found" value="none"/>
-            <ForceSuccess>
                 <Fallback>
+		    <SubTree actgoto="/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/wall_fire_extinguisher" fire="red_fire_2"/>
+		    <Sequence>
+		    <Action action="/Make_Plan" goal_name="red_facade_retreat" state="gtr2s" name="GoToRetreat3" ID="UPOGoToGoalByName"/>
                     <SubTree actgoto="/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/wall_fire_extinguisher" fire="red_fire_4"/>
+		   </Sequence>
                     <Sequence>
                         <Action action="/Make_Plan" goal_name="red_facade_retreat" state="gtr2s" name="GoToRetreat3" ID="UPOGoToGoalByName"/>
                         <SubTree actgoto="/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/wall_fire_extinguisher" fire="red_fire_3"/>
@@ -58,9 +61,12 @@
                         <Action action="/Make_Plan" goal_name="red_facade_retreat" state="gtr3s" ID="UPOGoToGoalByName"/>
                         <SubTree actgoto="/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/wall_fire_extinguisher" fire="red_fire_5"/>
                     </Sequence>
+		    <Sequence>
+			<Action action="/Make_Plan" goal_name="red_facade_retreat" state="gtr3s" ID="UPOGoToGoalByName"/>
+	 	    	<SubTree actgoto="/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/wall_fire_extinguisher" fire="red_fire_1"/>
+		    </Sequence>
                 </Fallback>
-            </ForceSuccess>
-            <SubTree actgoto="/Make_Plan" found_fire="fire_found" ID="CheckFireAndExtinguish" actextinguish="/wall_fire_extinguisher" fire="red_fire_2"/>
+            
         </SequenceStar>
     </BehaviorTree>
     <!-- ////////// -->
