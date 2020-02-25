@@ -11,8 +11,8 @@ siar_home:
 
 m210_home:
     pose:
-        x: 42.1
-        y: 54.4
+        x: 41.1
+        y: 51.0
         z: 0.0
     orientation:
         x: 0.0
@@ -33,8 +33,8 @@ m210_red_home:
 
 m600_home:
     pose:
-        x: 13.3
-        y: 59.1
+        x: 27.0
+        y: 53.5
         z: 0.0
     orientation:
         x: 0.0
