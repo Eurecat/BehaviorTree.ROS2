@@ -1,0 +1,19 @@
+<root main_tree_to_execute="BehaviorTree">
+    <!-- ////////// -->
+    <BehaviorTree ID="BehaviorTree">
+        <Repeat num_cycles="1000">
+            <Action ID="DemoPublishString" latch="false" data="Hello World!" topic="/behavior_tree/test" queue_size="1"/>
+        </Repeat>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <TreeNodesModel>
+        <Action ID="DemoPublishString">
+            <input_port type="std::string" name="data">Auto-generated field from std_msgs::String_&lt;std::allocator&lt;void> ></input_port>
+            <input_port type="bool" name="latch" default="0">Latch messages?</input_port>
+            <input_port type="unsigned int" name="queue_size" default="1">Internal publisher queue size</input_port>
+            <input_port type="std::string" name="topic">Topic to publish to</input_port>
+        </Action>
+    </TreeNodesModel>
+    <!-- ////////// -->
+</root>
+
