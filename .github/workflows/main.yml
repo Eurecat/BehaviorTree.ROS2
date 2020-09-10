@@ -223,10 +223,10 @@ jobs:
           username: ${{ secrets.UPO_USER }}
           password: ${{ secrets.ROBOTICS_PASSWORD }}
 
-      # - name: Add packages to repo
-      #   uses: garygrossgarten/github-action-ssh@release
-      #   with:
-      #     command: sudo add_pkg.sh 
-      #     host: ${{ secrets.UPO_SERVER }}
-      #     username: ${{ secrets.UPO_USER }}
-      #     password: ${{ secrets.ROBOTICS_PASSWORD }}
+      - name: Add packages to repo
+        uses: garygrossgarten/github-action-ssh@release
+        with:
+          command: sudo ./add_pkg.sh 
+          host: ${{ secrets.UPO_SERVER }}
+          username: ${{ secrets.UPO_USER }}
+          password: ${{ secrets.ROBOTICS_PASSWORD }}
