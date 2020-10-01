@@ -1,0 +1,93 @@
+red_facade_approach_1:
+    pose:
+        x: 13.0
+        y: 29.0
+        z: 8.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.340
+        w: 0.940
+
+red_facade_approach_2:
+    pose:
+        x: 25.7
+        y: 29.2
+        z: 8.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.685
+        w: 0.728
+
+red_facade_retreat:
+    pose:
+        x: 25.7
+        y: 29.2
+        z: 8.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.685
+        w: 0.728
+
+
+red_fire_5:
+    pose:
+        x: 31.3
+        y: 33.0
+        z: 14
+    orientation:
+        x: 0
+        y: 0
+        z: 0.703
+        w: 0.711
+
+red_fire_3:
+    pose:
+        x: 24.9
+        y: 33.0
+        z: 11.85
+    orientation:
+        x: 0
+        y: 0
+        z: 0.703
+        w: 0.711
+
+red_fire_4:
+    pose:
+        x: 20.0
+        y: 33.5
+        z: 14
+    orientation:
+        x: 0
+        y: 0
+        z: 0.703
+        w: 0.711
+
+red_fire_1:
+    pose:
+        x: 30.0
+        y: 32.6
+        z: 7.8
+    orientation:
+        x: 0
+        y: 0
+        z: 0.693
+        w: 0.721
+
+red_fire_2:
+    pose:
+        x: 20.0
+        y: 33.5
+        z: 9.6
+    orientation:
+        x: 0
+        y: 0
+        z: 0.694
+        w: 0.720
+
+
+
+
+

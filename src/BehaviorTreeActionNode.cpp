@@ -9,31 +9,37 @@
 
 #include <std_msgs/String.h>
 
-#include "BehaviorTreeNode.hpp"
+#include "BehaviorTreeActionNode.hpp"
 
 namespace UPO
 {
-    BehaviorTreeNode::BehaviorTreeNode() :
-        loop_rate_ { node_handle_.param("tick_frequency", 30.0) }
+    BehaviorTreeActionNode::BehaviorTreeActionNode() : 
+        loop_rate_ { node_handle_.param("tick_frequency", 30.0) }, bt_action_server_(node_handle_, "behavior_tree/action", false)
     {
         node_handle_.getParam("trees_folder", trees_folder_);
 
         LoadAllPlugins();
 
-        get_loaded_plugins_srv_ = node_handle_.advertiseService("behavior_tree/get_loaded_plugins", &BehaviorTreeNode::GetLoadedPluginsService, this);
-        load_tree_srv_          = node_handle_.advertiseService("behavior_tree/load_tree", &BehaviorTreeNode::LoadTree, this);
-        stop_tree_srv_          = node_handle_.advertiseService("behavior_tree/stop_tree", &BehaviorTreeNode::StopTree, this);
+        get_loaded_plugins_srv_ = node_handle_.advertiseService("behavior_tree/get_loaded_plugins", &BehaviorTreeActionNode::GetLoadedPluginsService, this);
+        load_tree_srv_          = node_handle_.advertiseService("behavior_tree/load_tree", &BehaviorTreeActionNode::LoadTree, this);
+        stop_tree_srv_          = node_handle_.advertiseService("behavior_tree/stop_tree", &BehaviorTreeActionNode::StopTree, this);
 
 	if(node_handle_.param("enable_rostopic_log", false))
         { 
 		bt_status_publisher_ =
           		node_handle_.advertise<std_msgs::String>("bt_status", 1);
 	}
+
+	bt_action_server_.registerGoalCallback(boost::bind(&BehaviorTreeActionNode::ActionGoalCB, this));
+  	bt_action_server_.registerPreemptCallback(boost::bind(&BehaviorTreeActionNode::ActionPreemptCB, this));
+
+  	bt_action_server_.start();
+
     }
 
-    void BehaviorTreeNode::Loop()
+    void BehaviorTreeActionNode::Loop()
     {
-        if(!tree_)
+        if(!tree_ || !bt_action_server_.isActive())
         {
             loop_rate_.sleep();
             return;
@@ -41,15 +47,29 @@ namespace UPO
 
         try
         {
+	    behavior_tree_ros::BehaviorTreeFeedback action_feedback_;
+	    behavior_tree_ros::BehaviorTreeResult action_result_;
+
+
             const auto tree_status = tree_->root_node->executeTick();
+
+	    action_feedback_.status.data = "RUNNING";
+	    bt_action_server_.publishFeedback(action_feedback_);
 
             if(tree_status == BT::NodeStatus::FAILURE)
             {
+		action_result_.result = false;
+		bt_action_server_.setAborted(action_result_);
+
                 ROS_ERROR("Tree finished with errors");
                 RemoveTree();
             }
             else if(tree_status == BT::NodeStatus::SUCCESS)
             {
+
+		action_result_.result = true;
+		bt_action_server_.setSucceeded(action_result_);
+
                 ROS_INFO("Tree finished with no errors");
                 RemoveTree();
             }
@@ -64,7 +84,7 @@ namespace UPO
     }
 
     //Private
-    bool BehaviorTreeNode::LoadTree(LoadTreeService::Request& _request, LoadTreeService::Response& _response)
+    bool BehaviorTreeActionNode::LoadTree(LoadTreeService::Request& _request, LoadTreeService::Response& _response)
     {
         const auto& full_path = GetFullPath(_request.tree_file);
 
@@ -81,19 +101,19 @@ namespace UPO
         return true;
     }
 
-    bool BehaviorTreeNode::StopTree(std_srvs::Empty::Request& _request, std_srvs::Empty::Response& _response)
+    bool BehaviorTreeActionNode::StopTree(std_srvs::Empty::Request& _request, std_srvs::Empty::Response& _response)
     {
         RemoveTree();
         return true;
     }
 
-    bool BehaviorTreeNode::GetLoadedPluginsService(PluginsService::Request& _request, PluginsService::Response& _response)
+    bool BehaviorTreeActionNode::GetLoadedPluginsService(PluginsService::Request& _request, PluginsService::Response& _response)
     {
         _response.plugins.assign(loaded_plugins_.cbegin(), loaded_plugins_.cend());
         return true;
     }
 
-    void BehaviorTreeNode::BuildTree(const std::string& _tree_file)
+    void BehaviorTreeActionNode::BuildTree(const std::string& _tree_file)
     {
         // Wait between creating and executing the Tree to fully initialize ROS publishers
         auto temp_tree = std::make_unique<BT::Tree>(bt_factory_.createTreeFromFile(_tree_file));
@@ -102,13 +122,13 @@ namespace UPO
         InitializeLoggers();
     }
     
-    void BehaviorTreeNode::RemoveTree()
+    void BehaviorTreeActionNode::RemoveTree()
     {
         ResetLoggers();
         tree_.reset();
     }
 
-    void BehaviorTreeNode::LoadPluginsFromROS()
+    void BehaviorTreeActionNode::LoadPluginsFromROS()
     {
         using namespace tinyxml2;
 
@@ -197,7 +217,7 @@ namespace UPO
         }
     }
 
-    void BehaviorTreeNode::LoadPluginsFromFolder(const std::string& _folder)
+    void BehaviorTreeActionNode::LoadPluginsFromFolder(const std::string& _folder)
     {
         using namespace boost::filesystem;
 
@@ -228,7 +248,7 @@ namespace UPO
         }
     }
 
-    void BehaviorTreeNode::LoadPlugin(const std::string& _plugin_path)
+    void BehaviorTreeActionNode::LoadPlugin(const std::string& _plugin_path)
     {
         try
         {
@@ -241,7 +261,7 @@ namespace UPO
         }
     }
 
-    void BehaviorTreeNode::LoadAllPlugins()
+    void BehaviorTreeActionNode::LoadAllPlugins()
     {
         LoadPluginsFromROS();
 
@@ -261,12 +281,12 @@ namespace UPO
     }
     }
 
-    std::string BehaviorTreeNode::GetFullPath(const std::string& _file) const
+    std::string BehaviorTreeActionNode::GetFullPath(const std::string& _file) const
     {
         return _file.front() == '/' ? _file : (trees_folder_.back() == '/' ? trees_folder_ : trees_folder_ + "/") + _file;
     }
 
-    void BehaviorTreeNode::InitializeLoggers()
+    void BehaviorTreeActionNode::InitializeLoggers()
     {
         if(!tree_ || !tree_->root_node) { return; }
 
@@ -315,7 +335,7 @@ namespace UPO
 	
     }
 
-    void BehaviorTreeNode::ResetLoggers()
+    void BehaviorTreeActionNode::ResetLoggers()
     {
         bt_logger_cout_.reset();
         bt_logger_trace_.reset();
@@ -328,4 +348,40 @@ namespace UPO
 
 	
     }
+
+    void BehaviorTreeActionNode::ActionGoalCB()
+    {  
+
+	const auto& full_path = GetFullPath(bt_action_server_.acceptNewGoal()->tree_file.data);
+
+        try
+        {
+            BuildTree(full_path);
+            ROS_INFO("Loaded tree %s", full_path.c_str());
+        }
+        catch(const std::runtime_error& ex)
+        {
+            ROS_ERROR("Error loading tree %s: %s", full_path.c_str(), ex.what());
+	    bt_action_server_.setAborted();
+            
+        }
+
+	//Preempts received for the new goal between checking if isNewGoalAvailable or invocation of a goal callback and the acceptNewGoal call will not trigger a preempt callback. This means, isPreemptRequested should be called after accepting the goal even for callback-based implementations to make sure the new goal does not have a pending preempt request.
+
+   	if(bt_action_server_.isPreemptRequested())
+	{
+		bt_action_server_.setPreempted();
+	}
+
+
+    }
+
+    void BehaviorTreeActionNode::ActionPreemptCB()
+    {
+	RemoveTree();
+	bt_action_server_.setPreempted();
+
+    }
+
+
 }

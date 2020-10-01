@@ -23,18 +23,23 @@
 
 #include "bt_rostopic_logger.h"
 
+// actions
+#include <actionlib/server/simple_action_server.h>
+#include <behavior_tree_ros/BehaviorTreeAction.h>
+
 
 namespace UPO
 {
-    class BehaviorTreeNode final
+    class BehaviorTreeActionNode final
     {
         private:
             using PluginsService  = behavior_tree_ros::GetLoadedPlugins;
             using LoadTreeService = behavior_tree_ros::LoadTree;
 
+
         public:
-            BehaviorTreeNode();
-            ~BehaviorTreeNode() = default;
+            BehaviorTreeActionNode();
+            ~BehaviorTreeActionNode() = default;
 
             void Loop();
 
@@ -56,6 +61,11 @@ namespace UPO
 
             std::string GetFullPath(const std::string& _file) const;
 
+
+	    //Behavior Tree action server callbacks  	
+  	    void ActionGoalCB();
+  	    void ActionPreemptCB();
+
         private:
             ros::NodeHandle node_handle_;
             ros::Rate loop_rate_;
@@ -64,6 +74,9 @@ namespace UPO
             ros::ServiceServer load_tree_srv_;
             ros::ServiceServer stop_tree_srv_;
 
+	    //Behavior Tree action server
+  	    actionlib::SimpleActionServer<behavior_tree_ros::BehaviorTreeAction> bt_action_server_;
+	
 	    ros::Publisher bt_status_publisher_;
 
             std::unique_ptr<BT::Tree> tree_;

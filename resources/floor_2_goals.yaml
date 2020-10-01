@@ -1,0 +1,229 @@
+floor_2_approach:
+    pose:
+        x: 93.0
+        y: 113.0
+        z: 2.5
+    orientation:
+        x: 0
+        y: 0
+        z: 0.7071
+        w: 0.7071
+
+floor_2_retreat:
+    pose:
+        x: 93.0
+        y: 113.0
+        z: 2.5
+    orientation:
+        x: 0
+        y: 0
+        z: 0.7071
+        w: 0.7071
+
+
+floor_2_fire_1:
+    pose:
+        x: 20.5
+        y: 53.1
+        z: 13
+    orientation:
+        x: 0
+        y: 0
+        z: -0.721
+        w:  0.693
+
+floor_2_fire_2:
+    pose:
+        x: 28.8
+        y: 52.3
+        z: 10.65
+    orientation:
+        x: 0
+        y: 0
+        z: -0.764
+        w: 0.646
+
+floor_2_fire_3:
+    pose:
+        x: 31.2
+        y: 52.1
+        z: 10.65
+    orientation:
+        x: 0
+        y: 0
+        z: -0.727
+        w: 0.687
+
+floor_2_fire_4:
+    pose:
+        x: 35.9
+        y: 48.3
+        z: 13
+    orientation:
+        x: 0
+        y: 0
+        z: 1.0
+        w: 0.020
+
+floor_2_fire_5:
+    pose:
+        x: 35.7
+        y: 42.7
+        z: 10.65
+    orientation:
+        x: 0
+        y: 0
+        z: 0.999
+        w: 0.038
+
+floor_2_fire_6:
+    pose:
+        x: 34.7
+        y: 37.0
+        z: 13
+    orientation:
+        x: 0
+        y: 0
+        z: 0.999
+        w: 0.032
+
+floor_2_fire_7:
+    pose:
+        x: 31.3
+        y: 33.0
+        z: 13
+    orientation:
+        x: 0
+        y: 0
+        z: 0.703
+        w: 0.711
+
+floor_2_fire_8:
+    pose:
+        x: 24.9
+        y: 33.0
+        z: 10.65
+    orientation:
+        x: 0
+        y: 0
+        z: 0.703
+        w: 0.711
+
+floor_2_fire_9:
+    pose:
+        x: 20.0
+        y: 33.5
+        z: 13
+    orientation:
+        x: 0
+        y: 0
+        z: 0.703
+        w: 0.711
+
+floor_2_win_1:
+    pose:
+        x: 96.66
+        y: 112.6
+        z: 7.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+floor_2_win_1_in:
+    pose:
+        x: 96.66
+        y: 116.6
+        z: 7.0
+    orientation:
+        x: 0
+        y: 0
+        z: 0.0
+        w: 1.0
+floor_2_win_1_in_to_out:
+    pose:
+        x: 96.66
+        y: 116.6
+        z: 7.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: -1.0
+floor_2_win_1_out:
+    pose:
+        x: 96.66
+        y: 112.6
+        z: 7.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: -1.0
+
+
+floor_2_win_2:
+    pose:
+        x: 45.66
+        y: 39.6
+        z: 0.0
+    orientation:
+        x: 0
+        y: 0
+        z: 0.43
+        w: 0.899
+
+floor_2_win_2_in:
+    pose:
+        x: 45.66
+        y: 39.6
+        z: 0.0
+    orientation:
+        x: 0
+        y: 0
+        z: 0.43
+        w: 0.899
+floor_2_win_2_in_to_out:
+    pose:
+        x: 97.5
+        y: 117.5
+        z: 0.0
+    orientation:
+        x: 0
+        y: 0
+        z: 0.177
+        w: 0.984
+floor_2_win_2_out:
+    pose:
+        x: 98.0
+        y: 115.0
+        z: 0.0
+    orientation:
+        x: 0
+        y: 0
+        z: 0.177
+
+
+floor_2_explore_1:
+    pose:
+        x: 99.0
+        y: 127.0
+        z: 7.0
+    orientation:
+        x: 0
+        y: 0
+        z: 0.177
+        w: 0.984
+floor_2_explore_2:
+    pose:
+        x: 99.0
+        y: 127.0
+        z: 7.0
+    orientation:
+        x: 0
+        y: 0
+        z: 0.177
+        w: 0.984
+
+
+
