@@ -1,10 +1,11 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>behavior_tree_ros</name>
-  <version>0.1.1</version>
+  <version>0.2.0</version>
   <description>ROS Behavior Tree package</description>
 
-  <maintainer email="apaegue@upo.es">Álvaro Páez</maintainer>
+  <maintainer email="jponchu@upo.es">Javier Ponce</maintainer>
+  <author>Álvaro Páez</author>
 
   <license>TODO</license>
 
