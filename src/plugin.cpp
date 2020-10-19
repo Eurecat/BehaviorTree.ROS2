@@ -10,6 +10,7 @@
 #include "behavior_tree_ros/actions/GetSizeNode.hpp"
 #include "behavior_tree_ros/actions/CopyNode.hpp"
 #include "behavior_tree_ros/actions/InitializeNode.hpp"
+#include "behavior_tree_ros/actions/AddKeyValueToJson.hpp"
 #include "behavior_tree_ros/decorators/ForEachLoopNode.hpp"
 #include "behavior_tree_ros/actions/ConvertMessageFieldNode.hpp"
 #include "behavior_tree_ros/actions/ConvertRandomMessageFieldNode.hpp"
@@ -49,6 +50,8 @@ BT_REGISTER_NODES(factory)
     factory.registerNodeType<WarnLog>("WarnLog");
     factory.registerNodeType<ErrorLog>("ErrorLog");
     factory.registerNodeType<FatalLog>("FatalLog");
+
+    factory.registerNodeType<AddKeyValueToJson>("AddKeyValueToJson");
 
     factory.registerTypeConverter<std::string, nlohmann::json>(BT::convertFromString<nlohmann::json>);
     factory.registerTypeConverter<nlohmann::json, std::string>(json2String);
