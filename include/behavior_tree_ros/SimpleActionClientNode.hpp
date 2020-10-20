@@ -43,9 +43,9 @@ class SimpleActionClientNode final : public BT::ActionNodeBase,
 
             client_ = std::make_unique<SimpleClient>(node_handle_, action.value(), false);
 
-	    std::cout << "Waiting for server" << _name << std::endl;
-            client_->waitForServer();
-	    std::cout << "Done" << std::endl;
+	    // std::cout << "Waiting for server" << _name << std::endl;
+        //     client_->waitForServer();
+	    // std::cout << "Done" << std::endl;
 
         }
 
@@ -71,44 +71,52 @@ class SimpleActionClientNode final : public BT::ActionNodeBase,
 
         virtual BT::NodeStatus tick() override
         {
-            setStatus(BT::NodeStatus::RUNNING);
+            BT::NodeStatus status = BT::NodeStatus::RUNNING;
+            setStatus(status);
 
-            if(!goal_sent_)
+            if (client_->isServerConnected())
             {
-
-                const auto& goal_msg = goal_policy_.buildMessage(*this);
-                client_->sendGoal(goal_msg, {}, {}, boost::bind(&SimpleActionClientNode::FeedbackCallback, this, _1));
-
-                goal_sent_ = true;
-            }
-
-            // Get state, save it in the output and save it in the output variable
-            const auto& goal_state = client_->getState();
-            setOutput("state", goal_state);
-
-            {
-                std::unique_lock<std::mutex> lock (feedback_mutex_);
-                if(new_feedback_)
+                if(!goal_sent_)
                 {
-                    new_feedback_ = false;
-                    feedback_policy_.onNewMessage(feedback_msg_, *this, "feedback");
+
+                    const auto& goal_msg = goal_policy_.buildMessage(*this);
+                    client_->sendGoal(goal_msg, {}, {}, boost::bind(&SimpleActionClientNode::FeedbackCallback, this, _1));
+
+                    goal_sent_ = true;
+                }
+
+                // Get state, save it in the output and save it in the output variable
+                const auto& goal_state = client_->getState();
+                setOutput("state", goal_state);
+
+                {
+                    std::unique_lock<std::mutex> lock (feedback_mutex_);
+                    if(new_feedback_)
+                    {
+                        new_feedback_ = false;
+                        feedback_policy_.onNewMessage(feedback_msg_, *this, "feedback");
+                    }
+                }
+
+                if(goal_state.isDone())
+                {
+                    const auto& result_ptr = client_->getResult();
+                    result_policy_.onNewMessage(*result_ptr, *this, "result");
+                    //std::cout << "Done" << std::endl;
+
+                    goal_sent_ = false;
+                }
+
+                status = GoalState2Status(goal_state);
+
+                if(goal_sent_ && status == BT::NodeStatus::IDLE)
+                {
+                    status = BT::NodeStatus::RUNNING;
                 }
             }
-
-            if(goal_state.isDone())
+            else
             {
-                const auto& result_ptr = client_->getResult();
-                result_policy_.onNewMessage(*result_ptr, *this, "result");
-		//std::cout << "Done" << std::endl;
-
-                goal_sent_ = false;
-            }
-
-            BT::NodeStatus status = GoalState2Status(goal_state);
-
-            if(goal_sent_ && status == BT::NodeStatus::IDLE)
-            {
-                status = BT::NodeStatus::RUNNING;
+                status = BT::NodeStatus::FAILURE;
             }
 
             return status;
