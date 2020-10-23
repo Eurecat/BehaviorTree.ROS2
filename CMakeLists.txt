@@ -24,6 +24,7 @@ find_package(catkin REQUIRED
 )
 
 find_package(TinyXML2 REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 add_service_files(
     FILES
@@ -62,7 +63,7 @@ target_link_libraries(${PROJECT_NAME} INTERFACE ${catkin_LIBRARIES})
 target_compile_options(${PROJECT_NAME} INTERFACE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 
 add_library(${PROJECT_NAME}_plugin src/plugin.cpp src/details/conversion_json.cpp)
-target_link_libraries(${PROJECT_NAME}_plugin ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_plugin ${catkin_LIBRARIES} yaml-cpp)
 target_include_directories(${PROJECT_NAME}_plugin PUBLIC include PRIVATE ${catkin_INCLUDE_DIRS})
 target_compile_options(${PROJECT_NAME}_plugin PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 target_compile_definitions(${PROJECT_NAME}_plugin PRIVATE BT_PLUGIN_EXPORT)
