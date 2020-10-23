@@ -24,6 +24,10 @@
 #include "behavior_tree_ros/decorators/ForEachLoopNode.hpp"
 #include "behavior_tree_ros/actions/ConvertMessageFieldNode.hpp"
 #include "behavior_tree_ros/actions/ConvertRandomMessageFieldNode.hpp"
+#include "behavior_tree_ros/actions/LookupTransformNode.hpp"
+#include "behavior_tree_ros/actions/GetTransformDistanceNode.hpp"
+#include "behavior_tree_ros/actions/GetTransformHorizontalDistanceNode.hpp"
+#include "behavior_tree_ros/actions/GetTransformOriginNode.hpp"
 
 #include "behavior_tree_ros/PublisherNode.hpp"
 #include "behavior_tree_ros/SubscriberNode.hpp"
@@ -65,6 +69,11 @@ BT_REGISTER_NODES(factory)
     factory.registerNodeType<FatalLog>("FatalLog");
 
     factory.registerNodeType<AddKeyValueToJson>("AddKeyValueToJson");
+
+    factory.registerNodeType<LookupTransformNode>("LookupTransform");
+    factory.registerNodeType<GetTransformDistanceNode>("GetTransformDistance");
+    factory.registerNodeType<GetTransformHorizontalDistanceNode>("GetTransformHorizontalDistance");
+    factory.registerNodeType<GetTransformOriginNode>("GetTransformOrigin");
 
     factory.registerNodeType<SerializedSubscriber<std_msgs::Int32>>("MonitorStdInt32");
     factory.registerNodeType<SerializedSubscriber<std_msgs::Float64>>("MonitorStdFloat64");

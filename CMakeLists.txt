@@ -19,7 +19,8 @@ find_package(catkin REQUIRED
         topic_tools
         actionlib
         behavior_tree_core
-	    cmake_modules
+        cmake_modules
+        tf
 )
 
 find_package(TinyXML2 REQUIRED)
@@ -47,7 +48,8 @@ catkin_package(
         behavior_tree_core
         topic_tools
         actionlib
-	    cmake_modules
+        cmake_modules
+        tf
     DEPENDS
 	    TinyXML2
     INCLUDE_DIRS
