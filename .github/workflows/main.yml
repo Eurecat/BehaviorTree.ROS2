@@ -60,9 +60,7 @@ jobs:
       - name: Compute repo name
         id: repo_name
         run: |
-          echo "::set-env name=REPO_NAME::$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}' | sed -e "s/:refs//")"
-          echo ::set-output name=repo_name::$REPO_NAME
-          echo ::set-env name=PACKAGE_NAME::$(cat $GITHUB_REPOSITORY/package.xml | grep name |  sed 's|<name>\(.*\)</name>|\1|')
+          echo "REPO_NAME=$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}' | sed -e "s/:refs//")" >> $GITHUB_ENV
       # Install additional dependencies
       - name: Install additional dependencies
         run: |
@@ -117,9 +115,6 @@ jobs:
       - name: Determine package version
         id: package_version
         run: |
-          version=`catkin_package_version`
-          echo ::set-output name=version::$version
-          echo ::set-env name=PACKAGE_VERSION::$(catkin_package_version)
           catkin_package_version > pkg_version.txt
         shell: bash
 
