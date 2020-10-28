@@ -21,6 +21,7 @@ find_package(catkin REQUIRED
         behavior_tree_core
         cmake_modules
         tf
+        angles
 )
 
 find_package(TinyXML2 REQUIRED)
@@ -51,6 +52,7 @@ catkin_package(
         actionlib
         cmake_modules
         tf
+        angles
     DEPENDS
 	    TinyXML2
     INCLUDE_DIRS
