@@ -1,3 +1,13 @@
+#include <std_msgs/Int32.h>
+#include <std_msgs/Float64.h>
+#include <std_msgs/String.h>
+#include <std_msgs/Bool.h>
+#include <std_msgs/Empty.h>
+
+#include <std_srvs/Empty.h>
+#include <std_srvs/SetBool.h>
+#include <std_srvs/Trigger.h>
+
 #include <behaviortree_cpp/bt_factory.h>
 
 #include "behavior_tree_ros/details/types_conversion.hpp"
@@ -14,7 +24,16 @@
 #include "behavior_tree_ros/decorators/ForEachLoopNode.hpp"
 #include "behavior_tree_ros/actions/ConvertMessageFieldNode.hpp"
 #include "behavior_tree_ros/actions/ConvertRandomMessageFieldNode.hpp"
+#include "behavior_tree_ros/actions/LookupTransformNode.hpp"
+#include "behavior_tree_ros/actions/GetTransformDistanceNode.hpp"
+#include "behavior_tree_ros/actions/GetTransformHorizontalDistanceNode.hpp"
+#include "behavior_tree_ros/actions/GetTransformOriginNode.hpp"
+#include "behavior_tree_ros/actions/GetTransformAnglesNode.hpp"
+#include "behavior_tree_ros/actions/LoadYamlFileNode.hpp"
 
+#include "behavior_tree_ros/PublisherNode.hpp"
+#include "behavior_tree_ros/SubscriberNode.hpp"
+#include "behavior_tree_ros/ServiceClientNode.hpp"
 #include "behavior_tree_ros/SimpleActionClientNode.hpp"
 
 #include <behavior_tree_ros/BehaviorTreeAction.h>
@@ -52,6 +71,26 @@ BT_REGISTER_NODES(factory)
     factory.registerNodeType<FatalLog>("FatalLog");
 
     factory.registerNodeType<AddKeyValueToJson>("AddKeyValueToJson");
+
+    factory.registerNodeType<LookupTransformNode>("LookupTransform");
+    factory.registerNodeType<GetTransformDistanceNode>("GetTransformDistance");
+    factory.registerNodeType<GetTransformHorizontalDistanceNode>("GetTransformHorizontalDistance");
+    factory.registerNodeType<GetTransformOriginNode>("GetTransformOrigin");
+    factory.registerNodeType<GetTransformAnglesNode>("GetTransformAngles");
+    factory.registerNodeType<LoadYamlFileNode>("LoadYamlFile");
+
+    factory.registerNodeType<SerializedSubscriber<std_msgs::Int32>>("MonitorStdInt32");
+    factory.registerNodeType<SerializedSubscriber<std_msgs::Float64>>("MonitorStdFloat64");
+    factory.registerNodeType<SerializedSubscriber<std_msgs::Bool>>("MonitorStdBool");
+    factory.registerNodeType<SerializedSubscriber<std_msgs::String>>("MonitorStdString");
+
+    factory.registerNodeType<AutomaticPublisher<std_msgs::String>>("PublishStdString");
+    factory.registerNodeType<AutomaticPublisher<std_msgs::Empty>>("PublishStdEmpty");
+    factory.registerNodeType<AutomaticPublisher<std_msgs::Bool>>("PublishStdBool");
+
+    factory.registerNodeType<AutomaticServiceClient<std_srvs::Empty>>("CallEmptyService");
+    factory.registerNodeType<AutomaticServiceClient<std_srvs::SetBool>>("CallSetBoolService");
+    factory.registerNodeType<AutomaticServiceClient<std_srvs::Trigger>>("CallTriggerService");
 
     factory.registerTypeConverter<std::string, nlohmann::json>(BT::convertFromString<nlohmann::json>);
     factory.registerTypeConverter<nlohmann::json, std::string>(json2String);

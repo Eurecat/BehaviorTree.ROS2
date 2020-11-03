@@ -19,6 +19,9 @@
   <build_depend>cmake_modules</build_depend>
   <build_depend>tinyxml2</build_depend>
   <build_depend>actionlib</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>yaml-cpp</build_depend>
+  <build_depend>angles</build_depend>
 
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>behavior_tree_core</build_export_depend>
@@ -27,12 +30,17 @@
   <build_export_depend>cmake_modules</build_export_depend>
   <build_export_depend>tinyxml2</build_export_depend>
   <build_export_depend>actionlib</build_export_depend>
+  <build_export_depend>tf</build_export_depend>
+  <build_export_depend>angles</build_export_depend>
 
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>behavior_tree_core</exec_depend>
   <exec_depend version_gte="2.0.4">ros_type_introspection</exec_depend>
   <exec_depend>tinyxml2</exec_depend>
   <exec_depend>actionlib</exec_depend>
+  <exec_depend>tf</exec_depend>
+  <exec_depend>yaml-cpp</exec_depend>
+  <exec_depend>angles</exec_depend>
 
   <export>
       <behavior_tree_ros plugin="${prefix}/plugin_description.xml" />

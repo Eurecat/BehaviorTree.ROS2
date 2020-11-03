@@ -1,4 +1,6 @@
 # behavior_tree_ros
+![Build and Release for ROS Kinetic & ROS Melodic](https://github.com/robotics-upo/behavior_tree_ros/workflows/Build%20and%20Release%20for%20ROS%20Kinetic%20&%20ROS%20Melodic/badge.svg)
+
 Provides a ROS wrapper for the Behavior Tree engine (BehaviorTree.CPP library), as well as ROS-based pluggins to deal with ROS topics, services and actions within a BT.
 
 
@@ -37,4 +39,9 @@ Please, see the documentation.
 * **ros-type-introspection**
 ```bash
 sudo apt-get install ros-$ROS_DISTRO-ros-type-introspection
+```
+
+* **yaml-cpp**
+```bash
+sudo apt-get install libyaml-cpp-dev
 ```
