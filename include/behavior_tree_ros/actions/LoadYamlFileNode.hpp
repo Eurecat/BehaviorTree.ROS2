@@ -1,7 +1,7 @@
 #ifndef LOAD_YAML_FILE_NODE_HPP
 #define LOAD_YAML_FILE_NODE_HPP
 
-#include <behaviortree_cpp/action_node.h>
+#include <behaviortree_cpp_v3/action_node.h>
 #include "yaml-cpp/yaml.h"
 #include "behavior_tree_ros/details/conversion_json.hpp"
 #include <pwd.h>

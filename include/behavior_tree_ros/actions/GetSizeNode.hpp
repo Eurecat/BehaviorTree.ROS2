@@ -1,7 +1,7 @@
 #ifndef GET_SIZE_NODE_HPP
 #define GET_SIZE_NODE_HPP
 
-#include <behaviortree_cpp/action_node.h>
+#include <behaviortree_cpp_v3/action_node.h>
 
 namespace BT_ROS
 {

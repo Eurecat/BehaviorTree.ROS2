@@ -1,7 +1,7 @@
 #ifndef PUBLISHER_NODE_HPP
 #define PUBLISHER_NODE_HPP
 
-#include <behaviortree_cpp/action_node.h>
+#include <behaviortree_cpp_v3/action_node.h>
 
 #include "behavior_tree_ros/policies/deserialization_policies.hpp"
 

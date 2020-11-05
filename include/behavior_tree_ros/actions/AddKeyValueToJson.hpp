@@ -1,8 +1,8 @@
 #ifndef ADD_KEY_VALUE_TO_NODE
 #define ADD_KEY_VALUE_TO_NODE
 
-#include <behaviortree_cpp/action_node.h>
-#include <behaviortree_cpp/utils/safe_any.hpp>
+#include <behaviortree_cpp_v3/action_node.h>
+#include <behaviortree_cpp_v3/utils/safe_any.hpp>
 #include "behavior_tree_ros/details/conversion_json.hpp"
 
 namespace BT_ROS

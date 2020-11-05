@@ -5,7 +5,7 @@
 #include <atomic>
 #include <memory>
 
-#include <behaviortree_cpp/action_node.h>
+#include <behaviortree_cpp_v3/action_node.h>
 #include <actionlib/client/simple_action_client.h>
 
 #include "behavior_tree_ros/policies/serialization_policies.hpp"

@@ -1,7 +1,7 @@
 #ifndef BEHAVIOR_TREE_ROS_CONVERSION_JSON
 #define BEHAVIOR_TREE_ROS_CONVERSION_JSON
 
-#include <behaviortree_cpp/basic_types.h>
+#include <behaviortree_cpp_v3/basic_types.h>
 
 //TODO: do not expose this
 #include "behavior_tree_ros/3rdparty/nlohmann/json.hpp"

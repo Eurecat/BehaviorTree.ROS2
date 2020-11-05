@@ -2,7 +2,7 @@
 #define SUBSCRIBER_NODE_HPP
 
 #include <mutex>
-#include <behaviortree_cpp/action_node.h>
+#include <behaviortree_cpp_v3/action_node.h>
 
 #include "behavior_tree_ros/policies/serialization_policies.hpp"
 

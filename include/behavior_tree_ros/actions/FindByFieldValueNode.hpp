@@ -2,7 +2,7 @@
 #define FIND_BY_FIELD_VALUE_NODE_HPP
 
 #include <algorithm>
-#include <behaviortree_cpp/action_node.h>
+#include <behaviortree_cpp_v3/action_node.h>
 
 #include "behavior_tree_ros/details/deserialization.hpp"
 

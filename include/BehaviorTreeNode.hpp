@@ -10,15 +10,15 @@
 #include <behavior_tree_ros/GetLoadedPlugins.h>
 #include <behavior_tree_ros/LoadTree.h>
 
-#include <behaviortree_cpp/bt_factory.h>
-#include <behaviortree_cpp/xml_parsing.h>
+#include <behaviortree_cpp_v3/bt_factory.h>
+#include <behaviortree_cpp_v3/xml_parsing.h>
 
-#include <behaviortree_cpp/loggers/bt_cout_logger.h>
-#include <behaviortree_cpp/loggers/bt_file_logger.h>
-#include <behaviortree_cpp/loggers/bt_minitrace_logger.h>
+#include <behaviortree_cpp_v3/loggers/bt_cout_logger.h>
+#include <behaviortree_cpp_v3/loggers/bt_file_logger.h>
+#include <behaviortree_cpp_v3/loggers/bt_minitrace_logger.h>
 
 #ifdef BEHAVIOR_TREE_CPP_ZMQ
-#include <behaviortree_cpp/loggers/bt_zmq_publisher.h>
+#include <behaviortree_cpp_v3/loggers/bt_zmq_publisher.h>
 #endif
 
 #include "bt_rostopic_logger.h"

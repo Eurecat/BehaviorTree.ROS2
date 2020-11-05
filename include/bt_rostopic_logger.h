@@ -2,7 +2,7 @@
 #define BT_ROSTOPIC_LOGGER_H
 
 #include <cstring>
-#include <behaviortree_cpp/loggers/abstract_logger.h>
+#include <behaviortree_cpp_v3/loggers/abstract_logger.h>
 
 #include <ros/ros.h>
 

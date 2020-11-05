@@ -1,8 +1,8 @@
 #ifndef CONVERT_JSON_TO_NODE_HPP
 #define CONVERT_JSON_TO_NODE_HPP
 
-#include <behaviortree_cpp/action_node.h>
-#include <behaviortree_cpp/utils/safe_any.hpp>
+#include <behaviortree_cpp_v3/action_node.h>
+#include <behaviortree_cpp_v3/utils/safe_any.hpp>
 #include "behavior_tree_ros/details/conversion_json.hpp"
 
 namespace BT_ROS

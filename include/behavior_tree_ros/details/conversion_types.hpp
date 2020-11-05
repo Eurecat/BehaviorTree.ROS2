@@ -1,7 +1,7 @@
 #ifndef BEHAVIOR_TREE_ROS_CONVERSION_TYPES
 #define BEHAVIOR_TREE_ROS_CONVERSION_TYPES
 
-#include <behaviortree_cpp/basic_types.h>
+#include <behaviortree_cpp_v3/basic_types.h>
 
 namespace BT
 {

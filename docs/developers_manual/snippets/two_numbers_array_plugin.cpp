@@ -2,7 +2,7 @@
 #include <behavior_tree_demo/TwoNumbers.h>
 #include <behavior_tree_demo/TwoNumbersArray.h>
 
-#include <behaviortree_cpp/bt_factory.h>
+#include <behaviortree_cpp_v3/bt_factory.h>
 #include <behavior_tree_ros/behavior_tree_ros.hpp>
 
 BT_REGISTER_NODES(factory)

@@ -1,7 +1,7 @@
 #ifndef CONVERT_RANDOM_MESSAGE_FIELD_NODE_HPP
 #define CONVERT_RANDOM_MESSAGE_FIELD_NODE_HPP
 
-#include <behaviortree_cpp/action_node.h>
+#include <behaviortree_cpp_v3/action_node.h>
 
 #include "behavior_tree_ros/utils/random.hpp"
 #include "behavior_tree_ros/details/deserialization.hpp"

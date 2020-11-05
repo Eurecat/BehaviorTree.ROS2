@@ -2,7 +2,7 @@
 #define BEHAVIOR_TREE_ROS_SERIALIZATION
 
 #include <functional>
-#include <behaviortree_cpp/action_node.h>
+#include <behaviortree_cpp_v3/action_node.h>
 
 //Do not treat reorder as an error even if it's compiled using -Werror
 //(this warning comes from ros_type_intronspection itself)

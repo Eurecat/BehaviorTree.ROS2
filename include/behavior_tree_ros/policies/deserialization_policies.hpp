@@ -4,8 +4,8 @@
 #include <algorithm>
 #include <functional>
 
-#include <behaviortree_cpp/action_node.h>
-#include <behaviortree_cpp/utils/demangle_util.h>
+#include <behaviortree_cpp_v3/action_node.h>
+#include <behaviortree_cpp_v3/utils/demangle_util.h>
 
 #include "behavior_tree_ros/details/serialization.hpp"
 

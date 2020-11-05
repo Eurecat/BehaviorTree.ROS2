@@ -3,7 +3,7 @@
 
 #include <functional>
 #include <ros/ros.h>
-#include <behaviortree_cpp/action_node.h>
+#include <behaviortree_cpp_v3/action_node.h>
 
 #include "behavior_tree_ros/3rdparty/nlohmann/json.hpp"
 #include "behavior_tree_ros/utils/UnorderedMap.hpp"

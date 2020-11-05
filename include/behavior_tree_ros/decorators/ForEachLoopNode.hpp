@@ -1,7 +1,7 @@
 #ifndef FOR_EACH_LOOP_NODE_HPP
 #define FOR_EACH_LOOP_NODE_HPP
 
-#include <behaviortree_cpp/decorator_node.h>
+#include <behaviortree_cpp_v3/decorator_node.h>
 
 #include "behavior_tree_ros/3rdparty/nlohmann/json.hpp"
 

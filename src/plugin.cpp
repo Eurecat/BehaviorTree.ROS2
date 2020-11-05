@@ -8,7 +8,7 @@
 #include <std_srvs/SetBool.h>
 #include <std_srvs/Trigger.h>
 
-#include <behaviortree_cpp/bt_factory.h>
+#include <behaviortree_cpp_v3/bt_factory.h>
 
 #include "behavior_tree_ros/details/types_conversion.hpp"
 
