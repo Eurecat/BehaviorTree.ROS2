@@ -9,7 +9,8 @@ on:
       - develop
 
 jobs:
-  build:
+
+  check_install:
     runs-on: ubuntu-latest
 
     strategy:
@@ -44,7 +45,7 @@ jobs:
         wget -O - http://robotics.upo.es/repos/apt/conf/harurepo.gpg.key | apt-key add -
         wget -P /etc/apt/sources.list.d/ http://robotics.upo.es/repos/apt/conf/harurepo.list
         apt-get update
-        cd $GITHUB_REPOSITORY
+        cd $GITHUB_WORKSPACE
         package_name=$(cat package.xml | grep name | sed -E 's/<\/?name>//g' | sed 's/_/-/g')
         apt-get install ros-$(rosversion -d)-$(package_name)
       shell: bash
