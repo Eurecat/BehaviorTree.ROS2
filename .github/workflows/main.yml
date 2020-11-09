@@ -260,7 +260,7 @@ jobs:
 
   check_install:
 
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: release
     runs-on: ubuntu-latest
 
     strategy:
