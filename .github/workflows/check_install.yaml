@@ -1,0 +1,51 @@
+# TODO:
+
+name: Check package is installable
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        container:
+          - "ros:melodic"
+          - "ros:kinetic"
+        include:
+          - container: "ros:melodic"
+            ros_distribution: Melodic
+          - container: "ros:kinetic"
+            ros_distribution: Kinetic
+
+    container:
+      image: ${{ matrix.container }}
+
+    steps:
+
+    - name: Update packages
+      run: |
+        apt-get update
+        apt-get install -yq software-properties-common apt-utils curl debhelper python-bloom python-rosdep python-rosinstall python-wstool build-essential fakeroot wget
+      shell: bash
+
+    - name: Checkout code
+      uses: actions/checkout@v2 #https://github.com/marketplace/actions/checkout
+      with:
+        fetch-depth: 0
+    
+    - name: Install package
+      run: |
+        wget -O - http://robotics.upo.es/repos/apt/conf/harurepo.gpg.key | apt-key add -
+        wget -P /etc/apt/sources.list.d/ http://robotics.upo.es/repos/apt/conf/harurepo.list
+        apt-get update
+        cd $GITHUB_REPOSITORY
+        package_name=$(cat package.xml | grep name | sed -E 's/<\/?name>//g' | sed 's/_/-/g')
+        apt-get install ros-$(rosversion -d)-$(package_name)
+      shell: bash
+    
