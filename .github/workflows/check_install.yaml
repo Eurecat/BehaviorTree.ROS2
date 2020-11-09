@@ -46,6 +46,6 @@ jobs:
         wget -P /etc/apt/sources.list.d/ http://robotics.upo.es/repos/apt/conf/harurepo.list
         apt-get update
         cd $GITHUB_WORKSPACE
-        apt-get install ros-$(rosversion -d)-$(cat package.xml | grep name | sed -E 's/<\/?name>//g' | sed 's/_/-/g')
+        apt-get install ros-$(rosversion -d)-$(cat package.xml | grep name | sed -E 's/<\/?name>//g' | sed 's/_/-/g' | sed -e 's/^[ \t]*//')
       shell: bash
     
