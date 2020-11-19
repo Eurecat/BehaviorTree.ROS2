@@ -33,11 +33,6 @@ class ServiceClientNode final : public BT::ActionNodeBase,
                 printf("joining thread\n");
                 service_call_thread_.join();
             }
-            else
-            {
-                printf("detaching thread\n");
-                service_call_thread_.detach();
-            }
         }
 
         void callService(const typename MessageType::Request& _request, typename MessageType::Response& _response)
