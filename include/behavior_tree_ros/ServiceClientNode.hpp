@@ -30,7 +30,6 @@ class ServiceClientNode final : public BT::ActionNodeBase,
             client_.shutdown();
             if (service_call_thread_.joinable())
             {
-                printf("joining thread\n");
                 service_call_thread_.join();
             }
         }
@@ -40,7 +39,6 @@ class ServiceClientNode final : public BT::ActionNodeBase,
             std::lock_guard<std::mutex> lock (service_mutex_);
             bool success = client_.call(_request, _response);
             service_state_ = success ? 2 : 1; // If service succedded to 2, otherwise to 1
-            // service_mutex_.unlock();
         }
 
         static BT::PortsList providedPorts()
@@ -65,6 +63,7 @@ class ServiceClientNode final : public BT::ActionNodeBase,
 
             if (!client_.exists()) { return BT::NodeStatus::FAILURE; }
 
+            // TODO: re-think thread things
             if(!service_called_)
             {
                 service_call_thread_ = std::thread(&ServiceClientNode::callService, this, std::ref(service_request), std::ref(service_response));
@@ -74,21 +73,21 @@ class ServiceClientNode final : public BT::ActionNodeBase,
 
             if(service_mutex_.try_lock())
             {
-                if (service_state_ == 1)
+                if (service_state_ == 1) // service finishes with errors
                 {
                     service_mutex_.unlock();
-                    service_call_thread_.join();
+                    if (service_call_thread_.joinable()) { service_call_thread_.join(); }
                     service_state_ = 0;
                     service_called_ = false;
                     return BT::NodeStatus::FAILURE;
                 }
-                else if (service_state_ == 2)
+                else if (service_state_ == 2) // service finishes successfully
                 {
                     response_policy_.onNewMessage(service_response, *this);
                     service_mutex_.unlock();
-                    service_call_thread_.join();
+                    if (service_call_thread_.joinable()) { service_call_thread_.join(); }
                     service_state_ = 0;
-                    service_called_ = true;
+                    service_called_ = false;
                     return BT::NodeStatus::SUCCESS;
                 }
                 else
@@ -100,7 +99,14 @@ class ServiceClientNode final : public BT::ActionNodeBase,
             return BT::NodeStatus::RUNNING;
         }
 
-        virtual void halt() override {}
+        virtual void halt() override
+        {
+            service_called_ = false;
+            if (service_call_thread_.joinable())
+            {
+                service_call_thread_.detach();
+            }
+        }
 
     private:
         ros::NodeHandle node_handle_;
