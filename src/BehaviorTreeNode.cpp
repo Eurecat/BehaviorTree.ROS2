@@ -10,6 +10,7 @@
 #include <std_msgs/String.h>
 
 #include "BehaviorTreeNode.hpp"
+#include "behavior_tree_ros/ExecutionStatus.h"
 
 namespace UPO
 {
@@ -29,6 +30,13 @@ namespace UPO
 		bt_status_publisher_ =
           		node_handle_.advertise<std_msgs::String>("bt_status", 1);
 	}
+
+	    bt_execution_status_publisher_
+            = node_handle_.advertise<behavior_tree_ros::ExecutionStatus>("behavior_tree/execution_status",
+                                                                         100, true);
+
+        // Publish the initial status (IDLE + no tree loaded).
+        PublishExecutionStatus();
     }
 
     void BehaviorTreeNode::Loop()
@@ -42,6 +50,14 @@ namespace UPO
         try
         {
             const auto tree_status = tree_->root_node->executeTick();
+
+            // Publish the updated status if
+            // there have been changes.
+            if(tree_status != status_)
+            {
+                status_ = tree_status;
+                PublishExecutionStatus();
+            }
 
             if(tree_status == BT::NodeStatus::FAILURE)
             {
@@ -71,6 +87,11 @@ namespace UPO
         try
         {
             BuildTree(full_path);
+
+            // Note: I'm saving the tree_file instead of
+            // the full path to be consistent with the original request.
+            current_tree_ = _request.tree_file;
+
             ROS_INFO("Loaded tree %s", full_path.c_str());
         }
         catch(const std::runtime_error& ex)
@@ -106,6 +127,14 @@ namespace UPO
     {
         ResetLoggers();
         tree_.reset();
+
+        // Update and publish the status here too
+        // (neeed to cover the case where users manually
+        // stop a tree by calling the stop_tree service).
+        current_tree_.clear();
+        status_ = BT::NodeStatus::IDLE;
+
+        PublishExecutionStatus();
     }
 
     void BehaviorTreeNode::LoadPluginsFromROS()
@@ -327,5 +356,43 @@ namespace UPO
         #endif
 
 	
+    }
+
+    // Publishes the current execution status. Note that
+    // this method assumes the member variables "status_"
+    // and "current_tree_" are up to date.
+    void BehaviorTreeNode::PublishExecutionStatus()
+    {
+        behavior_tree_ros::ExecutionStatus status_msg {};
+
+        static const auto to_msg_status = [](const BT::NodeStatus& bt_status)
+        {
+            using namespace behavior_tree_ros;
+
+            auto status { ExecutionStatus::IDLE };
+
+            switch(bt_status)
+            {
+                case BT::NodeStatus::FAILURE:
+                    status = ExecutionStatus::FAILURE;
+                    break;
+                case BT::NodeStatus::IDLE:
+                    status = ExecutionStatus::IDLE;
+                    break;
+                case BT::NodeStatus::RUNNING:
+                    status = ExecutionStatus::RUNNING;
+                    break;
+                case BT::NodeStatus::SUCCESS:
+                    status = ExecutionStatus::SUCCESS;
+                    break;
+            }
+
+            return status;
+        };
+
+        status_msg.tree_file = current_tree_;
+        status_msg.status    = to_msg_status(status_);
+
+        bt_execution_status_publisher_.publish(status_msg);
     }
 }
