@@ -86,16 +86,18 @@ namespace UPO
 
         try
         {
-            BuildTree(full_path);
-
             // Note: I'm saving the tree_file instead of
             // the full path to be consistent with the original request.
             current_tree_ = _request.tree_file;
+
+            BuildTree(full_path);
 
             ROS_INFO("Loaded tree %s", full_path.c_str());
         }
         catch(const std::runtime_error& ex)
         {
+            current_tree_.clear();
+
             ROS_ERROR("Error loading tree %s: %s", full_path.c_str(), ex.what());
             return false;
         }
