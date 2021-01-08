@@ -34,11 +34,12 @@ class ServiceClientNode final : public BT::ActionNodeBase,
             }
         }
 
-        void callService(const typename MessageType::Request& _request, typename MessageType::Response& _response)
+        void callService(const typename MessageType::Request& _request)
         {
-            std::lock_guard<std::mutex> lock (service_mutex_);
-            bool success = client_.call(_request, _response);
+            service_mutex_.lock();
+            bool success = client_.call(_request, service_response_);
             service_state_ = success ? 2 : 1; // If service succedded to 2, otherwise to 1
+            service_mutex_.unlock();
         }
 
         static BT::PortsList providedPorts()
@@ -59,14 +60,14 @@ class ServiceClientNode final : public BT::ActionNodeBase,
             setStatus(BT::NodeStatus::RUNNING);
 
             const auto& service_request = request_policy_.buildMessage(*this);
-            typename MessageType::Response service_response {};
+            // typename MessageType::Response service_response {};
 
             if (!client_.exists()) { return BT::NodeStatus::FAILURE; }
 
             // TODO: re-think thread things
             if(!service_called_)
             {
-                service_call_thread_ = std::thread(&ServiceClientNode::callService, this, std::ref(service_request), std::ref(service_response));
+                service_call_thread_ = std::thread(&ServiceClientNode::callService, this, service_request);
                 std::this_thread::sleep_for(std::chrono::milliseconds(200)); // sleep this thread for 200 ms
                 service_called_ = true;
             }
@@ -83,7 +84,7 @@ class ServiceClientNode final : public BT::ActionNodeBase,
                 }
                 else if (service_state_ == 2) // service finishes successfully
                 {
-                    response_policy_.onNewMessage(service_response, *this);
+                    response_policy_.onNewMessage(service_response_, *this);
                     service_mutex_.unlock();
                     if (service_call_thread_.joinable()) { service_call_thread_.join(); }
                     service_state_ = 0;
@@ -115,6 +116,7 @@ class ServiceClientNode final : public BT::ActionNodeBase,
         RequestDeserializationPolicy<typename MessageType::Request> request_policy_ {};
         ResponseSerializationPolicy<typename MessageType::Response> response_policy_ {};
 
+        typename MessageType::Response service_response_ {};
         int service_state_ {};
         std::thread service_call_thread_;
         std::atomic<bool> service_called_ {false};
