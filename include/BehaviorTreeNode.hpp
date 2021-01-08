@@ -56,6 +56,8 @@ namespace UPO
 
             std::string GetFullPath(const std::string& _file) const;
 
+            void PublishExecutionStatus();
+
         private:
             ros::NodeHandle node_handle_;
             ros::Rate loop_rate_;
@@ -65,6 +67,7 @@ namespace UPO
             ros::ServiceServer stop_tree_srv_;
 
 	    ros::Publisher bt_status_publisher_;
+	    ros::Publisher bt_execution_status_publisher_;
 
             std::unique_ptr<BT::Tree> tree_;
             BT::BehaviorTreeFactory bt_factory_;
@@ -80,6 +83,10 @@ namespace UPO
 
             std::set<std::string> loaded_plugins_;
             std::string trees_folder_;
+
+            // Execution status report.
+            BT::NodeStatus status_ { BT::NodeStatus::IDLE };
+            std::string current_tree_ {};
     };
 }
 

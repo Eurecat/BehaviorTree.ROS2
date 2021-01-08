@@ -40,6 +40,11 @@ add_action_files(
   BehaviorTree.action
 )
 
+add_message_files(
+    FILES
+        ExecutionStatus.msg
+)
+
 generate_messages(DEPENDENCIES
   actionlib_msgs  std_msgs)
 
