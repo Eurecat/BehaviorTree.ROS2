@@ -163,10 +163,10 @@ namespace UPO
                     error_msg  =std::string { "XML file may be ill-formed ( " }
                             + plugin_description.ErrorStr() ;
                     #else // version in Kinetic is 2.2
-                    // error_msg = std::string { "XML file may be ill-formed ( " }
+                    error_msg = std::string { "XML file may be ill-formed ( " }
+                                + plugin_description.ErrorName() + std::string { " )" };
                     //         + plugin_description.GetErrorStr1() + std::string { ". " }
                     //         + plugin_description.GetErrorStr2() + std::string { ")" };
-                    error_msg = "XML file may be ill-formed";
                     #endif
                     throw std::runtime_error { error_msg };
                 }
