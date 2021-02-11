@@ -59,7 +59,8 @@ namespace UPO
             void PublishExecutionStatus();
 
         private:
-            ros::NodeHandle node_handle_;
+            ros::NodeHandle private_node_handle_ { "~" };
+            ros::NodeHandle public_node_handle_;
             ros::Rate loop_rate_;
 
             ros::ServiceServer get_loaded_plugins_srv_;

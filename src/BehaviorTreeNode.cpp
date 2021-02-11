@@ -15,25 +15,25 @@
 namespace UPO
 {
     BehaviorTreeNode::BehaviorTreeNode() :
-        loop_rate_ { node_handle_.param("tick_frequency", 30.0) }
+        loop_rate_ { private_node_handle_.param("tick_frequency", 30.0) }
     {
-        node_handle_.getParam("trees_folder", trees_folder_);
+        private_node_handle_.getParam("trees_folder", trees_folder_);
 
         LoadAllPlugins();
 
-        get_loaded_plugins_srv_ = node_handle_.advertiseService("behavior_tree/get_loaded_plugins", &BehaviorTreeNode::GetLoadedPluginsService, this);
-        load_tree_srv_          = node_handle_.advertiseService("behavior_tree/load_tree", &BehaviorTreeNode::LoadTree, this);
-        stop_tree_srv_          = node_handle_.advertiseService("behavior_tree/stop_tree", &BehaviorTreeNode::StopTree, this);
+        get_loaded_plugins_srv_ = public_node_handle_.advertiseService("behavior_tree/get_loaded_plugins", &BehaviorTreeNode::GetLoadedPluginsService, this);
+        load_tree_srv_          = public_node_handle_.advertiseService("behavior_tree/load_tree", &BehaviorTreeNode::LoadTree, this);
+        stop_tree_srv_          = public_node_handle_.advertiseService("behavior_tree/stop_tree", &BehaviorTreeNode::StopTree, this);
 
-	if(node_handle_.param("enable_rostopic_log", false))
+	if(private_node_handle_.param("enable_rostopic_log", false))
         { 
 		bt_status_publisher_ =
-          		node_handle_.advertise<std_msgs::String>("bt_status", 1);
+        	public_node_handle_.advertise<std_msgs::String>("bt_status", 1);
 	}
 
 	    bt_execution_status_publisher_
-            = node_handle_.advertise<behavior_tree_ros::ExecutionStatus>("behavior_tree/execution_status",
-                                                                         100, true);
+            = public_node_handle_.advertise<behavior_tree_ros::ExecutionStatus>("behavior_tree/execution_status",
+                                                                                100, true);
 
         // Publish the initial status (IDLE + no tree loaded).
         PublishExecutionStatus();
@@ -275,12 +275,12 @@ namespace UPO
     {
         LoadPluginsFromROS();
 
-	bool import_from_folder = node_handle_.param("import_from_folder", false);
+	bool import_from_folder = private_node_handle_.param("import_from_folder", false);
 
 	if(import_from_folder)
     {
         std::string plugins_folder;
-        if(!node_handle_.getParam("plugins_folder", plugins_folder))
+        if(!private_node_handle_.getParam("plugins_folder", plugins_folder))
         {
             ROS_WARN("Import from folder option is set, but folder param is missing");
         }
@@ -307,33 +307,33 @@ namespace UPO
         std::stringstream file_base;
         const auto& current_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
-        file_base << node_handle_.param<std::string>("log_folder", "/tmp/") << "behavior_tree_ros-" << std::put_time(std::localtime(&current_time), "%F-%R");;
+        file_base << private_node_handle_.param<std::string>("log_folder", "/tmp/") << "behavior_tree_ros-" << std::put_time(std::localtime(&current_time), "%F-%R");;
         const auto& log_file       = file_base.str() + ".fbl";
         const auto& minitrace_file = file_base.str() + ".json";
 
-        if(node_handle_.param("enable_cout_log", false))
+        if(private_node_handle_.param("enable_cout_log", false))
         { 
             bt_logger_cout_ = std::make_unique<BT::StdCoutLogger>(*tree_);
         }
         
-        if(node_handle_.param("enable_minitrace_log", false))
+        if(private_node_handle_.param("enable_minitrace_log", false))
         { 
             bt_logger_trace_ = std::make_unique<BT::MinitraceLogger>(*tree_, minitrace_file.c_str());
         }
         
-        if(node_handle_.param("enable_file_log", false))
+        if(private_node_handle_.param("enable_file_log", false))
         { 
             bt_logger_file_ = std::make_unique<BT::FileLogger>(*tree_, log_file.c_str());
         }
 
-	if(node_handle_.param("enable_rostopic_log", false))
+    	if(private_node_handle_.param("enable_rostopic_log", false))
         { 
             //bt_logger_rostopic_ = std::make_unique<BT_ROS::RosTopicLogger>(*tree_,node_handle_);
 	      bt_logger_rostopic_ = std::make_unique<BT_ROS::RosTopicLogger>(*tree_,bt_status_publisher_);
         }
 
 
-        if(node_handle_.param("enable_zmq_log", false))
+        if(private_node_handle_.param("enable_zmq_log", false))
         {
             #ifdef BEHAVIOR_TREE_CPP_ZMQ
             bt_logger_zmq_ = std::make_unique<BT::PublisherZMQ>(*tree_);
