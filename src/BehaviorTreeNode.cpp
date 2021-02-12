@@ -19,6 +19,16 @@ namespace UPO
     {
         private_node_handle_.getParam("trees_folder", trees_folder_);
 
+        enable_cout_log_        = private_node_handle_.param("enable_cout_log", false);
+        enable_minitrace_log_   = private_node_handle_.param("enable_minitrace_log", false);
+        enable_rostopic_log_    = private_node_handle_.param("enable_rostopic_log", false);
+        enable_file_log_        = private_node_handle_.param("enable_file_log", false);
+        enable_zmq_log_         = private_node_handle_.param("enable_zmq_log", false);
+
+        const char* home = getenv("HOME");
+        log_folder_ = private_node_handle_.param<std::string>("log_folder", "/tmp/");
+        log_folder_ = log_folder_.front() == '~' ? std::string(home) + log_folder_.substr(1, log_folder_.size() - 1) : log_folder_;
+
         LoadAllPlugins();
 
         get_loaded_plugins_srv_ = public_node_handle_.advertiseService("behavior_tree/get_loaded_plugins", &BehaviorTreeNode::GetLoadedPluginsService, this);
@@ -293,7 +303,26 @@ namespace UPO
 
     std::string BehaviorTreeNode::GetFullPath(const std::string& _file) const
     {
-        return _file.front() == '/' ? _file : (trees_folder_.back() == '/' ? trees_folder_ : trees_folder_ + "/") + _file;
+        std::string full_name = _file;
+        const char* home = getenv("HOME");
+
+        full_name = full_name.front() == '~' ? std::string(home) + full_name.substr(1, full_name.size() - 1) : full_name;
+        full_name = full_name.front() == '/' ? full_name : (trees_folder_.back() == '/' ? trees_folder_ : trees_folder_ + "/") + full_name;
+
+        boost::filesystem::path full_path = full_name;
+
+        if (full_path.has_extension())
+        {
+            if (full_path.extension() != ".xml")
+            {
+                full_path.replace_extension(".xml");
+                full_name = full_path.string();
+            }
+        }
+        else
+            full_name += ".xml";
+
+        return full_name;
     }
 
     void BehaviorTreeNode::InitializeLoggers()
@@ -306,34 +335,34 @@ namespace UPO
 
         std::stringstream file_base;
         const auto& current_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        log_folder_ = log_folder_.back() == '/' ? log_folder_ : log_folder_ + "/";
 
-        file_base << private_node_handle_.param<std::string>("log_folder", "/tmp/") << "behavior_tree_ros-" << std::put_time(std::localtime(&current_time), "%F-%R");;
+        file_base << log_folder_ << "behavior_tree_ros-" << std::put_time(std::localtime(&current_time), "%F-%R");;
         const auto& log_file       = file_base.str() + ".fbl";
         const auto& minitrace_file = file_base.str() + ".json";
 
-        if(private_node_handle_.param("enable_cout_log", false))
+        if(enable_cout_log_)
         { 
             bt_logger_cout_ = std::make_unique<BT::StdCoutLogger>(*tree_);
         }
         
-        if(private_node_handle_.param("enable_minitrace_log", false))
+        if(enable_minitrace_log_)
         { 
             bt_logger_trace_ = std::make_unique<BT::MinitraceLogger>(*tree_, minitrace_file.c_str());
         }
         
-        if(private_node_handle_.param("enable_file_log", false))
+        if(enable_file_log_)
         { 
             bt_logger_file_ = std::make_unique<BT::FileLogger>(*tree_, log_file.c_str());
         }
 
-    	if(private_node_handle_.param("enable_rostopic_log", false))
+    	if(enable_rostopic_log_)
         { 
             //bt_logger_rostopic_ = std::make_unique<BT_ROS::RosTopicLogger>(*tree_,node_handle_);
 	      bt_logger_rostopic_ = std::make_unique<BT_ROS::RosTopicLogger>(*tree_,bt_status_publisher_);
         }
 
-
-        if(private_node_handle_.param("enable_zmq_log", false))
+        if(enable_zmq_log_)
         {
             #ifdef BEHAVIOR_TREE_CPP_ZMQ
             bt_logger_zmq_ = std::make_unique<BT::PublisherZMQ>(*tree_);

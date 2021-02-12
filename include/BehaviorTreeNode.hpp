@@ -84,6 +84,12 @@ namespace UPO
 
             std::set<std::string> loaded_plugins_;
             std::string trees_folder_;
+            std::string log_folder_;
+            bool enable_cout_log_;
+            bool enable_minitrace_log_;
+            bool enable_rostopic_log_;
+            bool enable_file_log_;
+            bool enable_zmq_log_;
 
             // Execution status report.
             BT::NodeStatus status_ { BT::NodeStatus::IDLE };
