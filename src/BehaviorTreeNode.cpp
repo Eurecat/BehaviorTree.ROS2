@@ -309,17 +309,10 @@ namespace UPO
         full_name = full_name.front() == '~' ? std::string(home) + full_name.substr(1, full_name.size() - 1) : full_name;
         full_name = full_name.front() == '/' ? full_name : (trees_folder_.back() == '/' ? trees_folder_ : trees_folder_ + "/") + full_name;
 
-        boost::filesystem::path full_path = full_name;
-
-        if (full_path.has_extension())
-        {
-            if (full_path.extension() != ".xml")
-            {
-                full_path.replace_extension(".xml");
-                full_name = full_path.string();
-            }
-        }
-        else
+        std::size_t pos = full_name.find_last_of('.');
+        if (pos == std::string::npos)
+            full_name += ".xml";
+        else if (full_name.substr(pos) != ".xml")
             full_name += ".xml";
 
         return full_name;
