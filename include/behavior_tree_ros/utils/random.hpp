@@ -15,7 +15,7 @@ namespace Utils
                                 void>>;
 
     template<typename T>
-    auto getRandomNumber(auto _min = std::numeric_limits<T>::min(), auto _max = std::numeric_limits<T>::max())
+    auto getRandomNumber(T _min = std::numeric_limits<T>::min(), T _max = std::numeric_limits<T>::max())
     {
         std::mt19937           generator(std::random_device{}());
         UniformDistribution<T> distribution(_min, _max);
