@@ -148,12 +148,10 @@ namespace UPO
                 if(plugin_description.Error())
                 {
                     std::string error_msg;
-                    #ifdef MELODIC
+                    #if TINYXML2_MAJOR_VERSION >= 6
                     error_msg  =std::string { "XML file may be ill-formed ( " }
                             + plugin_description.ErrorStr() ;
-                    #endif
-
-                    #ifndef MELODIC
+                    #else
                     error_msg = std::string { "XML file may be ill-formed ( " }
                             + plugin_description.GetErrorStr1() + ". "
                             + plugin_description.GetErrorStr2() + ")";

@@ -169,10 +169,10 @@ namespace UPO
                 if(plugin_description.Error())
                 {
                     std::string error_msg;
-                    #if TINYXML2_MAJOR_VERSION >= 6 // version in Melodic
+                    #if TINYXML2_MAJOR_VERSION >= 6
                     error_msg  =std::string { "XML file may be ill-formed ( " }
                             + plugin_description.ErrorStr() ;
-                    #else // version in Kinetic is 2.2
+                    #else
                     error_msg = std::string { "XML file may be ill-formed ( " }
                                 + plugin_description.ErrorName() + std::string { " )" };
                     //         + plugin_description.GetErrorStr1() + std::string { ". " }
