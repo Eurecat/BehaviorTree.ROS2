@@ -32,7 +32,17 @@ class AddKeyValueToJson final : public BT::SyncActionNode
             
             try{
                 nlohmann::json json_store = input_json.value();
-                json_store[input_key.value()] = input_value.value();
+
+                // Fill Json according to its type
+                if (json_store.is_array())
+                {
+                    nlohmann::json object;
+                    object[input_key.value()] = input_value.value();
+                    json_store.push_back(object);
+                }
+                else
+                    json_store[input_key.value()] = input_value.value();
+
                 setOutput("output", json_store);
                 return BT::NodeStatus::SUCCESS;
             }catch(const nlohmann::json::exception&) {

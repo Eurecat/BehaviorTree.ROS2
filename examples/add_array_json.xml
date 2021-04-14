@@ -1,0 +1,216 @@
+<?xml version="1.0"?>
+<root main_tree_to_execute="BehaviorTree">
+    <!-- ////////// -->
+    <BehaviorTree ID="BehaviorTree">
+        <Sequence>
+            <Action ID="InitializeJson" output="j"/>
+            <SetBlackboard output_key="json_numbers" value="[1,2,3]"/>
+            <Action ID="AddArrayToJson" input_json="" input_key="" input_value="{json_numbers}" name="Json Array j1 without initial json" output_json="j1" override="1"/>
+            <Action ID="InfoLog" message="{j1}"/>
+            <Action ID="AddArrayToJson" input_json="{j1}" input_key="gods" input_value="Ricardo" name="Add key-array to j1" output_json="j1" override="1"/>
+            <Action ID="InfoLog" message="{j1}"/>
+            <Action ID="AddArrayToJson" input_json="{j1}" input_key="furniture" input_value="table" name="Add other key-array to j1" output_json="j1" override="1"/>
+            <Action ID="InfoLog" message="{j1}"/>
+            <Action ID="AddArrayToJson" input_json="{j1}" input_key="gods" input_value="Fali" name="Add value to existent key-array in j1" output_json="{j1}" override="0"/>
+            <Action ID="InfoLog" message="{j1}"/>
+            <Action ID="AddArrayToJson" input_json="{j1}" input_key="" input_value="6" name="Add value to j1" output_json="j1" override="0"/>
+            <Action ID="InfoLog" message="{j1}"/>
+            <Action ID="AddKeyValueToJson" input_json="{j1}" input_key="hu" input_value="rray" name="Add key-value to j1" output="j1"/>
+            <Action ID="InfoLog" message="{j1}"/>
+            <Action ID="AddArrayToJson" input_json="{j1}" input_key="" input_value="perfect" name="Reset j1 to one value" output_json="j1" override="1"/>
+            <Action ID="InfoLog" message="{j1}"/>
+            <Action ID="AddArrayToJson" input_json="{j}" input_key="shopping" input_value="tomatoes" name="Json Object j2 from empty json" output_json="j2" override="1"/>
+            <Action ID="InfoLog" message="{j2}"/>
+            <Action ID="AddArrayToJson" input_json="{j2}" input_key="shopping" input_value="bananas" name="Add value to key-array" output_json="j2" override="0"/>
+            <Action ID="InfoLog" message="{j2}"/>
+            <Action ID="AddArrayToJson" input_json="{j2}" input_key="" input_value="empty" name="Add new key-array with empty key" output_json="j2" override="1"/>
+            <Action ID="InfoLog" message="{j2}"/>
+            <Action ID="AddArrayToJson" input_json="{j2}" input_key="" input_value="void" name="Add value to array with empty key" output_json="j2" override="0"/>
+            <Action ID="InfoLog" message="{j2}"/>
+            <Action ID="AddKeyValueToJson" input_json="{j2}" input_key="another" input_value="success" name="Add key-pair to j2" output="j2"/>
+            <Action ID="InfoLog" message="{j2}"/>
+            <Action ID="AddArrayToJson" input_json="{j2}" input_key="shopping" input_value="Haru" name="Reset key-array in j2" output_json="j2" override="1"/>
+            <Action ID="InfoLog" message="{j2}"/>
+        </Sequence>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <TreeNodesModel>
+        <Action ID="AddArrayToJson">
+            <input_port name="input_json" type="void">Input Json array</input_port>
+            <input_port name="input_key" type="std::string">Key name of the array</input_port>
+            <input_port name="input_value" type="std::string">New value or value to append to the array</input_port>
+            <output_port name="output_json" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Output Json array</output_port>
+            <input_port default="1" name="override" type="bool">1 to override the actual array; 0 to append value</input_port>
+        </Action>
+        <Action ID="AddKeyValueToJson">
+            <input_port name="input_json" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Input json to copy to</input_port>
+            <input_port name="input_key" type="std::string">Input key name</input_port>
+            <input_port name="input_value" type="std::string">Input value</input_port>
+            <output_port name="output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Output json with new value</output_port>
+        </Action>
+        <Action ID="CallEmptyService">
+            <input_port name="service" type="std::string">ROS service name</input_port>
+        </Action>
+        <Action ID="CallSetBoolService">
+            <input_port name="data" type="bool">Auto-generated field from std_srvs::SetBoolRequest_&lt;std::allocator&lt;void&gt; &gt;</input_port>
+            <output_port name="serialized_output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [std_srvs::SetBoolResponse_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
+            <input_port name="service" type="std::string">ROS service name</input_port>
+        </Action>
+        <Action ID="CallTriggerService">
+            <output_port name="serialized_output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [std_srvs::TriggerResponse_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
+            <input_port name="service" type="std::string">ROS service name</input_port>
+        </Action>
+        <Action ID="ConvertJsonToDouble">
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
+            <output_port name="output" type="double">Output variable</output_port>
+        </Action>
+        <Action ID="ConvertJsonToInt64">
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
+            <output_port name="output" type="long">Output variable</output_port>
+        </Action>
+        <Action ID="ConvertJsonToString">
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
+            <output_port name="output" type="std::string">Output variable</output_port>
+        </Action>
+        <Action ID="ConvertJsonToUint64">
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
+            <output_port name="output" type="unsigned long">Output variable</output_port>
+        </Action>
+        <Action ID="ConvertMessageField">
+            <input_port name="field" type="std::string">Field to fetch</input_port>
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
+            <output_port name="output" type="void">Output variable</output_port>
+        </Action>
+        <Action ID="ConvertRandomMessageField">
+            <input_port name="field" type="std::string">Field to fetch</input_port>
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
+            <output_port name="output" type="void">Output variable</output_port>
+        </Action>
+        <Action ID="CopyJson">
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Input variable</input_port>
+            <output_port name="output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Output variable to copy to</output_port>
+        </Action>
+        <Action ID="DebugLog">
+            <input_port name="message" type="std::string">Message to log</input_port>
+        </Action>
+        <Action ID="ErrorLog">
+            <input_port name="message" type="std::string">Message to log</input_port>
+        </Action>
+        <Action ID="ExecuteRemoteTree">
+            <input_port name="action" type="std::string">Actionlib action server name</input_port>
+            <output_port name="state" type="actionlib::SimpleClientGoalState">Actionlib reported state</output_port>
+            <input_port name="tree_file.data" type="std::string">Auto-generated field from behavior_tree_ros::BehaviorTreeGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
+        </Action>
+        <Action ID="FatalLog">
+            <input_port name="message" type="std::string">Message to log</input_port>
+        </Action>
+        <Action ID="FindByFieldValue">
+            <input_port name="field" type="std::string">Field to fetch</input_port>
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
+            <output_port name="output" type="void">Output variable</output_port>
+            <input_port name="value" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Value to search for</input_port>
+        </Action>
+        <Decorator ID="ForEachLoop">
+            <input_port name="break_on_child_failure" type="bool">Break loop on child failure?</input_port>
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Input sequence</input_port>
+            <output_port name="output_element" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Output element variable</output_port>
+            <output_port name="output_index" type="unsigned long">Output index variable</output_port>
+        </Decorator>
+        <Action ID="GetJsonSize">
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Input sequence</input_port>
+            <output_port name="output" type="unsigned long">Sequence size output</output_port>
+        </Action>
+        <Action ID="GetMessageField">
+            <input_port name="field" type="std::string">Field to fetch</input_port>
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
+            <output_port name="output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Output variable</output_port>
+        </Action>
+        <Action ID="GetRandomMessageField">
+            <input_port name="field" type="std::string">Field to fetch</input_port>
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
+            <output_port name="output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Output variable</output_port>
+        </Action>
+        <Action ID="GetTransformAngles">
+            <input_port name="input" type="tf::StampedTransform">TF transform</input_port>
+            <output_port name="pitch" type="double">Picth angle [0,2PI] from TF transform origin</output_port>
+            <output_port name="roll" type="double">Roll angle [0,2PI] from TF transform origin</output_port>
+            <output_port name="yaw" type="double">Yaw angle [0,2PI] from TF transform origin</output_port>
+        </Action>
+        <Action ID="GetTransformDistance">
+            <input_port name="input" type="tf::StampedTransform">TF transform</input_port>
+            <output_port name="output" type="double">Distance form transform origin</output_port>
+        </Action>
+        <Action ID="GetTransformHorizontalDistance">
+            <input_port name="input" type="tf::StampedTransform">TF transform</input_port>
+            <output_port name="output" type="double">2D distance from TF transform origin</output_port>
+        </Action>
+        <Action ID="GetTransformOrigin">
+            <input_port name="input" type="tf::StampedTransform">TF transform</input_port>
+            <output_port name="x" type="double">Origin x coordinate</output_port>
+            <output_port name="y" type="double">Origin y coordinate</output_port>
+            <output_port name="z" type="double">Origin z coordinate</output_port>
+        </Action>
+        <Action ID="InfoLog">
+            <input_port name="message" type="std::string">Message to log</input_port>
+        </Action>
+        <Action ID="InitializeJson">
+            <output_port name="output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Output variable to initialize</output_port>
+        </Action>
+        <Action ID="LoadYamlFile">
+            <input_port name="file_path" type="std::string">Path to the YAML config file</input_port>
+            <output_port name="output" type="std::string">Parameter list as json</output_port>
+        </Action>
+        <Action ID="LookupTransform">
+            <output_port name="output" type="tf::StampedTransform">Result transform</output_port>
+            <input_port name="source_frame" type="std::string">Origin TF frame</input_port>
+            <input_port name="target_frame" type="std::string">Target TF frame</input_port>
+            <input_port default="0" name="use_last_available" type="bool">Use last available transform?</input_port>
+        </Action>
+        <Action ID="MonitorStdBool">
+            <input_port default="0" name="consume_msgs" type="bool">Should messages be consumed?</input_port>
+            <input_port default="1" name="queue_size" type="unsigned int">Subscriber callback queue size</input_port>
+            <output_port name="serialized_output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [std_msgs::Bool_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
+            <input_port name="topic" type="std::string">Topic to subscribe</input_port>
+        </Action>
+        <Action ID="MonitorStdFloat64">
+            <input_port default="0" name="consume_msgs" type="bool">Should messages be consumed?</input_port>
+            <input_port default="1" name="queue_size" type="unsigned int">Subscriber callback queue size</input_port>
+            <output_port name="serialized_output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [std_msgs::Float64_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
+            <input_port name="topic" type="std::string">Topic to subscribe</input_port>
+        </Action>
+        <Action ID="MonitorStdInt32">
+            <input_port default="0" name="consume_msgs" type="bool">Should messages be consumed?</input_port>
+            <input_port default="1" name="queue_size" type="unsigned int">Subscriber callback queue size</input_port>
+            <output_port name="serialized_output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [std_msgs::Int32_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
+            <input_port name="topic" type="std::string">Topic to subscribe</input_port>
+        </Action>
+        <Action ID="MonitorStdString">
+            <input_port default="0" name="consume_msgs" type="bool">Should messages be consumed?</input_port>
+            <input_port default="1" name="queue_size" type="unsigned int">Subscriber callback queue size</input_port>
+            <output_port name="serialized_output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [std_msgs::String_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
+            <input_port name="topic" type="std::string">Topic to subscribe</input_port>
+        </Action>
+        <Action ID="PublishStdBool">
+            <input_port name="data" type="bool">Auto-generated field from std_msgs::Bool_&lt;std::allocator&lt;void&gt; &gt;</input_port>
+            <input_port default="0" name="latch" type="bool">Latch messages?</input_port>
+            <input_port default="1" name="queue_size" type="unsigned int">Internal publisher queue size</input_port>
+            <input_port name="topic" type="std::string">Topic to publish to</input_port>
+        </Action>
+        <Action ID="PublishStdEmpty">
+            <input_port default="0" name="latch" type="bool">Latch messages?</input_port>
+            <input_port default="1" name="queue_size" type="unsigned int">Internal publisher queue size</input_port>
+            <input_port name="topic" type="std::string">Topic to publish to</input_port>
+        </Action>
+        <Action ID="PublishStdString">
+            <input_port name="data" type="std::string">Auto-generated field from std_msgs::String_&lt;std::allocator&lt;void&gt; &gt;</input_port>
+            <input_port default="0" name="latch" type="bool">Latch messages?</input_port>
+            <input_port default="1" name="queue_size" type="unsigned int">Internal publisher queue size</input_port>
+            <input_port name="topic" type="std::string">Topic to publish to</input_port>
+        </Action>
+        <Action ID="WarnLog">
+            <input_port name="message" type="std::string">Message to log</input_port>
+        </Action>
+    </TreeNodesModel>
+    <!-- ////////// -->
+</root>
+
