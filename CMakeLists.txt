@@ -25,7 +25,6 @@ find_package(catkin REQUIRED
 )
 find_package(behavior_tree_core 3.2.0 REQUIRED)
 
-find_package(TinyXML2 REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 add_service_files(
@@ -59,8 +58,6 @@ catkin_package(
         cmake_modules
         tf
         angles
-    DEPENDS
-	    TinyXML2
     INCLUDE_DIRS
         include
 )
@@ -78,16 +75,16 @@ target_compile_definitions(${PROJECT_NAME}_plugin PRIVATE BT_PLUGIN_EXPORT)
 add_dependencies(${PROJECT_NAME}_plugin ${${PROJECT_NAME}_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_plugin)
 
-add_executable(${PROJECT_NAME}_node src/behavior_tree_node.cpp src/BehaviorTreeNode.cpp src/bt_rostopic_logger.cpp)
-target_include_directories(${PROJECT_NAME}_node PRIVATE include ${catkin_INCLUDE_DIRS} ${TinyXML2_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}_node PRIVATE ${catkin_LIBRARIES} ${TinyXML2_LIBRARIES})
+add_executable(${PROJECT_NAME}_node src/behavior_tree_node.cpp src/BehaviorTreeNode.cpp src/bt_rostopic_logger.cpp src/3rdparty/tinyxml2/tinyxml2.cpp)
+target_include_directories(${PROJECT_NAME}_node PRIVATE include ${catkin_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME}_node PRIVATE ${catkin_LIBRARIES})
 target_compile_options(${PROJECT_NAME}_node PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_node)
 
-add_executable(${PROJECT_NAME}_action_node src/behavior_tree_action_node.cpp src/BehaviorTreeActionNode.cpp src/bt_rostopic_logger.cpp)
-target_include_directories(${PROJECT_NAME}_action_node PRIVATE include ${catkin_INCLUDE_DIRS} ${TinyXML2_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}_action_node PRIVATE ${catkin_LIBRARIES} ${TinyXML2_LIBRARIES})
+add_executable(${PROJECT_NAME}_action_node src/behavior_tree_action_node.cpp src/BehaviorTreeActionNode.cpp src/bt_rostopic_logger.cpp src/3rdparty/tinyxml2/tinyxml2.cpp)
+target_include_directories(${PROJECT_NAME}_action_node PRIVATE include ${catkin_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME}_action_node PRIVATE ${catkin_LIBRARIES})
 target_compile_options(${PROJECT_NAME}_action_node PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 add_dependencies(${PROJECT_NAME}_action_node ${${PROJECT_NAME}_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_action_node)

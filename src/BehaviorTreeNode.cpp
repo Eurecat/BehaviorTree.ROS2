@@ -5,12 +5,12 @@
 
 #include <ros/package.h>
 #include <boost/filesystem.hpp>
-#include <tinyxml2.h>
 
 #include <std_msgs/String.h>
 
 #include "BehaviorTreeNode.hpp"
 #include "behavior_tree_ros/ExecutionStatus.h"
+#include "behavior_tree_ros/3rdparty/tinyxml2/tinyxml2.h"
 
 namespace UPO
 {
@@ -151,7 +151,7 @@ namespace UPO
 
     void BehaviorTreeNode::LoadPluginsFromROS()
     {
-        using namespace tinyxml2;
+        using namespace BT_TinyXML2;
 
         // ros::package::getPlugins returns a pair of strings for each result.
         // The first one is the name of the package that exported the target xml entry (behavior_tree_ros)
@@ -169,15 +169,8 @@ namespace UPO
                 if(plugin_description.Error())
                 {
                     std::string error_msg;
-                    #if TINYXML2_MAJOR_VERSION >= 6
                     error_msg  =std::string { "XML file may be ill-formed ( " }
                             + plugin_description.ErrorStr() ;
-                    #else
-                    error_msg = std::string { "XML file may be ill-formed ( " }
-                                + plugin_description.ErrorName() + std::string { " )" };
-                    //         + plugin_description.GetErrorStr1() + std::string { ". " }
-                    //         + plugin_description.GetErrorStr2() + std::string { ")" };
-                    #endif
                     throw std::runtime_error { error_msg };
                 }
 
