@@ -3,8 +3,12 @@ project(behavior_tree_ros VERSION 0.4.1)
 
 set(CMAKE_CXX_STANDARD 14)
 
-if($ENV{ROS_DISTRO} STREQUAL "melodic" )
-add_definitions(-DMELODIC)
+execute_process(COMMAND cat "/etc/issue" OUTPUT_VARIABLE UBUNTU_VERSION)
+
+if(UBUNTU_VERSION MATCHES "20")
+    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fconcepts")
+elseif(UBUNTU_VERSION MATCHES "18")
+    add_definitions(-DMELODIC)
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
