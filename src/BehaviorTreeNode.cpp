@@ -59,7 +59,7 @@ namespace UPO
 
         try
         {
-            const auto tree_status = tree_->root_node->executeTick();
+            const auto tree_status = tree_->tickRoot();
 
             // Publish the updated status if
             // there have been changes.
@@ -313,7 +313,7 @@ namespace UPO
 
     void BehaviorTreeNode::InitializeLoggers()
     {
-        if(!tree_ || !tree_->root_node) { return; }
+        if(!tree_ || !tree_->rootNode()) { return; }
 
         //Behaviortree_cpp complains if two instances of the same logger exist at the same time,
         //so the pointer is resetted explictly first

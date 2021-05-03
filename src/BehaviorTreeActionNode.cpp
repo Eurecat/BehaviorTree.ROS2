@@ -51,7 +51,7 @@ namespace UPO
 	    behavior_tree_ros::BehaviorTreeResult action_result_;
 
 
-            const auto tree_status = tree_->root_node->executeTick();
+            const auto tree_status = tree_->tickRoot();
 
 	    action_feedback_.status.data = "RUNNING";
 	    bt_action_server_.publishFeedback(action_feedback_);
@@ -280,7 +280,7 @@ namespace UPO
 
     void BehaviorTreeActionNode::InitializeLoggers()
     {
-        if(!tree_ || !tree_->root_node) { return; }
+        if(!tree_ || !tree_->rootNode()) { return; }
 
         //Behaviortree_cpp complains if two instances of the same logger exist at the same time,
         //so the pointer is resetted explictly first

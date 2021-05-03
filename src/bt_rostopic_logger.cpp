@@ -6,7 +6,7 @@ namespace BT_ROS
 {
 std::atomic<bool> RosTopicLogger::ref_count(false);
 
-RosTopicLogger::RosTopicLogger(const BT::Tree& tree, ros::Publisher pub) : BT::StatusChangeLogger(tree.root_node), bt_status_publisher_(pub)
+RosTopicLogger::RosTopicLogger(const BT::Tree& tree, ros::Publisher pub) : BT::StatusChangeLogger(tree.rootNode()), bt_status_publisher_(pub)
 {
     bool expected = false;
     if (!ref_count.compare_exchange_strong(expected, true))
