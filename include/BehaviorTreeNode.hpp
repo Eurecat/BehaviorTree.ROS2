@@ -6,25 +6,18 @@
 
 #include <ros/ros.h>
 #include <std_srvs/Empty.h>
+#include <actionlib/server/simple_action_server.h>
 
 #include <behavior_tree_ros/GetLoadedPlugins.h>
 #include <behavior_tree_ros/LoadTree.h>
+#include <behavior_tree_ros/BehaviorTreeAction.h>
 
 #include <behaviortree_cpp_v3/bt_factory.h>
 #include <behaviortree_cpp_v3/xml_parsing.h>
 
-#include <behaviortree_cpp_v3/loggers/bt_cout_logger.h>
-#include <behaviortree_cpp_v3/loggers/bt_file_logger.h>
-#include <behaviortree_cpp_v3/loggers/bt_minitrace_logger.h>
+#include "behavior_tree_ros/details/TreeWrapper.hpp"
 
-#ifdef BEHAVIOR_TREE_CPP_ZMQ
-#include <behaviortree_cpp_v3/loggers/bt_zmq_publisher.h>
-#endif
-
-#include "bt_rostopic_logger.h"
-
-
-namespace UPO
+namespace BT_ROS
 {
     class BehaviorTreeNode final
     {
@@ -48,15 +41,15 @@ namespace UPO
             void LoadPluginsFromFolder(const std::string& _plugins_folder);
             void LoadPlugin(const std::string& _plugin_path);
 
-            void BuildTree(const std::string& _xml_file);
             void RemoveTree();
-
-            void InitializeLoggers();
-            void ResetLoggers();
 
             std::string GetFullPath(const std::string& _file) const;
 
             void PublishExecutionStatus();
+
+            // Behavior Tree action server callbacks
+            void ActionGoalCB();
+            void ActionPreemptCB();
 
         private:
             ros::NodeHandle private_node_handle_ { "~" };
@@ -67,20 +60,14 @@ namespace UPO
             ros::ServiceServer load_tree_srv_;
             ros::ServiceServer stop_tree_srv_;
 
-	    ros::Publisher bt_status_publisher_;
-	    ros::Publisher bt_execution_status_publisher_;
+            ros::Publisher bt_execution_status_publisher_;
 
-            std::unique_ptr<BT::Tree> tree_;
+            // Behavior Tree action server
+            actionlib::SimpleActionServer<behavior_tree_ros::BehaviorTreeAction> bt_action_server_;
+
+            TreeWrapper service_tree_{"service"};
+            TreeWrapper action_tree_{"action"};
             BT::BehaviorTreeFactory bt_factory_;
-
-            std::unique_ptr<BT::StdCoutLogger>   bt_logger_cout_;
-            std::unique_ptr<BT::FileLogger>      bt_logger_file_;
-            std::unique_ptr<BT::MinitraceLogger> bt_logger_trace_;
-            #ifdef BEHAVIOR_TREE_CPP_ZMQ
-            std::unique_ptr<BT::PublisherZMQ>    bt_logger_zmq_;
-            #endif
-
-	    std::unique_ptr<BT_ROS::RosTopicLogger> bt_logger_rostopic_;
 
             std::set<std::string> loaded_plugins_;
             std::string trees_folder_;
@@ -94,6 +81,10 @@ namespace UPO
             // Execution status report.
             BT::NodeStatus status_ { BT::NodeStatus::IDLE };
             std::string current_tree_ {};
+
+            // Action feedback and status
+            behavior_tree_ros::BehaviorTreeFeedback action_feedback_;
+            behavior_tree_ros::BehaviorTreeResult action_result_;
     };
 }
 

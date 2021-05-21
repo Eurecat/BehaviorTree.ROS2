@@ -8,14 +8,14 @@ std::atomic<bool> RosTopicLogger::ref_count(false);
 
 RosTopicLogger::RosTopicLogger(const BT::Tree& tree, ros::Publisher pub) : BT::StatusChangeLogger(tree.rootNode()), bt_status_publisher_(pub)
 {
-    bool expected = false;
-    if (!ref_count.compare_exchange_strong(expected, true))
-    {
-        throw BT::LogicError("Only one instance of RosTopicLogger shall be created");
-    }
+    // It should be ok to have more than one rostopic logger
+    // The user should be responsible of using different topics for each tree if wanted
 
-
-    
+    // bool expected = false;
+    // if (!ref_count.compare_exchange_strong(expected, true))
+    // {
+    //     throw BT::LogicError("Only one instance of RosTopicLogger shall be created");
+    // }
 }
 RosTopicLogger::~RosTopicLogger()
 {

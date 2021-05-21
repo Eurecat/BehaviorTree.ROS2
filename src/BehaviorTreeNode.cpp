@@ -1,21 +1,15 @@
-#include <chrono>
-#include <sstream>
-#include <iomanip>
-#include <ctime>
-
 #include <ros/package.h>
 #include <boost/filesystem.hpp>
-
-#include <std_msgs/String.h>
 
 #include "BehaviorTreeNode.hpp"
 #include "behavior_tree_ros/ExecutionStatus.h"
 #include "behavior_tree_ros/3rdparty/tinyxml2/tinyxml2.h"
 
-namespace UPO
+namespace BT_ROS
 {
     BehaviorTreeNode::BehaviorTreeNode() :
-        loop_rate_ { private_node_handle_.param("tick_frequency", 30.0) }
+        loop_rate_(private_node_handle_.param("tick_frequency", 30.0)),
+        bt_action_server_(public_node_handle_, "behavior_tree/load_tree_action", false)
     {
         private_node_handle_.getParam("trees_folder", trees_folder_);
 
@@ -35,15 +29,22 @@ namespace UPO
         load_tree_srv_          = public_node_handle_.advertiseService("behavior_tree/load_tree", &BehaviorTreeNode::LoadTree, this);
         stop_tree_srv_          = public_node_handle_.advertiseService("behavior_tree/stop_tree", &BehaviorTreeNode::StopTree, this);
 
-	if(private_node_handle_.param("enable_rostopic_log", false))
-        { 
-		bt_status_publisher_ =
-        	public_node_handle_.advertise<std_msgs::String>("bt_status", 1);
-	}
+        if(enable_rostopic_log_)
+        {
+            service_tree_.InitializeStatusPublisher(public_node_handle_);
+            action_tree_.InitializeStatusPublisher(public_node_handle_);
+        }
 
-	    bt_execution_status_publisher_
-            = public_node_handle_.advertise<behavior_tree_ros::ExecutionStatus>("behavior_tree/execution_status",
-                                                                                100, true);
+        // TODO: Move execution publisher to tree class
+        bt_execution_status_publisher_
+            = public_node_handle_.advertise<behavior_tree_ros::ExecutionStatus>("behavior_tree/execution_status", 100, true);
+
+        // Set action callbacks
+        bt_action_server_.registerGoalCallback(boost::bind(&BehaviorTreeNode::ActionGoalCB, this));
+        bt_action_server_.registerPreemptCallback(boost::bind(&BehaviorTreeNode::ActionPreemptCB, this));
+
+        // Start action
+        bt_action_server_.start();
 
         // Publish the initial status (IDLE + no tree loaded).
         PublishExecutionStatus();
@@ -51,39 +52,72 @@ namespace UPO
 
     void BehaviorTreeNode::Loop()
     {
-        if(!tree_)
+        // Sleep if no tree running (main and remote)
+        if(!service_tree_.IsTreeLoaded() && !action_tree_.IsTreeLoaded())
         {
             loop_rate_.sleep();
             return;
         }
 
-        try
-        {
-            const auto tree_status = tree_->tickRoot();
+        if(service_tree_.IsTreeLoaded()) { // Tick main tree (loaded with service)
+            try
+            {
+                const auto tree_status = service_tree_.tickTree();
 
-            // Publish the updated status if
-            // there have been changes.
-            if(tree_status != status_)
-            {
-                status_ = tree_status;
-                PublishExecutionStatus();
-            }
+                // Publish the updated status if
+                // there have been changes.
+                if(tree_status != status_)
+                {
+                    status_ = tree_status;
+                    PublishExecutionStatus();
+                }
 
-            if(tree_status == BT::NodeStatus::FAILURE)
-            {
-                ROS_ERROR("Tree finished with errors");
-                RemoveTree();
+                if(tree_status == BT::NodeStatus::FAILURE)
+                {
+                    ROS_ERROR("Tree finished with errors");
+                    RemoveTree();
+                }
+                else if(tree_status == BT::NodeStatus::SUCCESS)
+                {
+                    ROS_INFO("Tree finished with no errors");
+                    RemoveTree();
+                }
             }
-            else if(tree_status == BT::NodeStatus::SUCCESS)
+            catch(const BT::BehaviorTreeException& ex)
             {
-                ROS_INFO("Tree finished with no errors");
+                ROS_ERROR("Tree crashed with exception: %s", ex.what());
                 RemoveTree();
             }
         }
-        catch(const BT::BehaviorTreeException& ex)
-        {
-            ROS_ERROR("Tree crashed with exception: %s", ex.what());
-            RemoveTree();
+
+        if(action_tree_.IsTreeLoaded()) { // Tick remote tree (loaded with action)
+            try
+            {
+                const auto action_tree_status = action_tree_.tickTree();
+
+                action_feedback_.status.data = "RUNNING";
+                bt_action_server_.publishFeedback(action_feedback_);
+
+                if(action_tree_status == BT::NodeStatus::FAILURE)
+                {
+                    ROS_ERROR("Action tree finished with errors");
+                    action_tree_.RemoveTree();
+                    action_result_.result = false;
+                    bt_action_server_.setAborted(action_result_);
+                }
+                else if(action_tree_status == BT::NodeStatus::SUCCESS)
+                {
+                    ROS_INFO("Action tree finished with no errors");
+                    action_tree_.RemoveTree();
+                    action_result_.result = true;
+                    bt_action_server_.setSucceeded(action_result_);
+                }
+            }
+            catch(const BT::BehaviorTreeException& ex)
+            {
+                ROS_ERROR("Action tree crashed with exception: %s", ex.what());
+                action_tree_.RemoveTree();
+            }
         }
 
         loop_rate_.sleep();
@@ -100,7 +134,8 @@ namespace UPO
             // the full path to be consistent with the original request.
             current_tree_ = _request.tree_file;
 
-            BuildTree(full_path);
+            service_tree_.BuildTree(full_path, bt_factory_);
+            service_tree_.InitializeLoggers(enable_cout_log_, enable_minitrace_log_, enable_file_log_, enable_rostopic_log_, enable_zmq_log_, log_folder_);
 
             ROS_INFO("Loaded tree %s", full_path.c_str());
         }
@@ -126,19 +161,9 @@ namespace UPO
         return true;
     }
 
-    void BehaviorTreeNode::BuildTree(const std::string& _tree_file)
-    {
-        // Wait between creating and executing the Tree to fully initialize ROS publishers
-        auto temp_tree = std::make_unique<BT::Tree>(bt_factory_.createTreeFromFile(_tree_file));
-        ros::Duration(0.5).sleep();
-        tree_.swap(temp_tree);
-        InitializeLoggers();
-    }
-    
     void BehaviorTreeNode::RemoveTree()
     {
-        ResetLoggers();
-        tree_.reset();
+        service_tree_.RemoveTree();
 
         // Update and publish the status here too
         // (neeed to cover the case where users manually
@@ -311,69 +336,6 @@ namespace UPO
         return full_name;
     }
 
-    void BehaviorTreeNode::InitializeLoggers()
-    {
-        if(!tree_ || !tree_->rootNode()) { return; }
-
-        //Behaviortree_cpp complains if two instances of the same logger exist at the same time,
-        //so the pointer is resetted explictly first
-        ResetLoggers();
-
-        std::stringstream file_base;
-        const auto& current_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-        log_folder_ = log_folder_.back() == '/' ? log_folder_ : log_folder_ + "/";
-
-        file_base << log_folder_ << "behavior_tree_ros-" << std::put_time(std::localtime(&current_time), "%F-%R");;
-        const auto& log_file       = file_base.str() + ".fbl";
-        const auto& minitrace_file = file_base.str() + ".json";
-
-        if(enable_cout_log_)
-        { 
-            bt_logger_cout_ = std::make_unique<BT::StdCoutLogger>(*tree_);
-        }
-        
-        if(enable_minitrace_log_)
-        { 
-            bt_logger_trace_ = std::make_unique<BT::MinitraceLogger>(*tree_, minitrace_file.c_str());
-        }
-        
-        if(enable_file_log_)
-        { 
-            bt_logger_file_ = std::make_unique<BT::FileLogger>(*tree_, log_file.c_str());
-        }
-
-    	if(enable_rostopic_log_)
-        { 
-            //bt_logger_rostopic_ = std::make_unique<BT_ROS::RosTopicLogger>(*tree_,node_handle_);
-	      bt_logger_rostopic_ = std::make_unique<BT_ROS::RosTopicLogger>(*tree_,bt_status_publisher_);
-        }
-
-        if(enable_zmq_log_)
-        {
-            #ifdef BEHAVIOR_TREE_CPP_ZMQ
-            bt_logger_zmq_ = std::make_unique<BT::PublisherZMQ>(*tree_);
-            #else
-            ROS_WARN("ZMQ logging is enabled but behaviortree_cpp was not compiled with ZMQ support.");
-            #endif
-        }
-
-	
-    }
-
-    void BehaviorTreeNode::ResetLoggers()
-    {
-        bt_logger_cout_.reset();
-        bt_logger_trace_.reset();
-        bt_logger_file_.reset();
-	bt_logger_rostopic_.reset();
-
-        #ifdef BEHAVIOR_TREE_CPP_ZMQ
-        bt_logger_zmq_.reset();
-        #endif
-
-	
-    }
-
     // Publishes the current execution status. Note that
     // this method assumes the member variables "status_"
     // and "current_tree_" are up to date.
@@ -410,5 +372,42 @@ namespace UPO
         status_msg.status    = to_msg_status(status_);
 
         bt_execution_status_publisher_.publish(status_msg);
+    }
+
+    void BehaviorTreeNode::ActionGoalCB()
+    {
+        const std::string full_path = GetFullPath(bt_action_server_.acceptNewGoal()->tree_file.data);
+
+        try
+        {
+            ROS_INFO("Loading action tree %s", full_path.c_str());
+            action_tree_.BuildTree(full_path, bt_factory_);
+
+            // If the service tree is loaded it means that the action was called from the remote BT block
+            // As such, don't show status messages through the terminal
+            if(service_tree_.IsTreeLoaded())
+                action_tree_.InitializeLoggers(false, enable_minitrace_log_, enable_file_log_, enable_rostopic_log_, enable_zmq_log_, log_folder_);
+            else
+                action_tree_.InitializeLoggers(enable_cout_log_, enable_minitrace_log_, enable_file_log_, enable_rostopic_log_, enable_zmq_log_, log_folder_);
+        }
+        catch(const std::runtime_error& ex)
+        {
+            ROS_ERROR("Error loading tree %s: %s", full_path.c_str(), ex.what());
+            bt_action_server_.setAborted();
+        }
+
+        // Preempts received for the new goal between checking if isNewGoalAvailabel
+        // or invocation of a goal callback and the acceptNewGoal call will not trigger a preempt callback.
+        // This means, isPreemptRequested should be called after accepting the goal even for
+        // callback-based implementations to make sure the new goal does not have a pending preempt request.
+        if(bt_action_server_.isPreemptRequested())
+            bt_action_server_.setPreempted();
+    }
+
+    void BehaviorTreeNode::ActionPreemptCB()
+    {
+        action_tree_.RemoveTree();
+        action_result_.result = false;
+        bt_action_server_.setPreempted(action_result_);
     }
 }
