@@ -9,8 +9,9 @@ jobs:
     strategy:
       matrix:
         container:
-          - "ghcr.io/robotics-upo/haru-generic-melodic:latest"
-          - "ghcr.io/robotics-upo/haru-generic-kinetic:latest"
+          - "ghcr.io/haru-project/haru-generic-melodic:latest"
+          - "ghcr.io/haru-project/haru-generic-kinetic:latest"
+          - "ghcr.io/haru-project/haru-generic-noetic:latest"
     container:
       image: ${{ matrix.container }}
       credentials:
@@ -41,7 +42,7 @@ jobs:
 
       - uses: actions/checkout@v2
         with:
-          repository: robotics-upo/action-build-ros-package
+          repository: haru-project/action-build-ros-package
           token: ${{ secrets.CI_TOKEN }}
           path: .github/actions/action-build-ros-package
       
