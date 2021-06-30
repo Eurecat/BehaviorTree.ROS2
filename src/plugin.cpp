@@ -1,4 +1,5 @@
 #include <std_msgs/Int32.h>
+#include <std_msgs/UInt64.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Bool.h>
@@ -82,6 +83,7 @@ BT_REGISTER_NODES(factory)
     factory.registerNodeType<LoadYamlFileNode>("LoadYamlFile");
 
     factory.registerNodeType<SerializedSubscriber<std_msgs::Int32>>("MonitorStdInt32");
+    factory.registerNodeType<SerializedSubscriber<std_msgs::UInt64>>("MonitorStdUInt64");
     factory.registerNodeType<SerializedSubscriber<std_msgs::Float64>>("MonitorStdFloat64");
     factory.registerNodeType<SerializedSubscriber<std_msgs::Bool>>("MonitorStdBool");
     factory.registerNodeType<SerializedSubscriber<std_msgs::String>>("MonitorStdString");
@@ -89,6 +91,9 @@ BT_REGISTER_NODES(factory)
     factory.registerNodeType<AutomaticPublisher<std_msgs::String>>("PublishStdString");
     factory.registerNodeType<AutomaticPublisher<std_msgs::Empty>>("PublishStdEmpty");
     factory.registerNodeType<AutomaticPublisher<std_msgs::Bool>>("PublishStdBool");
+    factory.registerNodeType<AutomaticPublisher<std_msgs::Int32>>("PublishStdInt32");
+    factory.registerNodeType<AutomaticPublisher<std_msgs::UInt64>>("PublishStdUInt64");
+    factory.registerNodeType<AutomaticPublisher<std_msgs::Float64>>("PublishStdFloat64");
 
     factory.registerNodeType<AutomaticServiceClient<std_srvs::Empty>>("CallEmptyService");
     factory.registerNodeType<AutomaticServiceClient<std_srvs::SetBool>>("CallSetBoolService");
