@@ -23,6 +23,7 @@
 #include "behavior_tree_ros/actions/InitializeNode.hpp"
 #include "behavior_tree_ros/actions/AddKeyValueToJson.hpp"
 #include "behavior_tree_ros/actions/AddArrayToJson.hpp"
+#include "behavior_tree_ros/actions/SplitStringToJsonArray.hpp"
 #include "behavior_tree_ros/decorators/ForEachLoopNode.hpp"
 #include "behavior_tree_ros/actions/ConvertMessageFieldNode.hpp"
 #include "behavior_tree_ros/actions/ConvertRandomMessageFieldNode.hpp"
@@ -74,6 +75,7 @@ BT_REGISTER_NODES(factory)
 
     factory.registerNodeType<AddKeyValueToJson>("AddKeyValueToJson");
     factory.registerNodeType<AddArrayToJson>("AddArrayToJson");
+    factory.registerNodeType<SplitStringToJsonArray>("SplitStringToJsonArray");
 
     factory.registerNodeType<LookupTransformNode>("LookupTransform");
     factory.registerNodeType<GetTransformDistanceNode>("GetTransformDistance");
