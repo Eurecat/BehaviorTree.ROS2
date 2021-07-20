@@ -9,8 +9,8 @@ jobs:
     strategy:
       matrix:
         container:
-          - "ghcr.io/haru-project/haru-generic-melodic:latest"
-          - "ghcr.io/haru-project/haru-generic-kinetic:latest"
+        #  - "ghcr.io/haru-project/haru-generic-melodic:latest"
+        #  - "ghcr.io/haru-project/haru-generic-kinetic:latest"
           - "ghcr.io/haru-project/haru-generic-noetic:latest"
     container:
       image: ${{ matrix.container }}
