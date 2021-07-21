@@ -59,12 +59,12 @@ jobs:
         with:
           build: true
           test: false
-          release: ${{ env.RELEASE }}
+          release: true
           check-install: false
           notify: true
 
       - name: Get Release Info
-        if: env.DISTRO  == 'bionic' && env.RELEASE == 'true'
+        if: env.RELEASE == 'true'
         id: release_info
         shell: bash
         working-directory: /catkin_ws/
@@ -74,7 +74,7 @@ jobs:
           catkin_generate_changelog -ya --skip-contributors --skip-merges --print-root > /catkin_ws/changelog.rst
 
       - name: Create Release
-        if: env.DISTRO  == 'bionic' && env.RELEASE == 'true'
+        if: env.RELEASE == 'true'
         id: create_release
         uses: actions/create-release@v1 
         env:
