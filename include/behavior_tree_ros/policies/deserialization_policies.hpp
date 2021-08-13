@@ -126,7 +126,10 @@ struct AutomaticDeserialization
                         continue;
                     }
 
-                    field_ports.emplace_back(_prefix + field.name(), field);
+                    // Rename "ID" and "name" ports to avoid conflict with keywords. Adding "_" in the front
+                    std::string port_name = (field.name() == "ID" || field.name() == "name") ? "_" + field.name() : field.name();
+
+                    field_ports.emplace_back(_prefix + port_name, field);
                 }
             };
 
