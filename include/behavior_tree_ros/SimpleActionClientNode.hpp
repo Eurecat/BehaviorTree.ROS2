@@ -16,7 +16,7 @@ namespace BT_ROS
 template <class ActionType,  template <class> class GoalDeserializationPolicy,
                              template <class> class ResultSerializationPolicy,
                              template <class> class FeedbackSerializationPolicy>
-class SimpleActionClientNode final : public BT::ActionNodeBase,
+class SimpleActionClientNode final : public BT::CoroActionNode,
                                      public GoalDeserializationPolicy<typename ActionType::_action_goal_type::_goal_type>,
                                      public ResultSerializationPolicy<typename ActionType::_action_result_type::_result_type>,
                                      public FeedbackSerializationPolicy<typename ActionType::_action_feedback_type::_feedback_type>
@@ -36,17 +36,12 @@ class SimpleActionClientNode final : public BT::ActionNodeBase,
         using FeedbackPolicy = FeedbackSerializationPolicy<Feedback>;
 
     public:
-        SimpleActionClientNode(const std::string& _name, const BT::NodeConfiguration& _config) : ActionNodeBase(_name, _config)
+        SimpleActionClientNode(const std::string& _name, const BT::NodeConfiguration& _config) : CoroActionNode(_name, _config)
         {
             const auto& action = getInput<std::string>("action");
             if(!action) { throw BT::RuntimeError { name() + ": " + action.error() }; }
 
             client_ = std::make_unique<SimpleClient>(node_handle_, action.value(), false);
-
-	    // std::cout << "Waiting for server" << _name << std::endl;
-        //     client_->waitForServer();
-	    // std::cout << "Done" << std::endl;
-
         }
 
         ~SimpleActionClientNode(){ halt();}
@@ -71,67 +66,59 @@ class SimpleActionClientNode final : public BT::ActionNodeBase,
 
         virtual BT::NodeStatus tick() override
         {
-            BT::NodeStatus status = BT::NodeStatus::RUNNING;
-            setStatus(status);
-
             if (client_->isServerConnected())
             {
-                if(!goal_sent_)
                 {
-
                     const auto& goal_msg = goal_policy_.buildMessage(*this);
                     client_->sendGoal(goal_msg, {}, {}, boost::bind(&SimpleActionClientNode::FeedbackCallback, this, _1));
-
-                    goal_sent_ = true;
+                    goal_finished_ = false;
                 }
 
-                // Get state, save it in the output and save it in the output variable
-                const auto& goal_state = client_->getState();
-                setOutput("state", goal_state);
-
+                while(!goal_finished_)
                 {
-                    std::unique_lock<std::mutex> lock (feedback_mutex_);
-                    if(new_feedback_)
+                    // Check connection to prevent lock if server dies processing goal
+                    if (!client_->isServerConnected()) { return BT::NodeStatus::FAILURE; }
+
+                    // Get state, save it in the output and save it in the output variable
+                    goal_state_ = client_->getState();
+                    setOutput("state", goal_state_);
+
                     {
-                        new_feedback_ = false;
-                        feedback_policy_.onNewMessage(feedback_msg_, *this, "feedback");
+                        std::unique_lock<std::mutex> lock (feedback_mutex_);
+                        if(new_feedback_)
+                        {
+                            new_feedback_ = false;
+                            feedback_policy_.onNewMessage(feedback_msg_, *this, "feedback");
+                        }
                     }
+
+                    if(goal_state_.isDone())
+                    {
+                        const auto& result_ptr = client_->getResult();
+                        result_policy_.onNewMessage(*result_ptr, *this, "result");
+
+                        goal_finished_ = true;
+                    }
+
+                    if(!goal_finished_) { setStatusRunningAndYield(); }
                 }
 
-                if(goal_state.isDone())
-                {
-                    const auto& result_ptr = client_->getResult();
-                    result_policy_.onNewMessage(*result_ptr, *this, "result");
-                    //std::cout << "Done" << std::endl;
-
-                    goal_sent_ = false;
-                }
-
-                status = GoalState2Status(goal_state);
-
-                if(goal_sent_ && status == BT::NodeStatus::IDLE)
-                {
-                    status = BT::NodeStatus::RUNNING;
-                }
-            }
-            else
-            {
-                status = BT::NodeStatus::FAILURE;
+                return GoalState2Status(goal_state_);
             }
 
-            return status;
+            return BT::NodeStatus::FAILURE;;
         }
 
         virtual void halt() override
         {
-	    //std::cout << "Halted" << std::endl;
-            if(client_ && status() == BT::NodeStatus::RUNNING) { client_->cancelGoal(); 
-		//Get result when cancelling
-		const auto& result_ptr = client_->getResult();
+            if(client_ && status() == BT::NodeStatus::RUNNING) {
+                client_->cancelGoal();
+                //Get result when cancelling
+                const auto& result_ptr = client_->getResult();
                 result_policy_.onNewMessage(*result_ptr, *this, "result");
-		//std::cout << "Cancelled" << std::endl;
-		}
-            goal_sent_ = false;
+		    }
+            goal_finished_ = false;
+            CoroActionNode::halt();
         }
     
     private:
@@ -176,7 +163,8 @@ class SimpleActionClientNode final : public BT::ActionNodeBase,
         ResultPolicy   result_policy_   {};
         FeedbackPolicy feedback_policy_ {};
 
-        bool goal_sent_ { false };
+        bool goal_finished_ { false };
+        GoalState goal_state_ { GoalState::StateEnum::PENDING, "" };
 
         std::mutex        feedback_mutex_;
         std::atomic<bool> new_feedback_ { false };
