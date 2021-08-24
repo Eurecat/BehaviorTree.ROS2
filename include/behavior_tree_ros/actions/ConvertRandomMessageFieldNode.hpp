@@ -24,7 +24,6 @@ class ConvertRandomMessageFieldNode final : public BT::SyncActionNode
 
         virtual BT::NodeStatus tick() override
         {
-            setStatus(BT::NodeStatus::RUNNING);
             const auto& input  = getInput<nlohmann::json>("input");
             const auto& field  = getInput<std::string>("field");
 

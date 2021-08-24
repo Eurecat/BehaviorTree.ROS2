@@ -20,7 +20,6 @@ class Logger final : public BT::SyncActionNode
 
         virtual BT::NodeStatus tick() override
         {
-            setStatus(BT::NodeStatus::RUNNING);
             const auto& message = getInput<std::string>("message");
             if(!message) { throw BT::RuntimeError { name() + ": " + message.error() }; }
 

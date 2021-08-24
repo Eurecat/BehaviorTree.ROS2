@@ -23,8 +23,6 @@ class GetTransformOriginNode final : public BT::SyncActionNode
 
         virtual BT::NodeStatus tick() override
         {
-            setStatus(BT::NodeStatus::RUNNING);
-
             const auto& input = getInput<tf::StampedTransform>("input");
             if(!input) { throw BT::RuntimeError { name() + ": " + input.error() }; }
 

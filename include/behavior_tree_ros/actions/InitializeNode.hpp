@@ -19,8 +19,6 @@ class InitializeNode final : public BT::SyncActionNode
 
         virtual BT::NodeStatus tick() override
         {
-            setStatus(BT::NodeStatus::RUNNING);
-
             setOutput("output", T{});
 
             return BT::NodeStatus::SUCCESS;

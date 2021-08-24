@@ -24,7 +24,6 @@ class LoadYamlFileNode final : public BT::SyncActionNode
 
         virtual BT::NodeStatus tick() override
         {
-            setStatus(BT::NodeStatus::RUNNING);
             const auto& file_path  = getInput<std::string>("file_path");
             if(!file_path)  { throw BT::RuntimeError { name() + ": " + file_path.error()  }; }
             
@@ -41,22 +40,26 @@ class LoadYamlFileNode final : public BT::SyncActionNode
                 absolute_file_path = std::string(homedir) + absolute_file_path;
             }
 
+            // TODO: Add support for more complex YAML files
             // Load YAML File
-            std::cout << std::endl << "--> Loading Yaml File " << absolute_file_path << std::endl;
-            YAML::Node config = YAML::LoadFile(absolute_file_path);
-            
-            // Parse to JSON
-            nlohmann::json json;
-            for(YAML::const_iterator it=config.begin();it!=config.end();++it) 
-            {
-                std::cout << "    - " << it->first.as<std::string>() << " = " 
-                                      << it->second.as<std::string>() << std::endl;
-                json[it->first.as<std::string>()] = it->second.as<std::string>(); 
+            // std::cout << std::endl << "--> Loading Yaml File " << absolute_file_path << std::endl;
+            try {
+                YAML::Node config = YAML::LoadFile(absolute_file_path);
+
+                // Parse to JSON
+                nlohmann::json json;
+                for(YAML::const_iterator it=config.begin();it!=config.end();++it)
+                {
+                    // std::cout << "    - " << it->first.as<std::string>() << " = "
+                    //                     << it->second.as<std::string>() << std::endl;
+                    json[it->first.as<std::string>()] = it->second.as<std::string>();
+                }
+
+                // Return json as result
+                setOutput("output", json);
+                return BT::NodeStatus::SUCCESS;
             }
-            
-            // Return json as result
-            setOutput("output", json);
-            return BT::NodeStatus::SUCCESS;
+            catch(const YAML::Exception&) { return BT::NodeStatus::FAILURE; }
         }
 };
 }

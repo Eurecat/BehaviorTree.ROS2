@@ -24,7 +24,6 @@ class GetTransformAnglesNode final : public BT::SyncActionNode
 
         virtual BT::NodeStatus tick() override
         {
-            setStatus(BT::NodeStatus::RUNNING);
             const auto& input = getInput<tf::StampedTransform>("input");
             if(!input) { throw BT::RuntimeError { name() + ": " + input.error() }; }
 
@@ -36,11 +35,11 @@ class GetTransformAnglesNode final : public BT::SyncActionNode
             pitch = angles::normalize_angle_positive(pitch);
             yaw = angles::normalize_angle_positive(yaw);
 
-            printf("-------------------- \n");
-            printf("Roll: %.2f\n", roll);
-            printf("Pitch: %.2f\n", pitch);
-            printf("Yaw: %.2f\n", yaw);
-            printf("-------------------- \n");
+            // printf("-------------------- \n");
+            // printf("Roll: %.2f\n", roll);
+            // printf("Pitch: %.2f\n", pitch);
+            // printf("Yaw: %.2f\n", yaw);
+            // printf("-------------------- \n");
 
             setOutput("roll", roll);
             setOutput("pitch", pitch);

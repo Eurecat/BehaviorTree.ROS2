@@ -25,7 +25,6 @@ class LookupTransformNode final : public BT::SyncActionNode
 
         virtual BT::NodeStatus tick() override
         {
-            setStatus(BT::NodeStatus::RUNNING);
             const auto& source_frame      = getInput<std::string>("source_frame");
             const auto& target_frame      = getInput<std::string>("target_frame");
             const auto use_last_available = getInput<bool>("use_last_available");

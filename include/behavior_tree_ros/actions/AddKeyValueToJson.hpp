@@ -23,8 +23,6 @@ class AddKeyValueToJson final : public BT::SyncActionNode
 
         virtual BT::NodeStatus tick() override
         {
-            setStatus(BT::NodeStatus::RUNNING);
-
             const auto& input_key = getInput<std::string>("input_key");
             const auto& input_value = getInput<std::string>("input_value");
             const auto& input_json = getInput<nlohmann::json>("input_json");
