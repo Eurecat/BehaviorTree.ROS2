@@ -9,17 +9,35 @@
     <arg name="enable_zmq_log"          default="true" />
     <arg name="enable_rostopic_log"     default="true" />
     <arg name="log_folder"              default="/tmp/" />
+    <arg name="robot_namespace"         default="" />
 
-    <node pkg="behavior_tree_ros" name="behavior_tree_ros_node" type="behavior_tree_ros_node" output="screen">
-        <param name="trees_folder"         type="string" value="$(arg trees_folder)" />
-        <param name="import_from_folder"   type="bool"   value="$(arg import_from_folder)" />
-        <param name="plugins_folder"       type="string" value="$(arg plugins_folder)" />
-        <param name="tick_frequency"       type="double" value="$(arg tick_frequency)"   />
-        <param name="enable_cout_log"      type="bool"   value="$(arg enable_cout_log)" />
-        <param name="enable_minitrace_log" type="bool"   value="$(arg enable_minitrace_log)" />
-        <param name="enable_file_log"      type="bool"   value="$(arg enable_file_log)" />
-        <param name="enable_zmq_log"       type="bool"   value="$(arg enable_zmq_log)" />
-        <param name="enable_rostopic_log"  type="bool"   value="$(arg enable_rostopic_log)" />
-        <param name="log_folder"           type="string" value="$(arg log_folder)" />
-    </node>
+    <group if="$(eval arg('robot_namespace') == '')">
+        <node pkg="behavior_tree_ros" name="behavior_tree_ros_node" type="behavior_tree_ros_node" output="screen">
+            <param name="trees_folder"         type="string" value="$(arg trees_folder)" />
+            <param name="import_from_folder"   type="bool"   value="$(arg import_from_folder)" />
+            <param name="plugins_folder"       type="string" value="$(arg plugins_folder)" />
+            <param name="tick_frequency"       type="double" value="$(arg tick_frequency)"   />
+            <param name="enable_cout_log"      type="bool"   value="$(arg enable_cout_log)" />
+            <param name="enable_minitrace_log" type="bool"   value="$(arg enable_minitrace_log)" />
+            <param name="enable_file_log"      type="bool"   value="$(arg enable_file_log)" />
+            <param name="enable_zmq_log"       type="bool"   value="$(arg enable_zmq_log)" />
+            <param name="enable_rostopic_log"  type="bool"   value="$(arg enable_rostopic_log)" />
+            <param name="log_folder"           type="string" value="$(arg log_folder)" />
+        </node>
+    </group>
+
+    <group if="$(eval arg('robot_namespace') != '')">
+        <node pkg="behavior_tree_ros" name="behavior_tree_ros_node" type="behavior_tree_ros_node" output="screen" ns="$(arg robot_namespace)">
+            <param name="trees_folder"         type="string" value="$(arg trees_folder)" />
+            <param name="import_from_folder"   type="bool"   value="$(arg import_from_folder)" />
+            <param name="plugins_folder"       type="string" value="$(arg plugins_folder)" />
+            <param name="tick_frequency"       type="double" value="$(arg tick_frequency)"   />
+            <param name="enable_cout_log"      type="bool"   value="$(arg enable_cout_log)" />
+            <param name="enable_minitrace_log" type="bool"   value="$(arg enable_minitrace_log)" />
+            <param name="enable_file_log"      type="bool"   value="$(arg enable_file_log)" />
+            <param name="enable_zmq_log"       type="bool"   value="$(arg enable_zmq_log)" />
+            <param name="enable_rostopic_log"  type="bool"   value="$(arg enable_rostopic_log)" />
+            <param name="log_folder"           type="string" value="$(arg log_folder)" />
+        </node>
+    </group>
 </launch>
