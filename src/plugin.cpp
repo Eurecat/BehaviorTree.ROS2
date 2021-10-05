@@ -40,6 +40,7 @@
 #include "behavior_tree_ros/SimpleActionClientNode.hpp"
 
 #include <behavior_tree_ros/BehaviorTreeAction.h>
+#include <behavior_tree_ros/HandShakeAction.h> 
 
 namespace BT_ROS
 {
@@ -108,4 +109,5 @@ BT_REGISTER_NODES(factory)
                                                     AutomaticDeserialization,
                                                     EmptySerialization,
                                                     EmptySerialization>>("ExecuteRemoteTree");
+    factory.registerNodeType<AutomaticSimpleActionClient<behavior_tree_ros::HandShakeAction>>("BTCommandHandShakeAction");
 }

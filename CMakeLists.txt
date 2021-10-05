@@ -39,6 +39,7 @@ add_service_files(
 add_action_files(
   FILES
   BehaviorTree.action
+  HandShake.action
 )
 
 add_message_files(
@@ -84,6 +85,12 @@ target_link_libraries(${PROJECT_NAME}_node PRIVATE ${catkin_LIBRARIES})
 target_compile_options(${PROJECT_NAME}_node PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_node)
+
+add_executable(handshake_signal_node src/handshake_signal_node.cpp )
+target_include_directories(handshake_signal_node PRIVATE ${catkin_INCLUDE_DIRS})
+target_link_libraries(handshake_signal_node PRIVATE ${catkin_LIBRARIES})
+add_dependencies(handshake_signal_node ${${PROJECT_NAME}_EXPORTED_TARGETS})
+list(APPEND ${PROJECT_NAME}_targets handshake_signal_node)
 
 install(TARGETS ${${PROJECT_NAME}_targets}
         ARCHIVE  DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

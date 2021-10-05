@@ -1,0 +1,5 @@
+string bt_id
+string message
+---
+bool result
+---
