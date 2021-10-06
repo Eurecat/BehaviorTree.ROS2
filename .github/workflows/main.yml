@@ -1,4 +1,4 @@
-name: Build and Release for ROS Kinetic & ROS Melodic
+name: Build and Release for ROS Noetic
 
 on: [push, pull_request]
 
@@ -59,7 +59,7 @@ jobs:
         with:
           build: true
           test: false
-          release: true
+          release: ${{ env.RELEASE}}
           check-install: false
           notify: true
 

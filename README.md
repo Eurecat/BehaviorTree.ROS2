@@ -1,5 +1,5 @@
 # behavior_tree_ros
-![Build and Release for ROS Kinetic & ROS Melodic](https://github.com/robotics-upo/behavior_tree_ros/workflows/Build%20and%20Release%20for%20ROS%20Kinetic%20&%20ROS%20Melodic/badge.svg)
+[![Build and Release for ROS Noetic](https://github.com/haru-project/behavior_tree_ros/actions/workflows/main.yml/badge.svg)](https://github.com/haru-project/behavior_tree_ros/actions/workflows/main.yml)
 
 Provides a ROS wrapper for the Behavior Tree engine (BehaviorTree.CPP library), as well as ROS-based pluggins to deal with ROS topics, services and actions within a BT.
 
