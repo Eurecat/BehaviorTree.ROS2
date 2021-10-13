@@ -56,10 +56,16 @@ public:
                     if(new_handshake_topic_msg_)
                     {
                         new_handshake_topic_msg_ = false;
+                        std::string handshake_bt_id {""};
+                        std::string handshake_message {""};
                         for (auto it = handshake_topic_msgs_.begin(); it != handshake_topic_msgs_.end(); it++)
                         {
+                            // ID and message are separated by ":"
+                            size_t pos = it->find_first_of(":");
+                            handshake_bt_id = it->substr(0, pos);
+                            handshake_message = it->substr(pos+1, it->size());
                             // Checking if msg received is not empty, is from another BT and is in the same stage
-                            if(!it->empty() && it->find(_goal_msg->bt_id) == std::string::npos && it->find(_goal_msg->message) != std::string::npos)
+                            if(!it->empty() && handshake_bt_id != _goal_msg->bt_id && handshake_message == _goal_msg->message)
                             {
                                 ROS_INFO("Message received from another node [%s]", it->c_str());
                                 // Remove matched message
