@@ -47,7 +47,7 @@ public:
 
         try
         {
-            while(!signal_received)
+            while(!signal_received && ros::ok() && handshake_action_server_.isActive())
             {
                 // Check signal received is the correct one
                 {

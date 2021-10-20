@@ -130,6 +130,9 @@ namespace BT_ROS
 
         try
         {
+            // If there's a tree being executed, halt and destoy it to execute the new one
+            if (service_tree_.IsTreeLoaded()) { service_tree_.RemoveTree(); }
+
             // Note: I'm saving the tree_file instead of
             // the full path to be consistent with the original request.
             current_tree_ = _request.tree_file;
