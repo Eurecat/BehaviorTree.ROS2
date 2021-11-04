@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>behavior_tree_ros</name>
-  <version>0.6.2</version>
+  <version>0.6.3</version>
   <description>ROS Behavior Tree package</description>
 
   <maintainer email="jponchu@upo.es">Javier Ponce</maintainer>
