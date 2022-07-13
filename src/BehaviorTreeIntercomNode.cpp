@@ -30,13 +30,17 @@ namespace BT_ROS
     void RosHandShake::HandShakeActionCallback(const behavior_tree_ros::HandShakeGoalConstPtr& _goal_msg)
     {
         ROS_INFO("Starting Handshake Action callback! [%s] [%s]", _goal_msg->bt_id.c_str(), _goal_msg->message.c_str());
-        bool signal_sent = false;
         bool signal_received = false;
+
+        // To avoid possible problems due to the network connection, let's send it multiple times.
+        //bool signal_sent = false;
+        int signal_sent_counter = 0;
 
         try
         {
             while(!signal_received && ros::ok() && handshake_action_server_.isActive())
             {
+                std::cout << "Waiting ..." << std::endl;
                 // Check signal received is the correct one
                 {
                     std::unique_lock<std::mutex> lock (handshake_mutex_);
@@ -69,16 +73,28 @@ namespace BT_ROS
                 }
 
                 // Send signal only one time
-                if(!signal_sent)
+                if(signal_sent_counter < 5)
                 {
                     ROS_INFO("Sending signal to the other node!");
                     std_msgs::String msg_to_send;
                     msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message;
                     send_signal_publisher_.publish(msg_to_send);
-                    signal_sent = true;
+                    signal_sent_counter++;
                 }
 
                 usleep(2e5); // not overload CPU
+            }
+
+            // Continue sending if they were not all sent
+            while(signal_sent_counter < 5)
+            {
+                ROS_INFO("Sending signal to the other node!");
+                std_msgs::String msg_to_send;
+                msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message;
+                send_signal_publisher_.publish(msg_to_send);
+                signal_sent_counter++;
+
+                usleep(2e5);
             }
 
             if(handshake_action_server_.isActive())
