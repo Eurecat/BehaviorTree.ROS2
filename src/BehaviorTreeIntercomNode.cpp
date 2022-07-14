@@ -21,7 +21,7 @@ namespace BT_ROS
 
     void RosHandShake::HandShakeTopicCallback(const std_msgs::StringConstPtr& _topic_msg)
     {
-        ROS_INFO("Received Handshake topic message! [%s]", _topic_msg->data.c_str());
+        ROS_INFO("[RosHandShake] Received Handshake TOPIC message: [%s]", _topic_msg->data.c_str());
         std::unique_lock<std::mutex> lock (handshake_mutex_);
         handshake_topic_msgs_.emplace_back(_topic_msg->data);
         new_handshake_topic_msg_ = true;
@@ -29,7 +29,7 @@ namespace BT_ROS
 
     void RosHandShake::HandShakeActionCallback(const behavior_tree_ros::HandShakeGoalConstPtr& _goal_msg)
     {
-        ROS_INFO("Starting Handshake Action callback! [%s] [%s]", _goal_msg->bt_id.c_str(), _goal_msg->message.c_str());
+        ROS_INFO("[RosHandShake] Starting Handshake ACTION callback: [ID: %s] [MSG: %s]", _goal_msg->bt_id.c_str(), _goal_msg->message.c_str());
         bool signal_received = false;
 
         // To avoid possible problems due to the network connection, let's send it multiple times.
@@ -40,7 +40,6 @@ namespace BT_ROS
         {
             while(!signal_received && ros::ok() && handshake_action_server_.isActive())
             {
-                std::cout << "Waiting ..." << std::endl;
                 // Check signal received is the correct one
                 {
                     std::unique_lock<std::mutex> lock (handshake_mutex_);
@@ -59,7 +58,7 @@ namespace BT_ROS
                             // Checking if msg received is not empty, is from another BT and is in the same stage
                             if(!it->empty() && handshake_bt_id != _goal_msg->bt_id && handshake_message == _goal_msg->message)
                             {
-                                ROS_INFO("Message received from another node [%s]", it->c_str());
+                                ROS_INFO("[RosHandShake] Processing message received from ANOTHER node: [%s]", it->c_str());
                                 // Remove matched message
                                 handshake_topic_msgs_.erase(it--);
                                 signal_received = true;
@@ -73,9 +72,9 @@ namespace BT_ROS
                 }
 
                 // Send signal only one time
-                if(signal_sent_counter < 5)
+                if(signal_sent_counter < NUM_OF_REPUB)
                 {
-                    ROS_INFO("Sending signal to the other node!");
+                    ROS_INFO("[RosHandShake] Sending signal to the other node...");
                     std_msgs::String msg_to_send;
                     msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message;
                     send_signal_publisher_.publish(msg_to_send);
@@ -86,9 +85,9 @@ namespace BT_ROS
             }
 
             // Continue sending if they were not all sent
-            while(signal_sent_counter < 5)
+            while(signal_sent_counter < NUM_OF_REPUB)
             {
-                ROS_INFO("Sending signal to the other node!");
+                ROS_INFO("[RosHandShake] Sending signal to the other node...");
                 std_msgs::String msg_to_send;
                 msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message;
                 send_signal_publisher_.publish(msg_to_send);
@@ -99,7 +98,7 @@ namespace BT_ROS
 
             if(handshake_action_server_.isActive())
             {
-                ROS_INFO("Handshake succeeded!!");
+                ROS_INFO("[RosHandShake] -- HANDSHAKE SUCCEEDED --");
                 handshake_action_result_.result = true;
                 handshake_action_server_.setSucceeded(handshake_action_result_, "Synchronization succeeded!");
             }

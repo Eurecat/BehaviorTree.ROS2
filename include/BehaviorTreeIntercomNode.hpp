@@ -22,6 +22,8 @@ namespace BT_ROS
             RosHandShake();
             ~RosHandShake() = default;
 
+            static const int NUM_OF_REPUB = 5; // Times that the handshake signal is sent to ensure it is received at least once in the remote node.
+        
         private:
             void HandShakeTopicCallback(const std_msgs::StringConstPtr& _topic_msg);
 
