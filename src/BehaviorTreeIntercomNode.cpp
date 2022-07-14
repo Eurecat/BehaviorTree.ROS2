@@ -45,9 +45,20 @@ namespace BT_ROS
         ROS_INFO("[RosHandShake] Starting Handshake ACTION callback: [ID: %s] [MSG: %s]", _goal_msg->bt_id.c_str(), _goal_msg->message.c_str());
         bool signal_received = false;
 
-        // Update the handshake signal that this node is sending
+        // Update the handshake signal that this node is sending and publish it at least 5 times before exit this action
         handshake_mutex_.lock();
-        handshake_sync_message_ = _goal_msg->bt_id + ":" + _goal_msg->message;
+            handshake_sync_message_ = _goal_msg->bt_id + ":" + _goal_msg->message;
+            std_msgs::String msg_to_send;
+            msg_to_send.data = handshake_sync_message_;
+            send_signal_publisher_.publish(msg_to_send);
+            usleep(2e5);
+            send_signal_publisher_.publish(msg_to_send);
+            usleep(2e5);
+            send_signal_publisher_.publish(msg_to_send);
+            usleep(2e5);
+            send_signal_publisher_.publish(msg_to_send);
+            usleep(2e5);
+            send_signal_publisher_.publish(msg_to_send);
         handshake_mutex_.unlock();
 
         try
