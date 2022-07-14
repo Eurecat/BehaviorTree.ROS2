@@ -5,6 +5,7 @@
 #include <vector>
 #include <atomic>
 #include <mutex>
+#include <thread> 
 
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
@@ -20,15 +21,15 @@ namespace BT_ROS
     {
         public:
             RosHandShake();
-            ~RosHandShake() = default;
-
-            static const int NUM_OF_REPUB = 5; // Times that the handshake signal is sent to ensure it is received at least once in the remote node.
+            ~RosHandShake();
         
         private:
             void HandShakeTopicCallback(const std_msgs::StringConstPtr& _topic_msg);
 
             void HandShakeActionCallback(const behavior_tree_ros::HandShakeGoalConstPtr& _goal_msg);
             void HandShakeActionPreemptCallback();
+            
+            void HandShakeBroadcasterCallback(); 
 
         private:
             ros::NodeHandle public_node_handle_;
@@ -44,6 +45,9 @@ namespace BT_ROS
             std::mutex handshake_mutex_;
 
             std::vector<std::string> handshake_topic_msgs_;
+
+            std::unique_ptr<std::thread> handshake_broadcaster_th_;
+            std::string handshake_sync_message_ = "";
     }; // class RosHandShake
 
     class RosExchangeInfo final

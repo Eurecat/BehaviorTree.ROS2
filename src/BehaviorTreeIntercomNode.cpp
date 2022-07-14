@@ -17,6 +17,19 @@ namespace BT_ROS
         // Actionlib
         handshake_action_server_.registerPreemptCallback(boost::bind(&RosHandShake::HandShakeActionPreemptCallback, this));
         handshake_action_server_.start();
+
+        // Broadcaster
+        handshake_broadcaster_th_ = std::make_unique<std::thread>(std::thread(&RosHandShake::HandShakeBroadcasterCallback, this));
+    }
+
+    RosHandShake::~RosHandShake()
+    {
+        // Ensure the thread has been started.
+        if(handshake_broadcaster_th_->joinable()) 
+        {
+            // This will block until the thread has finished.
+            handshake_broadcaster_th_->join();
+        }
     }
 
     void RosHandShake::HandShakeTopicCallback(const std_msgs::StringConstPtr& _topic_msg)
@@ -32,9 +45,10 @@ namespace BT_ROS
         ROS_INFO("[RosHandShake] Starting Handshake ACTION callback: [ID: %s] [MSG: %s]", _goal_msg->bt_id.c_str(), _goal_msg->message.c_str());
         bool signal_received = false;
 
-        // To avoid possible problems due to the network connection, let's send it multiple times.
-        //bool signal_sent = false;
-        int signal_sent_counter = 0;
+        // Update the handshake signal that this node is sending
+        handshake_mutex_.lock();
+        handshake_sync_message_ = _goal_msg->bt_id + ":" + _goal_msg->message;
+        handshake_mutex_.unlock();
 
         try
         {
@@ -71,29 +85,7 @@ namespace BT_ROS
                     }
                 }
 
-                // Send signal only one time
-                if(signal_sent_counter < NUM_OF_REPUB)
-                {
-                    ROS_INFO("[RosHandShake] Sending signal to the other node...");
-                    std_msgs::String msg_to_send;
-                    msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message;
-                    send_signal_publisher_.publish(msg_to_send);
-                    signal_sent_counter++;
-                }
-
                 usleep(2e5); // not overload CPU
-            }
-
-            // Continue sending if they were not all sent
-            while(signal_sent_counter < NUM_OF_REPUB)
-            {
-                ROS_INFO("[RosHandShake] Sending signal to the other node...");
-                std_msgs::String msg_to_send;
-                msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message;
-                send_signal_publisher_.publish(msg_to_send);
-                signal_sent_counter++;
-
-                usleep(2e5);
             }
 
             if(handshake_action_server_.isActive())
@@ -117,7 +109,24 @@ namespace BT_ROS
         handshake_action_result_.result = false;
         handshake_action_server_.setPreempted(handshake_action_result_, "Goal preempted");
     }
+    
+    void RosHandShake::HandShakeBroadcasterCallback()
+    {
+        std_msgs::String msg_to_send;
+        
+        while(ros::ok())
+        {
+            handshake_mutex_.lock();
+            ROS_INFO("[RosHandShake] Broadcaster - Sending signal to the other node: [%s]", handshake_sync_message_.c_str());
+            msg_to_send.data = handshake_sync_message_;
+            handshake_mutex_.unlock();
 
+            send_signal_publisher_.publish(msg_to_send);
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    }
+
+    
     RosExchangeInfo::RosExchangeInfo() :
         exchange_info_action_server_ (public_node_handle_, "behavior_tree/exchange_info", boost::bind(&RosExchangeInfo::ExchangeInfoActionCallback, this, _1), false)
     {
