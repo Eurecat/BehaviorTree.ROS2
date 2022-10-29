@@ -27,7 +27,7 @@ jobs:
         UPO_KEY: ${{ secrets.UPO_KEY }}
     env:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOKEN }}
-      RELEASE: false
+      RELEASE: true
 
     defaults:
       run:
