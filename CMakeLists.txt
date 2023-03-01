@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
-project(behavior_tree_ros VERSION 0.6.3)
+project(behavior_tree_ros VERSION 0.6.4)
 
 set(CMAKE_CXX_STANDARD 14)
 
