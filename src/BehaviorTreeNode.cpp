@@ -366,6 +366,12 @@ namespace BT_ROS
                 case BT::NodeStatus::SUCCESS:
                     status = ExecutionStatus::SUCCESS;
                     break;
+                case BT::NodeStatus::SKIPPED:
+                    status = ExecutionStatus::SKIPPED;
+                    break;
+                case BT::NodeStatus::PAUSED:
+                    status = ExecutionStatus::PAUSED;
+                    break;
             }
 
             return status;

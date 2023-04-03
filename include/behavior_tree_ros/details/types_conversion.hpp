@@ -12,6 +12,12 @@ namespace BT
     {
         return nlohmann::json::parse(str);
     }
+
+    template <>
+    inline std::string toStr<nlohmann::json>(nlohmann::json json)
+    {
+        return json.dump();
+    }
 }
 
 #endif

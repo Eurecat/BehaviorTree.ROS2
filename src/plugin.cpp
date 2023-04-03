@@ -49,6 +49,11 @@ namespace BT_ROS
     {
         return _input.dump();
     }
+
+    double json2Double(const nlohmann::json& _input)
+    {
+        return atof( _input.dump().c_str() );
+    }
 }
 
 BT_REGISTER_NODES(factory)
@@ -103,8 +108,9 @@ BT_REGISTER_NODES(factory)
     factory.registerNodeType<AutomaticServiceClient<std_srvs::SetBool>>("CallSetBoolService");
     factory.registerNodeType<AutomaticServiceClient<std_srvs::Trigger>>("CallTriggerService");
 
-    factory.registerTypeConverter<std::string, nlohmann::json>(BT::convertFromString<nlohmann::json>);
-    factory.registerTypeConverter<nlohmann::json, std::string>(json2String);
+    // factory.registerTypeConverter<std::string, nlohmann::json>(BT::convertFromString<nlohmann::json>);
+    // factory.registerTypeConverter<nlohmann::json, std::string>(json2String);
+    // factory.registerTypeConverter<nlohmann::json, double>(json2Double);
 
     factory.registerNodeType<SimpleActionClientNode<behavior_tree_ros::BehaviorTreeAction,
                                                     AutomaticDeserialization,

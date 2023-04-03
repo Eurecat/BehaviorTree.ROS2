@@ -20,13 +20,14 @@ find_package(catkin REQUIRED
         ros_type_introspection
         topic_tools
         actionlib
-        behavior_tree_core
+        # behavior_tree_core
+        behaviortree_cpp_v3
         cmake_modules
         tf
         angles
 )
-find_package(behavior_tree_core 3.2.0 REQUIRED)
-
+# find_package(behavior_tree_core 3.2.0 REQUIRED)
+find_package(behaviortree_cpp_v3 3.2.0 REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 add_service_files(
@@ -56,7 +57,8 @@ catkin_package(
         roscpp
         message_runtime
         ros_type_introspection
-        behavior_tree_core
+        # behavior_tree_core
+        behaviortree_cpp_v3
         topic_tools
         actionlib
         cmake_modules
