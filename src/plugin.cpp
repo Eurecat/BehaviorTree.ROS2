@@ -34,6 +34,8 @@
 #include "behavior_tree_ros/actions/GetTransformAnglesNode.hpp"
 #include "behavior_tree_ros/actions/LoadYamlFileNode.hpp"
 
+#include "behavior_tree_ros/actions/TfStampedTransformUtils.hpp"
+
 #include "behavior_tree_ros/PublisherNode.hpp"
 #include "behavior_tree_ros/SubscriberNode.hpp"
 #include "behavior_tree_ros/ServiceClientNode.hpp"

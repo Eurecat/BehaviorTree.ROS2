@@ -1,5 +1,6 @@
 # Define the goal
 std_msgs/String tree_file  
+bool debug
 ---
 # Define the result
 bool result 

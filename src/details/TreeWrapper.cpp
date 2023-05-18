@@ -8,12 +8,13 @@ namespace BT_ROS
         bt_status_publisher_ = _public_node_handle.advertise<std_msgs::String>(topic_name, 1);
     }
 
-    void TreeWrapper::BuildTree(const std::string& _tree_file, BT::BehaviorTreeFactory& _bt_factory)
+    void TreeWrapper::BuildTree(const std::string& _tree_file, BT::BehaviorTreeFactory& _bt_factory, const bool debug)
     {
         // Wait between creating and executing the Tree to fully initialize ROS publishers
         auto temp_tree = std::make_unique<BT::Tree>(_bt_factory.createTreeFromFile(_tree_file));
         ros::Duration(0.5).sleep();
         tree_.swap(temp_tree);
+        if(debug) tree_->setDebug(); // set tree in debug mode
     }
 
     void TreeWrapper::RemoveTree()
@@ -58,7 +59,7 @@ namespace BT_ROS
                 ROS_WARN("Error initializing Minitrace logger for %s: %s", identifier_.c_str(), ex.what());
             }
         if(_enable_file)
-            bt_logger_file_ = std::make_unique<BT::FileLogger>(*tree_, log_file.c_str());
+            bt_logger_file_ = std::make_unique<BT::FileLogger>(*tree_, log_file.c_str(), 20, true);
         if(_enable_topic)
             bt_logger_rostopic_ = std::make_unique<BT_ROS::RosTopicLogger>(*tree_, bt_status_publisher_);
 
