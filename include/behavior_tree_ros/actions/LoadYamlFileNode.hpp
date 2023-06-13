@@ -17,8 +17,8 @@ class LoadYamlFileNode final : public BT::SyncActionNode
         static BT::PortsList providedPorts()
         {
             return { BT::InputPort<std::string>("file_path", "Path to the YAML config file"),
-                     //BT::OutputPort<nlohmann::json>("output", "Parameter list as json")
-                     BT::OutputPort<std::string>("output", "Parameter list as json")
+                     BT::OutputPort<nlohmann::json>("output", "Parameter list as json")
+                    //  BT::OutputPort<std::string>("output", "Parameter list as json")
                    };
         }
 
