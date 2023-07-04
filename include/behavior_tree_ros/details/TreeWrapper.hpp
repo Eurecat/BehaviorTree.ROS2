@@ -5,6 +5,7 @@
 #include <chrono>
 #include <sstream>
 #include <ctime>
+#include <atomic>
 
 #include <ros/ros.h>
 #include <std_msgs/String.h>
@@ -39,6 +40,7 @@ namespace BT_ROS
             void ResetLoggers();
 
             bool IsTreeLoaded() { return !!tree_; };
+            bool AreLoggersInitialized() { return loggers_initialized_.load(); };
             BT::NodeStatus tickTree() { return tree_->tickRoot(); };
 
         private:
@@ -56,6 +58,8 @@ namespace BT_ROS
 
             // Var to differenciate between service and action tree
             std::string identifier_;
+
+            std::atomic_bool loggers_initialized_{false};
     };
 }
 #endif

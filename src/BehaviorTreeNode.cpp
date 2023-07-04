@@ -59,7 +59,7 @@ namespace BT_ROS
             return;
         }
 
-        if(service_tree_.IsTreeLoaded()) { // Tick main tree (loaded with service)
+        if(service_tree_.IsTreeLoaded() && service_tree_.AreLoggersInitialized()) { // Tick main tree (loaded with service)
             try
             {
                 const auto tree_status = service_tree_.tickTree();
@@ -90,7 +90,7 @@ namespace BT_ROS
             }
         }
 
-        if(action_tree_.IsTreeLoaded()) { // Tick remote tree (loaded with action)
+        if(action_tree_.IsTreeLoaded() && action_tree_.AreLoggersInitialized()) { // Tick remote tree (loaded with action)
             try
             {
                 const auto action_tree_status = action_tree_.tickTree();

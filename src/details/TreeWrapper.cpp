@@ -10,6 +10,7 @@ namespace BT_ROS
 
     void TreeWrapper::BuildTree(const std::string& _tree_file, BT::BehaviorTreeFactory& _bt_factory, const bool debug)
     {
+        ResetLoggers();
         // Wait between creating and executing the Tree to fully initialize ROS publishers
         auto temp_tree = std::make_unique<BT::Tree>(_bt_factory.createTreeFromFile(_tree_file));
         ros::Duration(0.5).sleep();
@@ -80,10 +81,12 @@ namespace BT_ROS
         #else
         ROS_WARN("ZMQ logging is enabled but behavior_tree_core was not compiled with ZMQ support.");
         #endif
+        loggers_initialized_ = true;
     }
 
     void TreeWrapper::ResetLoggers()
     {
+        loggers_initialized_ = false;
         bt_logger_cout_.reset();
         bt_logger_trace_.reset();
         bt_logger_file_.reset();
