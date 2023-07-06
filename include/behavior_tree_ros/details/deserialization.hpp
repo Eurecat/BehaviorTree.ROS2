@@ -35,8 +35,10 @@ namespace deserialization
                 match_not_found = true; //perform setOutput to max int, i.e. int64
             
         }
+        else
+            match_not_found = true;
         
-        if(!port_info.has_value() || match_not_found)
+        if(match_not_found)
         {
             // Don't have enough info (shall not happen in a good design tree)
             _node.setOutput<int64_t>(_port, _field.get<int64_t>()); // just jump to the highest int
@@ -64,8 +66,10 @@ namespace deserialization
              else 
                 match_not_found = true; //perform setOutput to max int, i.e. uint64
         }
+        else
+            match_not_found = true;
         
-        if(!port_info.has_value() || match_not_found)
+        if(match_not_found)
         {
             // Don't have enough info (shall not happen in a good design tree)
             _node.setOutput<uint64_t>(_port, _field.get<uint64_t>()); // just jump to the highest uint
