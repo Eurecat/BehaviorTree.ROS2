@@ -32,7 +32,8 @@ namespace BT_ROS
         ROS_INFO("Starting Handshake Action callback! [%s] [%s]", _goal_msg->bt_id.c_str(), _goal_msg->message.c_str());
         bool signal_sent = false;
         bool signal_received = false;
-
+        int  time_count = 0;
+        
         try
         {
             while(!signal_received && ros::ok() && handshake_action_server_.isActive())
@@ -73,19 +74,21 @@ namespace BT_ROS
                     ROS_INFO("Sending signal to the other node!");
                     std_msgs::String msg_to_send;
                     msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message;
-                    send_signal_publisher_.publish(msg_to_send);
-                    usleep(2e5);
-                    send_signal_publisher_.publish(msg_to_send);
-                    usleep(2e5);
-                    send_signal_publisher_.publish(msg_to_send);
-                    usleep(2e5);
-                    send_signal_publisher_.publish(msg_to_send);
-                    usleep(2e5);
-                    send_signal_publisher_.publish(msg_to_send);
+                    for(int i = 0; i <= 7; i++)
+                    {
+                        send_signal_publisher_.publish(msg_to_send);
+                        usleep(2e5);
+                    }
                     signal_sent = true;
                 }
 
                 usleep(2e5); // not overload CPU
+
+                time_count++;
+                
+                if(time_count == 25){
+                    signal_sent = false;
+                }
             }
 
             if(handshake_action_server_.isActive())
