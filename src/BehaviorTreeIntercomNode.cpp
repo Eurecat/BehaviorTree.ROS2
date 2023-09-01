@@ -68,12 +68,19 @@ namespace BT_ROS
                     }
                 }
 
-                // Send signal only one time
-                if(!signal_sent)
-                {
+                if(!signal_sent){
+                    // Send a signal every time
                     ROS_INFO("Sending signal to the other node!");
                     std_msgs::String msg_to_send;
                     msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message;
+                    send_signal_publisher_.publish(msg_to_send);
+                    usleep(2e5);
+                    send_signal_publisher_.publish(msg_to_send);
+                    usleep(2e5);
+                    send_signal_publisher_.publish(msg_to_send);
+                    usleep(2e5);
+                    send_signal_publisher_.publish(msg_to_send);
+                    usleep(2e5);
                     send_signal_publisher_.publish(msg_to_send);
                     signal_sent = true;
                 }
