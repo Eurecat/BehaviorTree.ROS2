@@ -77,6 +77,7 @@ namespace BT_ROS
                 
                 if(time_count == 25){
                     signal_sent = false;
+                    time_count = 0;
                 }
             }            
             if(handshake_action_server_.isActive())
