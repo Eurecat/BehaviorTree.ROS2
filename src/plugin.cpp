@@ -66,10 +66,10 @@ BT_REGISTER_NODES(factory)
     factory.registerNodeType<ConvertJsonToNode<std::string>>("ConvertJsonToString");
     factory.registerNodeType<ConvertJsonToNode<double>>("ConvertJsonToDouble");
     factory.registerNodeType<ConvertJsonToNode<int16_t>>("ConvertJsonToShort");
-    factory.registerNodeType<ConvertJsonToNode<int32_t>>("ConvertJsonToInt");
+    factory.registerNodeType<ConvertJsonToNode<int32_t>>("ConvertJsonToInt32");
     factory.registerNodeType<ConvertJsonToNode<int64_t>>("ConvertJsonToLong");
     factory.registerNodeType<ConvertJsonToNode<uint16_t>>("ConvertJsonToUShort");
-    factory.registerNodeType<ConvertJsonToNode<uint32_t>>("ConvertJsonToUInt");
+    factory.registerNodeType<ConvertJsonToNode<uint32_t>>("ConvertJsonToUInt32");
     factory.registerNodeType<ConvertJsonToNode<uint64_t>>("ConvertJsonToULong");
     factory.registerNodeType<GetRandomMessageFieldNode>("GetRandomMessageField");
     factory.registerNodeType<FindByFieldValueNode>("FindByFieldValue");
