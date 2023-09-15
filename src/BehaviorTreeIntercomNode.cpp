@@ -6,99 +6,172 @@ namespace BT_ROS
         handshake_action_server_ (public_node_handle_, "behavior_tree/handshake", boost::bind(&RosHandShake::HandShakeActionCallback, this, _1), false)
     {
         // Get intercom topic name
-        std::string handshake_topic_name = private_node_handle_.param<std::string>("handshake_topic_name", "/remote/bt_handshake");        // Publisher
-        send_signal_publisher_ = public_node_handle_.advertise<std_msgs::String>(handshake_topic_name, 1, true);        // Subscriber
-        get_signal_subscriber_ = public_node_handle_.subscribe(handshake_topic_name, 10, &RosHandShake::HandShakeTopicCallback, this);        // Actionlib
+        std::string handshake_topic_name = private_node_handle_.param<std::string>("handshake_topic_name", "/remote/bt_handshake");        
+        // Publisher
+        send_signal_publisher_ = public_node_handle_.advertise<std_msgs::String>(handshake_topic_name, 1, true);  
+        send_handshake_end_signal_publisher_ = public_node_handle_.advertise<std_msgs::Bool>("/encouraging_mediator/handshake_end_signal", 1, true);    
+        // Subscriber
+        get_signal_subscriber_ = public_node_handle_.subscribe(handshake_topic_name, 10, &RosHandShake::HandShakeTopicCallback, this);   
+        get_end_handshake_signal_subscriber_ = public_node_handle_.subscribe("/encouraging_mediator/handshake_end_signal", 10, &RosHandShake::HandShakeEndTopicCallback, this);     
+        // Actionlib
         handshake_action_server_.registerPreemptCallback(boost::bind(&RosHandShake::HandShakeActionPreemptCallback, this));
         handshake_action_server_.start();
-    }    void RosHandShake::HandShakeTopicCallback(const std_msgs::StringConstPtr& _topic_msg)
+    }    
+    
+    void RosHandShake::HandShakeTopicCallback(const std_msgs::StringConstPtr& _topic_msg)
     {
-        ROS_INFO("Received Handshake topic message! [%s]", _topic_msg->data.c_str());
+        ROS_INFO("Received end Handshake topic message! [%s]", _topic_msg->data.c_str());
         std::unique_lock<std::mutex> lock (handshake_mutex_);
         handshake_topic_msgs_.emplace_back(_topic_msg->data);
         new_handshake_topic_msg_ = true;
-    }    void RosHandShake::HandShakeActionCallback(const behavior_tree_ros::HandShakeGoalConstPtr& _goal_msg)
+    }   
+ 
+    void RosHandShake::HandShakeEndTopicCallback(const std_msgs::Bool::ConstPtr& _topic_msg)
     {
-        ROS_INFO("Starting Handshake Action callback! [%s] [%s]", _goal_msg->bt_id.c_str(), _goal_msg->message.c_str());
-        bool signal_sent = false;
-        bool signal_received = false;
-        int  time_count = 0;        
-        
-        try
-        {
-            while(!signal_received && ros::ok() && handshake_action_server_.isActive())
-            {
-                // Check signal received is the correct one
-                {
-                    std::unique_lock<std::mutex> lock (handshake_mutex_);                    
-                    
-                    if(new_handshake_topic_msg_)
-                    {
-                        new_handshake_topic_msg_ = false;
-                        std::string handshake_bt_id {""};
-                        std::string handshake_message {""};
-                        for (auto it = handshake_topic_msgs_.begin(); it != handshake_topic_msgs_.end(); it++)
-                        {
-                            // ID and message are separated by ":"
-                            size_t pos = it->find_first_of(":");
-                            handshake_bt_id = it->substr(0, pos);
-                            handshake_message = it->substr(pos+1, it->size());
-                            // Checking if msg received is not empty, is from another BT and is in the same stage
-                            if(!it->empty() && handshake_bt_id != _goal_msg->bt_id && handshake_message == _goal_msg->message)
-                            {
-                                ROS_INFO("Message received from another node [%s]", it->c_str());
-                                // Remove matched message
-                                handshake_topic_msgs_.erase(it--);
-                                signal_received = true;                                
-                                break; // Stop checking msgs as we found what we were looking for
-                            }
-                            // Remove unmatched message
-                            handshake_topic_msgs_.erase(it--);
-                        }
-                    }
-                }               
-                if(!signal_sent){
-                    // Send a signal every time
-                    ROS_INFO("Sending signal to the other node!");
-                    std_msgs::String msg_to_send;
-                    msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message;
-                    for(int i = 0; i<=7; i++)
-                    {
-                        send_signal_publisher_.publish(msg_to_send);
-                        usleep(2e5);
-                    }
-                    signal_sent = true;
-                }                
-                
+        ROS_INFO("Received Handshake topic message! [%i]", _topic_msg->data);
+        std::unique_lock<std::mutex> lock (handshake_mutex_);
+        end_handshake_topic_msg_ = _topic_msg->data;
+    }  
+    
+    void RosHandShake::ThreeWayHandshakeJapan(const behavior_tree_ros::HandShakeGoalConstPtr& _goal_msg){
+        bool first_sync_sent = false;
 
-                usleep(2e5); // not overload CPU                
-                
-                time_count++;                
-                
-                if(time_count == 25){
-                    signal_sent = false;
-                    time_count = 0;
+        // Send handshake message to the other side every 0.5 second until we receive the ACK signal
+        while(!first_sync_sent){
+            // Send handshake message every 0.5 seconds 
+            std_msgs::String msg_to_send;
+            msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message + "_1";
+            send_signal_publisher_.publish(msg_to_send);
+            usleep(10e5);
+
+            // Check if we have receive the first ACK signal from the other side
+            if(new_handshake_topic_msg_){
+                new_handshake_topic_msg_ = false;
+                std::string handshake_bt_id {""};
+                std::string handshake_message {""};
+                for (auto it = handshake_topic_msgs_.begin(); it != handshake_topic_msgs_.end(); it++){
+                    // ID and message are separated by ":"
+                    size_t pos = it->find_first_of(":");
+                    handshake_bt_id = it->substr(0, pos);
+                    handshake_message = it->substr(pos+1, it->size());
+                    // Checking if msg received is not empty, is from another BT and is in the same stage
+                    if(!it->empty() && handshake_bt_id != _goal_msg->bt_id && handshake_message == _goal_msg->message+"_ack")
+                    {
+                        ROS_INFO("Message received from another node [%s]", it->c_str());
+                        // Remove matched message
+                        handshake_topic_msgs_.erase(it--);
+                        first_sync_sent = true;                                
+                        break; // Stop checking msgs as we found what we were looking for
+                    }
+                    // Remove unmatched message
+                    handshake_topic_msgs_.erase(it--);
                 }
-            }            
-            if(handshake_action_server_.isActive())
-            {
-                ROS_INFO("Handshake succeeded!!");
-                handshake_action_result_.result = true;
-                handshake_action_server_.setSucceeded(handshake_action_result_, "Synchronization succeeded!");
             }
         }
-        catch(const std::runtime_error& ex)
-        {
-            ROS_ERROR("Error in Handshake Action: %s", ex.what());
-            handshake_action_result_.result = false;
-            handshake_action_server_.setAborted(handshake_action_result_, "Synchronization aborted!");
+
+        // Send handshake message to the other side every 0.5 second until we receive the ACK signal
+        while(!end_handshake_topic_msg_){
+            // Send handshake message every 0.5 seconds 
+            std_msgs::String msg_to_send;
+            msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message + "_1_ack";
+            send_signal_publisher_.publish(msg_to_send);
+            usleep(10e5);
         }
-    }    void RosHandShake::HandShakeActionPreemptCallback()
+    }
+
+    void RosHandShake::ThreeWayHandshakeAustralia(const behavior_tree_ros::HandShakeGoalConstPtr& _goal_msg){
+        bool first_sync_receive = false;
+        bool second_sync_sent = false;
+
+        while(!first_sync_receive){
+            // Check if we have receive the first ACK signal from the other side
+            if(new_handshake_topic_msg_){
+                new_handshake_topic_msg_ = false;
+                std::string handshake_bt_id {""};
+                std::string handshake_message {""};
+                for (auto it = handshake_topic_msgs_.begin(); it != handshake_topic_msgs_.end(); it++){
+                    // ID and message are separated by ":"
+                    size_t pos = it->find_first_of(":");
+                    handshake_bt_id = it->substr(0, pos);
+                    handshake_message = it->substr(pos+1, it->size());
+                    // Checking if msg received is not empty, is from another BT and is in the same stage
+                    if(!it->empty() && handshake_bt_id != _goal_msg->bt_id && handshake_message == _goal_msg->message+"_1")
+                    {
+                        ROS_INFO("Message received from another node [%s]", it->c_str());
+                        // Remove matched message
+                        handshake_topic_msgs_.erase(it--);
+                        first_sync_receive = true;                                
+                        break; // Stop checking msgs as we found what we were looking for
+                    }
+                    // Remove unmatched message
+                    handshake_topic_msgs_.erase(it--);
+                }
+            }
+        }
+
+        while(!second_sync_sent){
+            // Send handshake message every 0.5 seconds 
+            std_msgs::String msg_to_send;
+            msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message + "_ack";
+            send_signal_publisher_.publish(msg_to_send);
+            usleep(10e5);
+
+            // Check if we have receive the ACK signal from the other side
+            if(new_handshake_topic_msg_){
+                new_handshake_topic_msg_ = false;
+                std::string handshake_bt_id {""};
+                std::string handshake_message {""};
+                for (auto it = handshake_topic_msgs_.begin(); it != handshake_topic_msgs_.end(); it++){
+                    // ID and message are separated by ":"
+                    size_t pos = it->find_first_of(":");
+                    handshake_bt_id = it->substr(0, pos);
+                    handshake_message = it->substr(pos+1, it->size());
+                    // Checking if msg received is not empty, is from another BT and is in the same stage
+                    if(!it->empty() && handshake_bt_id != _goal_msg->bt_id && handshake_message == _goal_msg->message+"_1_ack")
+                    {
+                        ROS_INFO("Message received from another node [%s]", it->c_str());
+                        // Remove matched message
+                        handshake_topic_msgs_.erase(it--);
+                        std_msgs::Bool end_msg_to_send;
+                        end_msg_to_send.data = true;
+                        send_handshake_end_signal_publisher_.publish(end_msg_to_send);
+                        second_sync_sent = true;                           
+                        break; // Stop checking msgs as we found what we were looking for
+                    }
+                    // Remove unmatched message
+                    handshake_topic_msgs_.erase(it--);
+                }
+            }
+        }
+    }
+
+    void RosHandShake::HandShakeActionCallback(const behavior_tree_ros::HandShakeGoalConstPtr& _goal_msg)
+    {
+        ROS_INFO("Starting Handshake Action callback! [%s] [%s]", _goal_msg->bt_id.c_str(), _goal_msg->message.c_str());   
+        std::string country_name = std::getenv("BT_THIS_COUNTRY");   
+
+        if(country_name == "japan"){
+            ThreeWayHandshakeJapan(_goal_msg);
+        }else{
+            ThreeWayHandshakeAustralia(_goal_msg);
+        }
+
+        if(handshake_action_server_.isActive())
+        {
+            ROS_INFO("Handshake succeeded!!");
+            handshake_action_result_.result = true;
+            handshake_action_server_.setSucceeded(handshake_action_result_, "Synchronization succeeded!");
+        }
+    }    
+    
+    void RosHandShake::HandShakeActionPreemptCallback()
     {
         ROS_INFO("Handshake Action Goal canceled!");
         handshake_action_result_.result = false;
         handshake_action_server_.setPreempted(handshake_action_result_, "Goal preempted");
-    }    RosExchangeInfo::RosExchangeInfo() :
+    }    
+    
+    RosExchangeInfo::RosExchangeInfo() :
         exchange_info_action_server_ (public_node_handle_, "behavior_tree/exchange_info", boost::bind(&RosExchangeInfo::ExchangeInfoActionCallback, this, _1), false)
     {
         // Get intercom topic name
@@ -107,13 +180,17 @@ namespace BT_ROS
         get_info_subscriber_ = public_node_handle_.subscribe(exchange_info_topic_name, 10, &RosExchangeInfo::ExchangeInfoTopicCallback, this);        // Actionlib
         exchange_info_action_server_.registerPreemptCallback(boost::bind(&RosExchangeInfo::ExchangeInfoActionPreemptCallback, this));
         exchange_info_action_server_.start();
-    }    void RosExchangeInfo::ExchangeInfoTopicCallback(const std_msgs::StringConstPtr& _topic_msg)
+    }    
+    
+    void RosExchangeInfo::ExchangeInfoTopicCallback(const std_msgs::StringConstPtr& _topic_msg)
     {
         ROS_INFO("Received Info topic message! [%s]", _topic_msg->data.c_str());
         std::unique_lock<std::mutex> lock (exchange_info_mutex_);
         exchange_info_topic_msgs_.emplace_back(_topic_msg->data);
         new_exchange_info_topic_msg_ = true;
-    }    void RosExchangeInfo::ExchangeInfoActionCallback(const behavior_tree_ros::ExchangeInfoGoalConstPtr& _goal_msg)
+    }    
+    
+    void RosExchangeInfo::ExchangeInfoActionCallback(const behavior_tree_ros::ExchangeInfoGoalConstPtr& _goal_msg)
     {
         ROS_INFO("Starting ExchangeInfo Action callback! [%s] [%s] [%s]", _goal_msg->bt_id.c_str(), _goal_msg->info_type.c_str(), _goal_msg->info_data.c_str());
         bool signal_sent = false;
@@ -173,10 +250,12 @@ namespace BT_ROS
             exchange_info_action_result_.info_received = false;
             exchange_info_action_server_.setAborted(exchange_info_action_result_, "Synchronization aborted!");
         }
-    }    void RosExchangeInfo::ExchangeInfoActionPreemptCallback()
+    }    
+    
+    void RosExchangeInfo::ExchangeInfoActionPreemptCallback()
     {
         ROS_INFO("ExchangeInfo Action Goal canceled!");
         exchange_info_action_result_.info_received = false;
         exchange_info_action_server_.setPreempted(exchange_info_action_result_, "Goal preempted");
-}
+    }
 }// namespace BT_ROS
