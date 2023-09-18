@@ -9,7 +9,7 @@ namespace BT_ROS
         std::string handshake_topic_name = private_node_handle_.param<std::string>("handshake_topic_name", "/remote/bt_handshake");        
         // Publisher
         send_signal_publisher_ = public_node_handle_.advertise<std_msgs::String>(handshake_topic_name, 1, true);  
-        send_handshake_end_signal_publisher_ = public_node_handle_.advertise<std_msgs::Bool>("/encouraging_mediator/handshake_end_signal", 1, true);    
+        send_handshake_end_signal_publisher_ = public_node_handle_.advertise<std_msgs::Bool>("/encouraging_mediator/handshake_end_signal", 1, false);    
         // Subscriber
         get_signal_subscriber_ = public_node_handle_.subscribe(handshake_topic_name, 10, &RosHandShake::HandShakeTopicCallback, this);   
         get_end_handshake_signal_subscriber_ = public_node_handle_.subscribe("/encouraging_mediator/handshake_end_signal", 10, &RosHandShake::HandShakeEndTopicCallback, this);     
@@ -34,6 +34,7 @@ namespace BT_ROS
     }  
     
     void RosHandShake::ThreeWayHandshakeJapan(const behavior_tree_ros::HandShakeGoalConstPtr& _goal_msg){
+        
         bool first_sync_sent = false;
 
         // Send handshake message to the other side every 0.5 second until we receive the ACK signal
@@ -77,6 +78,9 @@ namespace BT_ROS
             send_signal_publisher_.publish(msg_to_send);
             usleep(10e5);
         }
+        std_msgs::Bool end_msg_to_send;
+        end_msg_to_send.data = false;
+        send_handshake_end_signal_publisher_.publish(end_msg_to_send);
     }
 
     void RosHandShake::ThreeWayHandshakeAustralia(const behavior_tree_ros::HandShakeGoalConstPtr& _goal_msg){
@@ -135,7 +139,8 @@ namespace BT_ROS
                         std_msgs::Bool end_msg_to_send;
                         end_msg_to_send.data = true;
                         send_handshake_end_signal_publisher_.publish(end_msg_to_send);
-                        second_sync_sent = true;                           
+                        second_sync_sent = true;
+                        end_handshake_topic_msg_ = true;                           
                         break; // Stop checking msgs as we found what we were looking for
                     }
                     // Remove unmatched message
@@ -148,8 +153,8 @@ namespace BT_ROS
     void RosHandShake::HandShakeActionCallback(const behavior_tree_ros::HandShakeGoalConstPtr& _goal_msg)
     {
         ROS_INFO("Starting Handshake Action callback! [%s] [%s]", _goal_msg->bt_id.c_str(), _goal_msg->message.c_str());   
-        std::string country_name = std::getenv("BT_THIS_COUNTRY");   
-
+        std::string country_name;   
+        ros::param::get("this_country", country_name);
         if(country_name == "japan"){
             ThreeWayHandshakeJapan(_goal_msg);
         }else{
@@ -159,6 +164,7 @@ namespace BT_ROS
         if(handshake_action_server_.isActive())
         {
             ROS_INFO("Handshake succeeded!!");
+            end_handshake_topic_msg_ = false;
             handshake_action_result_.result = true;
             handshake_action_server_.setSucceeded(handshake_action_result_, "Synchronization succeeded!");
         }
