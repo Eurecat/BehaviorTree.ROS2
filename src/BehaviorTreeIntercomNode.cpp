@@ -38,7 +38,7 @@ namespace BT_ROS
         bool first_sync_sent = false;
 
         // Send handshake message to the other side every 0.5 second until we receive the ACK signal
-        while(!first_sync_sent){
+        while(!first_sync_sent && !action_cancelled_){
             // Send handshake message every 0.5 seconds 
             std_msgs::String msg_to_send;
             msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message + "_1";
@@ -71,7 +71,7 @@ namespace BT_ROS
         }
 
         // Send handshake message to the other side every 0.5 second until we receive the ACK signal
-        while(!end_handshake_topic_msg_){
+        while(!end_handshake_topic_msg_ && !action_cancelled_){
             // Send handshake message every 0.5 seconds 
             std_msgs::String msg_to_send;
             msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message + "_1_ack";
@@ -87,7 +87,7 @@ namespace BT_ROS
         bool first_sync_receive = false;
         bool second_sync_sent = false;
 
-        while(!first_sync_receive){
+        while(!first_sync_receive && !action_cancelled_){
             // Check if we have receive the first ACK signal from the other side
             if(new_handshake_topic_msg_){
                 new_handshake_topic_msg_ = false;
@@ -113,7 +113,7 @@ namespace BT_ROS
             }
         }
 
-        while(!second_sync_sent){
+        while(!second_sync_sent && !action_cancelled_){
             // Send handshake message every 0.5 seconds 
             std_msgs::String msg_to_send;
             msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message + "_ack";
@@ -152,6 +152,7 @@ namespace BT_ROS
 
     void RosHandShake::HandShakeActionCallback(const behavior_tree_ros::HandShakeGoalConstPtr& _goal_msg)
     {
+        action_cancelled_ = false;
         ROS_INFO("Starting Handshake Action callback! [%s] [%s]", _goal_msg->bt_id.c_str(), _goal_msg->message.c_str());   
         std::string country_name;   
         ros::param::get("this_country", country_name);
@@ -173,6 +174,7 @@ namespace BT_ROS
     void RosHandShake::HandShakeActionPreemptCallback()
     {
         ROS_INFO("Handshake Action Goal canceled!");
+        action_cancelled_ = true;
         handshake_action_result_.result = false;
         handshake_action_server_.setPreempted(handshake_action_result_, "Goal preempted");
     }    

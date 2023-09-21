@@ -46,6 +46,7 @@ namespace BT_ROS
 
             std::atomic<bool> new_handshake_topic_msg_ { false };
             std::atomic<bool> end_handshake_topic_msg_ { false };
+            std::atomic<bool> action_cancelled_ {false};
             std::mutex handshake_mutex_;
 
             std::vector<std::string> handshake_topic_msgs_;
