@@ -175,6 +175,9 @@ namespace BT_ROS
     {
         ROS_INFO("Handshake Action Goal canceled!");
         action_cancelled_ = true;
+        std_msgs::Bool end_msg_to_send;
+        end_msg_to_send.data = false;
+        send_handshake_end_signal_publisher_.publish(end_msg_to_send);
         handshake_action_result_.result = false;
         handshake_action_server_.setPreempted(handshake_action_result_, "Goal preempted");
     }    
