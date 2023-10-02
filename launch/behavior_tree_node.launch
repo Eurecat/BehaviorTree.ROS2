@@ -5,7 +5,7 @@
     <arg name="tick_frequency"          default="30.0" />
     <arg name="enable_cout_log"         default="true" />
     <arg name="enable_minitrace_log"    default="false" />
-    <arg name="enable_file_log"         default="false" />
+    <arg name="enable_file_log"         default="true" />
     <arg name="enable_zmq_log"          default="true" />
     <arg name="enable_rostopic_log"     default="true" />
     <arg name="log_folder"              default="/tmp/" />
