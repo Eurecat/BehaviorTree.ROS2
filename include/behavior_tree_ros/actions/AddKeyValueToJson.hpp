@@ -26,9 +26,9 @@ class AddKeyValueToJson final : public BT::SyncActionNode
             const auto& input_key = getInput<std::string>("input_key");
             const auto& input_value = getInputAsJson("input_value");
             const auto& input_json = getInput<nlohmann::json>("input_json");
-            if(!input_key) { throw BT::RuntimeError { name() + ": missing \"input_key\" required fields. Error: " + input_key.value() }; }
-            if(!input_value) { throw BT::RuntimeError { name() + ": missing \"input_value\" required fields. Error: " + input_value.value() }; }
-            if(!input_json) { throw BT::RuntimeError { name() + ": missing \"input_json\" required fields. Error: " + input_json.value() }; }
+            if(!input_key) { throw BT::RuntimeError { name() + ": missing \"input_key\" required fields. Error: " + input_key.error() }; }
+            if(!input_value) { throw BT::RuntimeError { name() + ": missing \"input_value\" required fields. Error: " + input_value.error() }; }
+            if(!input_json) { throw BT::RuntimeError { name() + ": missing \"input_json\" required fields. Error: " + input_json.error() }; }
             
             try{
                 nlohmann::json json_store = input_json.value();
