@@ -44,7 +44,7 @@ namespace BT_ROS
             msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message + "_1";
             send_signal_publisher_.publish(msg_to_send);
             usleep(10e6);
-
+            std::unique_lock<std::mutex> lock (handshake_mutex_);
             // Check if we have receive the first ACK signal from the other side
             if(new_handshake_topic_msg_){
                 new_handshake_topic_msg_ = false;
@@ -89,6 +89,7 @@ namespace BT_ROS
 
         while(!first_sync_receive && !action_cancelled_){
             // Check if we have receive the first ACK signal from the other side
+            std::unique_lock<std::mutex> lock (handshake_mutex_);
             if(new_handshake_topic_msg_){
                 new_handshake_topic_msg_ = false;
                 std::string handshake_bt_id {""};
@@ -119,7 +120,7 @@ namespace BT_ROS
             msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message + "_ack";
             send_signal_publisher_.publish(msg_to_send);
             usleep(10e6);
-
+            std::unique_lock<std::mutex> lock (handshake_mutex_);
             // Check if we have receive the ACK signal from the other side
             if(new_handshake_topic_msg_){
                 new_handshake_topic_msg_ = false;
