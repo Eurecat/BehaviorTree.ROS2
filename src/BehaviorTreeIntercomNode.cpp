@@ -36,7 +36,6 @@ namespace BT_ROS
     void RosHandShake::ThreeWayHandshakeJapan(const behavior_tree_ros::HandShakeGoalConstPtr& _goal_msg){
         
         bool first_sync_sent = false;
-        std::unique_lock<std::mutex> lock (handshake_mutex_);
         // Send handshake message to the other side every 0.5 second until we receive the ACK signal
         while(!first_sync_sent && !action_cancelled_){
             // Send handshake message every 0.5 seconds 
@@ -85,7 +84,6 @@ namespace BT_ROS
     void RosHandShake::ThreeWayHandshakeAustralia(const behavior_tree_ros::HandShakeGoalConstPtr& _goal_msg){
         bool first_sync_receive = false;
         bool second_sync_sent = false;
-        std::unique_lock<std::mutex> lock (handshake_mutex_);
         while(!first_sync_receive && !action_cancelled_){
             // Check if we have receive the first ACK signal from the other side
             if(new_handshake_topic_msg_){
@@ -154,6 +152,7 @@ namespace BT_ROS
         ROS_INFO("Starting Handshake Action callback! [%s] [%s]", _goal_msg->bt_id.c_str(), _goal_msg->message.c_str());   
         std::string country_name;   
         ros::param::get("this_country", country_name);
+        std::unique_lock<std::mutex> lock (handshake_mutex_);
         if(country_name == "japan"){
             ThreeWayHandshakeJapan(_goal_msg);
         }else{
