@@ -20,7 +20,7 @@ namespace BT_ROS
     
     void RosHandShake::HandShakeTopicCallback(const std_msgs::StringConstPtr& _topic_msg)
     {
-        ROS_INFO("Received Handshake topic message! [%s]", _topic_msg->data);
+        ROS_INFO("Received Handshake topic message! [%s]", _topic_msg->data.c_str());
         std::unique_lock<std::mutex> lock (handshake_mutex_);
         handshake_topic_msgs_.emplace_back(_topic_msg->data);
         new_handshake_topic_msg_ = true;
@@ -28,7 +28,7 @@ namespace BT_ROS
  
     void RosHandShake::HandShakeEndTopicCallback(const std_msgs::Bool::ConstPtr& _topic_msg)
     {
-        ROS_INFO("Received end Handshake topic message! [%i]", _topic_msg->data.c_str());
+        ROS_INFO("Received end Handshake topic message! [%i]", _topic_msg->data);
         std::unique_lock<std::mutex> lock (handshake_mutex_);
         end_handshake_topic_msg_ = _topic_msg->data;
     }  
