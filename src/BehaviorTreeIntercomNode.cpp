@@ -43,7 +43,7 @@ namespace BT_ROS
             std_msgs::String msg_to_send;
             msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message + "_1";
             send_signal_publisher_.publish(msg_to_send);
-            usleep(10e5);
+            usleep(10e6);
 
             // Check if we have receive the first ACK signal from the other side
             if(new_handshake_topic_msg_){
@@ -76,7 +76,7 @@ namespace BT_ROS
             std_msgs::String msg_to_send;
             msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message + "_1_ack";
             send_signal_publisher_.publish(msg_to_send);
-            usleep(10e5);
+            usleep(10e6);
         }
         std_msgs::Bool end_msg_to_send;
         end_msg_to_send.data = false;
@@ -118,7 +118,7 @@ namespace BT_ROS
             std_msgs::String msg_to_send;
             msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message + "_ack";
             send_signal_publisher_.publish(msg_to_send);
-            usleep(10e5);
+            usleep(10e6);
 
             // Check if we have receive the ACK signal from the other side
             if(new_handshake_topic_msg_){
