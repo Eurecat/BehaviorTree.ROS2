@@ -152,7 +152,6 @@ namespace BT_ROS
         ROS_INFO("Starting Handshake Action callback! [%s] [%s]", _goal_msg->bt_id.c_str(), _goal_msg->message.c_str());   
         std::string country_name;   
         ros::param::get("this_country", country_name);
-        std::unique_lock<std::mutex> lock (handshake_mutex_);
         if(country_name == "japan"){
             ThreeWayHandshakeJapan(_goal_msg);
         }else{
