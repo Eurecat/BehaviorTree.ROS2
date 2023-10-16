@@ -24,32 +24,36 @@ namespace BT_ROS
             ~RosHandShake() = default;
 
         private:
-            void HandShakeTopicCallback(const std_msgs::StringConstPtr& _topic_msg);
+            void HandShakeFatherTopicCallback(const std_msgs::StringConstPtr& _topic_msg);
+            void HandShakeChildTopicCallback(const std_msgs::StringConstPtr& _topic_msg);
             void HandShakeEndTopicCallback(const std_msgs::Bool::ConstPtr& _topic_msg);
 
             void HandShakeActionCallback(const behavior_tree_ros::HandShakeGoalConstPtr& _goal_msg);
-            void ThreeWayHandshakeJapan(const behavior_tree_ros::HandShakeGoalConstPtr& _goal_msg);
-            void ThreeWayHandshakeAustralia(const behavior_tree_ros::HandShakeGoalConstPtr& _goal_msg);
+            void ThreeWayHandshakeFather(const behavior_tree_ros::HandShakeGoalConstPtr& _goal_msg);
+            void ThreeWayHandshakeChild(const behavior_tree_ros::HandShakeGoalConstPtr& _goal_msg);
             void HandShakeActionPreemptCallback();
 
         private:
             ros::NodeHandle public_node_handle_;
             ros::NodeHandle private_node_handle_ { "~" };
 
-            ros::Publisher  send_signal_publisher_;
-            ros::Publisher  send_handshake_end_signal_publisher_;
-            ros::Subscriber get_signal_subscriber_;
-            ros::Subscriber get_end_handshake_signal_subscriber_;
+            ros::Publisher  send_father_signal_publisher_;
+            ros::Publisher  send_child_signal_publisher_;
+            ros::Publisher  send_end_signal_publisher_;
+            ros::Subscriber get_father_signal_subscriber_;
+            ros::Subscriber get_child_signal_subscriber_;
+            ros::Subscriber get_end_signal_subscriber_;
 
             actionlib::SimpleActionServer<behavior_tree_ros::HandShakeAction> handshake_action_server_;
             behavior_tree_ros::HandShakeResult handshake_action_result_;
 
-            std::atomic<bool> new_handshake_topic_msg_ { false };
+            std::atomic<bool> new_father_handshake_topic_msg_ { false };
+            std::atomic<bool> new_child_handshake_topic_msg_ { false };
             std::atomic<bool> end_handshake_topic_msg_ { false };
             std::atomic<bool> action_cancelled_ {false};
-            std::mutex handshake_mutex_;
 
-            std::vector<std::string> handshake_topic_msgs_;
+            std::string handshake_father_topic_msg_;
+            std::string handshake_child_topic_msg_;
     }; // class RosHandShake
 
     class RosExchangeInfo final
