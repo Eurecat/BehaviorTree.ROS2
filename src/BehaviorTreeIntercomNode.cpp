@@ -40,7 +40,7 @@ namespace BT_ROS
         handshake_action_server_.start();
 
         // Publish Timer
-        pub_timer_ = public_node_handle_.createTimer(ros::Duration(pub_period_s_), &RosHandShake::PublishSmsCallback, this);
+        pub_timer_ = public_node_handle_.createTimer(ros::Duration(pub_period_s_), &RosHandShake::PublishSmsCallback, this, false, false);
     }    
     
     void RosHandShake::PublishSmsCallback(const ros::TimerEvent& ev)

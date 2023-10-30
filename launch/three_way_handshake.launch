@@ -1,0 +1,43 @@
+<launch>
+
+ # Define three way mode
+  <arg name="handshake_mode" default="server"/>
+    
+  ## Configurations
+
+  <arg name="remote_robot_hostname"     default="CL-DCALERO"/>
+  <arg name="local_robot_hostname"      default="CL-LABROB2"/>
+  <arg name="local_robot_username"      default="devis.dalmoro"/>
+  <arg name="local_robot_password"      default="Noviembre.2022"/>
+  <arg name="local_robot_ip"            default="192.168.2.30"/>
+
+
+  # Replace - by _ for the remote robot hostname
+  <arg name="remote_robot_ns" default="$(eval remote_robot_hostname.replace('-', '_') if '-' in remote_robot_hostname else remote_robot_hostname)"/>
+  <arg name="local_robot_ns"  default="$(eval local_robot_hostname.replace('-', '_') if '-' in local_robot_hostname else local_robot_hostname)"/>
+
+
+
+    # Setup networking
+    <node pkg="haru_encouraging_mediator" type="setup_network_config.sh" name="setup_ip_forwarding"/>
+
+    # FKIE multimaster manager
+    <include file="$(find haru_encouraging_mediator)/launch/utils/multimaster.launch">
+        <arg name="target_robots"            value="[$(arg remote_robot_hostname)]"/>
+        <arg name="local_robot_hostname"     value="$(arg local_robot_hostname)"/>
+        <arg name="local_robot_username"     value="$(arg local_robot_username)"/>
+        <arg name="local_robot_password"     value="$(arg local_robot_password)"/>
+        <arg name="local_robot_vpn_ip"       value="$(arg local_robot_ip)"/>
+        <arg name="enable_sync_remote_nodes" value="True"/>
+
+        <arg name="sync_topics"       value="[/server/bt_handshake,
+                                              /client/bt_handshake
+                                              ]"/>
+
+    </include>
+
+    ## BTs Sync Server node
+    <param name="handshake_mode" value="$(arg handshake_mode)"/>
+    <node pkg="behavior_tree_ros" name="behavior_tree_ros_intercom_node_$(arg local_robot_ns)" type="behavior_tree_ros_intercom_node" output="screen"/>
+    
+</launch>
