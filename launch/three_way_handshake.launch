@@ -5,11 +5,11 @@
     
   ## Configurations
 
-  <arg name="remote_robot_hostname"     default="CL-DCALERO"/>
-  <arg name="local_robot_hostname"      default="CL-LABROB2"/>
-  <arg name="local_robot_username"      default="devis.dalmoro"/>
-  <arg name="local_robot_password"      default="Noviembre.2022"/>
-  <arg name="local_robot_ip"            default="192.168.2.30"/>
+  <arg name="remote_robot_hostname"     default="REMOTE_HOSTNAME"/>
+  <arg name="local_robot_hostname"      default="HOSTNAME"/>
+  <arg name="local_robot_username"      default="USERNAME"/>
+  <arg name="local_robot_password"      default="PASSWORD"/>
+  <arg name="local_robot_ip"            default="IP"/>
 
 
   # Replace - by _ for the remote robot hostname
