@@ -38,8 +38,22 @@ namespace BT_ROS
         // Actionlib
         handshake_action_server_.registerPreemptCallback(boost::bind(&RosHandShake::ThreeWayHandShakeActionPreemptCallback, this));
         handshake_action_server_.start();
+
+        // Publish Timer
+        pub_timer_ = public_node_handle_.createTimer(ros::Duration(pub_period_s_), &RosHandShake::PublishSmsCallback, this);
     }    
     
+    void RosHandShake::PublishSmsCallback(const ros::TimerEvent& ev)
+    {
+        sync_publisher_.publish(msg_to_send_);
+        std::string mode_str = "CLIENT";
+        if (handshake_mode_ == "server")
+        {
+            mode_str = "SERVER";
+        }
+        ROS_INFO("%s: %s Message send %d", mode_str.c_str(), msg_to_send_.message.c_str(), msg_to_send_.seq_id);
+    }
+
     void RosHandShake::ThreeWayHandShakeActionCallback(const PerformHandShakeGoalConstPtr& _goal_msg)
     {
         action_cancelled_.store(false);
@@ -66,31 +80,28 @@ namespace BT_ROS
         sync_received_.store(false);
         ack_received_.store(false);
 
-        int cnt = 0;
         // Wait for SYNC handshake message from the other side every 2 second
+        ROS_INFO("SERVER: Waiting FOR SYNC message %d [%d-%s]", my_seq_id_, _goal_msg->request.seq_id, _goal_msg->request.message.c_str());
         while(!sync_received_.load() && !action_cancelled_.load())
         {
-            if (cnt == 0)
-                ROS_INFO("SERVER: Waiting FOR SYNC message %d [%d-%s]", my_seq_id_, _goal_msg->request.seq_id, _goal_msg->request.message.c_str());
-
-            cnt++;
-            if (cnt == 20){ cnt = 0;}
-            
             usleep(100000);
         }
 
-        // Wait for FINAL_ACK handshake message from the other side, while pub SYNC_ACK every 2 second
-        while(!ack_received_.load() && !action_cancelled_.load())
-        {
-            // Send handshake message every 2 seconds 
-            HandShake msg_to_send;
-            msg_to_send.message = SYNC_ACK_MSG;
-            msg_to_send.seq_id = my_seq_id_;
-            sync_publisher_.publish(msg_to_send);
-            ROS_INFO("SERVER: SYNC_ACK Message send %d [%d-%s]", my_seq_id_, _goal_msg->request.seq_id, _goal_msg->request.message.c_str());
-            sleep(2);
-        }
+        //Send SYNC_ACK periodically
+        msg_to_send_.message = SYNC_ACK_MSG;
+        msg_to_send_.seq_id = my_seq_id_;
+        sync_publisher_.publish(msg_to_send_);
+        ROS_INFO("SERVER: %s Message send %d", msg_to_send_.message.c_str(), msg_to_send_.seq_id);
+        pub_timer_.start();
 
+        // Wait for ACK handshake message from the other side, while pub SYNC_ACK
+        ROS_INFO("SERVER: Waiting FOR ACK message %d [%d-%s]", my_seq_id_, _goal_msg->request.seq_id, _goal_msg->request.message.c_str());
+        while(!ack_received_.load() && !action_cancelled_.load())
+        {          
+            usleep(100000);
+        }
+        //Stop sending SYNC_ACK
+        pub_timer_.stop();
     }
 
     void RosHandShake::ThreeWayHandshakeClient(const PerformHandShakeGoalConstPtr& _goal_msg){
@@ -99,17 +110,20 @@ namespace BT_ROS
 
         ack_received_.store(false);
 
-        // Send handshake message to the other side every 2 second until we receive the SYNC_ACK signal
+        //Send SYNC periodically
+        msg_to_send_.message = SYNC_MSG;
+        msg_to_send_.seq_id = my_seq_id_;
+        sync_publisher_.publish(msg_to_send_);
+        ROS_INFO("CLIENT: %s Message send %d", msg_to_send_.message.c_str(), msg_to_send_.seq_id);
+        pub_timer_.start();
+        ROS_INFO("CLIENT: Waiting FOR SYNC_ACK message %d [%d-%s]", my_seq_id_, _goal_msg->request.seq_id, _goal_msg->request.message.c_str());
+        // Wait for SYNC_ACK signal
         while(!ack_received_.load() && !action_cancelled_.load())
-        {
-            // Send handshake message every 2 seconds 
-            HandShake msg_to_send;
-            msg_to_send.message = SYNC_MSG;
-            msg_to_send.seq_id = my_seq_id_;
-            sync_publisher_.publish(msg_to_send);
-            ROS_INFO("CLIENT: SYNC Message send %d [%d-%s]", my_seq_id_, _goal_msg->request.seq_id, _goal_msg->request.message.c_str());
-            sleep(2);
+        {            
+            usleep(100000);
         }
+        //Stop sending SYNC
+        pub_timer_.stop();
     }
     
     void RosHandShake::ThreeWayHandShakeActionPreemptCallback()
@@ -142,7 +156,7 @@ namespace BT_ROS
                 ack_received_.store(true); // RECEIVED SYNC_ACK of stage we're both in
             }
         }   
-        else if(my_seq_id_ > _topic_msg.seq_id)
+        else if((my_seq_id_ > _topic_msg.seq_id) && (_topic_msg.seq_id != -1))
         {
             // CLIENT IS AT STAGE N+x, COMMUNICATE FINAL ACK FOR STAGE N, SO THAT SERVER CAN REACH US
             if(_topic_msg.message == SYNC_ACK_MSG)
@@ -174,7 +188,7 @@ namespace BT_ROS
                 ack_received_.store(true); // RECEIVED FINAL ACK of stage we're both in
             }
         }  
-        else if(my_seq_id_ > _topic_msg.seq_id)
+        else if((my_seq_id_ > _topic_msg.seq_id) && (_topic_msg.seq_id != -1))
         {
             // SERVER IS AT STAGE N+x, COMMUNICATE SYNC ACK FOR STAGE N, SO THAT CLIENT CAN REACH US
             if(_topic_msg.message == SYNC_MSG)
@@ -186,7 +200,7 @@ namespace BT_ROS
                 sync_publisher_.publish(msg_to_send);
             }
         }
-        else if(my_seq_id_ < _topic_msg.seq_id)
+        else if((my_seq_id_ < _topic_msg.seq_id) && (my_seq_id_ != -1))
         {
             // SERVER IS AT STAGE N-x, COMMUNICATE SYNC ACK FOR STAGE N-x, SO THAT CLIENT CAN SEND FINAL ACK AND SERVER CAN MOVE FORWARD
             if(_topic_msg.message == SYNC_MSG)

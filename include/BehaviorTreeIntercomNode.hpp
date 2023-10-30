@@ -32,6 +32,7 @@ namespace BT_ROS
             void ThreeWayHandshakeServer(const behavior_tree_ros::PerformHandShakeGoalConstPtr& _goal_msg);
             void ThreeWayHandshakeClient(const behavior_tree_ros::PerformHandShakeGoalConstPtr& _goal_msg);
             void ThreeWayHandShakeActionPreemptCallback();
+            void PublishSmsCallback(const ros::TimerEvent& ev);
 
         private:
             ros::NodeHandle public_node_handle_;
@@ -47,10 +48,15 @@ namespace BT_ROS
             std::atomic<bool> ack_received_ {false};
             std::atomic<bool> action_cancelled_ {false};
 
-            uint8_t my_seq_id_{0};
+            int8_t my_seq_id_{0};
 
             std::string handshake_mode_;
-            
+
+            ros::Timer pub_timer_;
+
+            double pub_period_s_ {1.0};
+
+            behavior_tree_ros::HandShake  msg_to_send_;
     }; // class RosHandShake
 
     class RosExchangeInfo final
