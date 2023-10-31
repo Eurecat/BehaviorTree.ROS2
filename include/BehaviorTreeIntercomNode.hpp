@@ -48,7 +48,7 @@ namespace BT_ROS
             std::atomic<bool> ack_received_ {false};
             std::atomic<bool> action_cancelled_ {false};
 
-            int8_t my_seq_id_{0};
+            int16_t my_seq_id_{0};
 
             std::string handshake_mode_;
 

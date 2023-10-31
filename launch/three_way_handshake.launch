@@ -29,7 +29,7 @@
         <arg name="local_robot_password"     value="$(arg local_robot_password)"/>
         <arg name="local_robot_vpn_ip"       value="$(arg local_robot_ip)"/>
         <arg name="enable_sync_remote_nodes" value="True"/>
-
+	      <arg name="not_sync_nodes"       value="[/behavior_tree_ros_node]"/>
         <arg name="sync_topics"       value="[/server/bt_handshake,
                                               /client/bt_handshake
                                               ]"/>
