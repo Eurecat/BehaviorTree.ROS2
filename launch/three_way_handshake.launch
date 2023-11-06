@@ -6,10 +6,10 @@
   ## Configurations
 
   <arg name="remote_robot_hostname"     default="REMOTE_HOSTNAME"/>
-  <arg name="local_robot_hostname"      default="HOSTNAME"/>
-  <arg name="local_robot_username"      default="USERNAME"/>
-  <arg name="local_robot_password"      default="PASSWORD"/>
-  <arg name="local_robot_ip"            default="IP"/>
+  <arg name="local_robot_hostname"      default="LOCAL_HOSTNAME"/>
+  <arg name="local_robot_username"      default="LOCAL_USERNAME"/>
+  <arg name="local_robot_password"      default="LOCAL_PASSWORD"/>
+  <arg name="local_robot_ip"            default="LOCAL_IP"/>
 
 
   # Replace - by _ for the remote robot hostname

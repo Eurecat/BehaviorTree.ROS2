@@ -71,7 +71,7 @@ namespace BT_ROS
             handshake_result_.result = true;
             handshake_action_server_.setSucceeded(handshake_result_, "Synchronization succeeded!");
         }
-    }    
+            }    
 
     void RosHandShake::ThreeWayHandshakeServer(const PerformHandShakeGoalConstPtr& _goal_msg){
         
@@ -130,8 +130,8 @@ namespace BT_ROS
     {
         ROS_INFO("Handshake Action Goal canceled!");
 
-        my_seq_id_ = 0;
-        action_cancelled_.store(false);
+        my_seq_id_ = -1;
+        action_cancelled_.store(true);
         sync_received_.store(false);
         ack_received_.store(false);
         
@@ -141,9 +141,9 @@ namespace BT_ROS
 
     void RosHandShake::ThreeWayHandShakeTopicCallbackClient(const behavior_tree_ros::HandShake& _topic_msg)
     {
-        if(my_seq_id_ == _topic_msg.seq_id)
+                if(my_seq_id_ == _topic_msg.seq_id)
         {
-            // NORMAL CASE
+                        // NORMAL CASE
             if(_topic_msg.message == SYNC_ACK_MSG)
             {
                 ROS_INFO("CLIENT: Received SYNC_ACK message %d [%d-%s]", my_seq_id_, _topic_msg.seq_id, _topic_msg.message.c_str());
