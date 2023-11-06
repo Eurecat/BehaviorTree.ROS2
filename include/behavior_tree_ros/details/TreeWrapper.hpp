@@ -32,7 +32,8 @@ namespace BT_ROS
 
             void InitializeStatusPublisher(ros::NodeHandle& _public_node_handle);
 
-            void BuildTree(const std::string& _xml_file, BT::BehaviorTreeFactory& _bt_factory, const bool debug = false);
+            void BuildTree(const std::string& _xml_file, BT::BehaviorTreeFactory& _bt_factory, 
+                const bool debug = false, const std::string& bb_init_abs_filepath = "");
             void RemoveTree();
 
             void InitializeLoggers(const bool& _enable_cout, const bool& _enable_minitrace, const bool& _enable_file,
