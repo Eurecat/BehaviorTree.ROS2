@@ -23,7 +23,7 @@ namespace BT_ROS
                 YAML::Node config = YAML::LoadFile(bb_init_abs_filepath);
                 for(YAML::const_iterator it=config.begin();it!=config.end();++it)
                 {
-                    ROS_INFO("Init. BB key [\"%s\"] with value \"%s\"", it->first.as<std::string>(), it->second.as<std::string>());
+                    ROS_INFO("Init. BB key [\"%s\"] with value \"%s\"", it->first.as<std::string>().c_str(), it->second.as<std::string>().c_str());
                     // use the string here and blackboard_ptr->set(...)
                     blackboard_ptr->set(it->first.as<std::string>(), it->second.as<std::string>());
                 }
