@@ -1,104 +1,221 @@
 #include "BehaviorTreeIntercomNode.hpp"
 
+#define SYNC_MSG "SYNC"
+#define SYNC_ACK_MSG "SYNC_ACK"
+#define FINAL_ACK_MSG "ACK"
+
 namespace BT_ROS
 {
-    RosHandShake::RosHandShake() :
-        handshake_action_server_ (public_node_handle_, "behavior_tree/handshake", boost::bind(&RosHandShake::HandShakeActionCallback, this, _1), false)
-    {
-        // Get intercom topic name
-        std::string handshake_topic_name = private_node_handle_.param<std::string>("handshake_topic_name", "/remote/bt_handshake");        // Publisher
-        send_signal_publisher_ = public_node_handle_.advertise<std_msgs::String>(handshake_topic_name, 1, true);        // Subscriber
-        get_signal_subscriber_ = public_node_handle_.subscribe(handshake_topic_name, 10, &RosHandShake::HandShakeTopicCallback, this);        // Actionlib
-        handshake_action_server_.registerPreemptCallback(boost::bind(&RosHandShake::HandShakeActionPreemptCallback, this));
-        handshake_action_server_.start();
-    }    void RosHandShake::HandShakeTopicCallback(const std_msgs::StringConstPtr& _topic_msg)
-    {
-        ROS_INFO("Received Handshake topic message! [%s]", _topic_msg->data.c_str());
-        std::unique_lock<std::mutex> lock (handshake_mutex_);
-        handshake_topic_msgs_.emplace_back(_topic_msg->data);
-        new_handshake_topic_msg_ = true;
-    }    void RosHandShake::HandShakeActionCallback(const behavior_tree_ros::HandShakeGoalConstPtr& _goal_msg)
-    {
-        ROS_INFO("Starting Handshake Action callback! [%s] [%s]", _goal_msg->bt_id.c_str(), _goal_msg->message.c_str());
-        bool signal_sent = false;
-        bool signal_received = false;
-        int  time_count = 0;        
-        
-        try
-        {
-            while(!signal_received && ros::ok() && handshake_action_server_.isActive())
-            {
-                // Check signal received is the correct one
-                {
-                    std::unique_lock<std::mutex> lock (handshake_mutex_);                    
-                    
-                    if(new_handshake_topic_msg_)
-                    {
-                        new_handshake_topic_msg_ = false;
-                        std::string handshake_bt_id {""};
-                        std::string handshake_message {""};
-                        for (auto it = handshake_topic_msgs_.begin(); it != handshake_topic_msgs_.end(); it++)
-                        {
-                            // ID and message are separated by ":"
-                            size_t pos = it->find_first_of(":");
-                            handshake_bt_id = it->substr(0, pos);
-                            handshake_message = it->substr(pos+1, it->size());
-                            // Checking if msg received is not empty, is from another BT and is in the same stage
-                            if(!it->empty() && handshake_bt_id != _goal_msg->bt_id && handshake_message == _goal_msg->message)
-                            {
-                                ROS_INFO("Message received from another node [%s]", it->c_str());
-                                // Remove matched message
-                                handshake_topic_msgs_.erase(it--);
-                                signal_received = true;                                
-                                break; // Stop checking msgs as we found what we were looking for
-                            }
-                            // Remove unmatched message
-                            handshake_topic_msgs_.erase(it--);
-                        }
-                    }
-                }               
-                if(!signal_sent){
-                    // Send a signal every time
-                    ROS_INFO("Sending signal to the other node!");
-                    std_msgs::String msg_to_send;
-                    msg_to_send.data = _goal_msg->bt_id + ":" + _goal_msg->message;
-                    for(int i = 0; i<=7; i++)
-                    {
-                        send_signal_publisher_.publish(msg_to_send);
-                        usleep(2e5);
-                    }
-                    signal_sent = true;
-                }                
-                
+    using namespace behavior_tree_ros;
 
-                usleep(2e5); // not overload CPU                
-                
-                time_count++;                
-                
-                if(time_count == 25){
-                    signal_sent = false;
-                    time_count = 0;
-                }
-            }            
-            if(handshake_action_server_.isActive())
-            {
-                ROS_INFO("Handshake succeeded!!");
-                handshake_action_result_.result = true;
-                handshake_action_server_.setSucceeded(handshake_action_result_, "Synchronization succeeded!");
-            }
-        }
-        catch(const std::runtime_error& ex)
+    RosHandShake::RosHandShake() :
+        handshake_action_server_ (public_node_handle_, "behavior_tree/handshake", boost::bind(&RosHandShake::ThreeWayHandShakeActionCallback, this, _1), false)
+    {
+
+        // Get intercom topic names
+        std::string handshake_server_topic_name = private_node_handle_.param<std::string>("handshake_server_topic_name", "/server/bt_handshake");  
+        std::string handshake_client_topic_name = private_node_handle_.param<std::string>("handshake_client_topic_name", "/client/bt_handshake"); 
+
+        ros::param::get("/handshake_mode", handshake_mode_);
+
+        if (handshake_mode_ == "server")
         {
-            ROS_ERROR("Error in Handshake Action: %s", ex.what());
-            handshake_action_result_.result = false;
-            handshake_action_server_.setAborted(handshake_action_result_, "Synchronization aborted!");
+            // Publisher of updates on server side
+            sync_publisher_ = public_node_handle_.advertise<HandShake>(handshake_server_topic_name, 1, true);    
+
+            //Subscriber to updates from client side
+            sync_subscriber_ =  public_node_handle_.subscribe(handshake_client_topic_name, 10, &RosHandShake::ThreeWayHandShakeTopicCallbackServer, this);    
         }
-    }    void RosHandShake::HandShakeActionPreemptCallback()
+        else
+        {       
+            // Publisher of updates on client side
+            sync_publisher_ = public_node_handle_.advertise<HandShake>(handshake_client_topic_name, 1, true);    
+                                          
+            //Subscriber of updates from server side
+            sync_subscriber_ =  public_node_handle_.subscribe(handshake_server_topic_name, 10, &RosHandShake::ThreeWayHandShakeTopicCallbackClient, this);    
+        }
+
+        // Actionlib
+        handshake_action_server_.registerPreemptCallback(boost::bind(&RosHandShake::ThreeWayHandShakeActionPreemptCallback, this));
+        handshake_action_server_.start();
+
+        // Publish Timer
+        pub_timer_ = public_node_handle_.createTimer(ros::Duration(pub_period_s_), &RosHandShake::PublishSmsCallback, this, false, false);
+    }    
+    
+    void RosHandShake::PublishSmsCallback(const ros::TimerEvent& ev)
+    {
+        sync_publisher_.publish(msg_to_send_);
+        std::string mode_str = "CLIENT";
+        if (handshake_mode_ == "server")
+        {
+            mode_str = "SERVER";
+        }
+        ROS_INFO("%s: %s Message send %d", mode_str.c_str(), msg_to_send_.message.c_str(), msg_to_send_.seq_id);
+    }
+
+    void RosHandShake::ThreeWayHandShakeActionCallback(const PerformHandShakeGoalConstPtr& _goal_msg)
+    {
+        action_cancelled_.store(false);
+        my_seq_id_ = _goal_msg->request.seq_id;
+        if (handshake_mode_ == "server"){
+            ThreeWayHandshakeServer(_goal_msg);
+        }else{
+            ThreeWayHandshakeClient(_goal_msg);
+        }
+
+        if(handshake_action_server_.isActive())
+        {
+            ROS_INFO("Handshake succeeded!!"); 
+
+            handshake_result_.result = true;
+            handshake_action_server_.setSucceeded(handshake_result_, "Synchronization succeeded!");
+        }
+            }    
+
+    void RosHandShake::ThreeWayHandshakeServer(const PerformHandShakeGoalConstPtr& _goal_msg){
+        
+        ROS_INFO("ThreeWayHandshake Server START");
+
+        sync_received_.store(false);
+        ack_received_.store(false);
+
+        // Wait for SYNC handshake message from the other side every 2 second
+        ROS_INFO("SERVER: Waiting FOR SYNC message %d [%d-%s]", my_seq_id_, _goal_msg->request.seq_id, _goal_msg->request.message.c_str());
+        while(!sync_received_.load() && !action_cancelled_.load())
+        {
+            usleep(100000);
+        }
+
+        //Send SYNC_ACK periodically
+        msg_to_send_.message = SYNC_ACK_MSG;
+        msg_to_send_.seq_id = my_seq_id_;
+        sync_publisher_.publish(msg_to_send_);
+        ROS_INFO("SERVER: %s Message send %d", msg_to_send_.message.c_str(), msg_to_send_.seq_id);
+        pub_timer_.start();
+
+        // Wait for ACK handshake message from the other side, while pub SYNC_ACK
+        ROS_INFO("SERVER: Waiting FOR ACK message %d [%d-%s]", my_seq_id_, _goal_msg->request.seq_id, _goal_msg->request.message.c_str());
+        while(!ack_received_.load() && !action_cancelled_.load())
+        {          
+            usleep(100000);
+        }
+        //Stop sending SYNC_ACK
+        pub_timer_.stop();
+    }
+
+    void RosHandShake::ThreeWayHandshakeClient(const PerformHandShakeGoalConstPtr& _goal_msg){
+        
+        ROS_INFO("ThreeWayHandshake Client START");
+
+        ack_received_.store(false);
+
+        //Send SYNC periodically
+        msg_to_send_.message = SYNC_MSG;
+        msg_to_send_.seq_id = my_seq_id_;
+        sync_publisher_.publish(msg_to_send_);
+        ROS_INFO("CLIENT: %s Message send %d", msg_to_send_.message.c_str(), msg_to_send_.seq_id);
+        pub_timer_.start();
+        ROS_INFO("CLIENT: Waiting FOR SYNC_ACK message %d [%d-%s]", my_seq_id_, _goal_msg->request.seq_id, _goal_msg->request.message.c_str());
+        // Wait for SYNC_ACK signal
+        while(!ack_received_.load() && !action_cancelled_.load())
+        {            
+            usleep(100000);
+        }
+        //Stop sending SYNC
+        pub_timer_.stop();
+    }
+    
+    void RosHandShake::ThreeWayHandShakeActionPreemptCallback()
     {
         ROS_INFO("Handshake Action Goal canceled!");
-        handshake_action_result_.result = false;
-        handshake_action_server_.setPreempted(handshake_action_result_, "Goal preempted");
-    }    RosExchangeInfo::RosExchangeInfo() :
+
+        my_seq_id_ = -1;
+        action_cancelled_.store(true);
+        sync_received_.store(false);
+        ack_received_.store(false);
+        
+        handshake_result_.result = false;
+        handshake_action_server_.setPreempted(handshake_result_, "Goal preempted");
+    }    
+
+    void RosHandShake::ThreeWayHandShakeTopicCallbackClient(const behavior_tree_ros::HandShake& _topic_msg)
+    {
+                if(my_seq_id_ == _topic_msg.seq_id)
+        {
+                        // NORMAL CASE
+            if(_topic_msg.message == SYNC_ACK_MSG)
+            {
+                ROS_INFO("CLIENT: Received SYNC_ACK message %d [%d-%s]", my_seq_id_, _topic_msg.seq_id, _topic_msg.message.c_str());
+                HandShake msg_to_send;
+                msg_to_send.message = FINAL_ACK_MSG;
+                msg_to_send.seq_id = my_seq_id_;
+                ROS_INFO("CLIENT: Send ACK message %d [%d-%s]", my_seq_id_, my_seq_id_, _topic_msg.message.c_str());
+                sync_publisher_.publish(msg_to_send);
+                
+                ack_received_.store(true); // RECEIVED SYNC_ACK of stage we're both in
+            }
+        }   
+        else if((my_seq_id_ > _topic_msg.seq_id) && (_topic_msg.seq_id != -1))
+        {
+            // CLIENT IS AT STAGE N+x, COMMUNICATE FINAL ACK FOR STAGE N, SO THAT SERVER CAN REACH US
+            if(_topic_msg.message == SYNC_ACK_MSG)
+            {
+                HandShake msg_to_send;
+                msg_to_send.message = FINAL_ACK_MSG;
+                msg_to_send.seq_id = _topic_msg.seq_id;
+                ROS_INFO("CLIENT: Received PREV SYNC_ACK message %d [%d-%s] & Replying ACK Message", my_seq_id_, _topic_msg.seq_id, _topic_msg.message.c_str());
+                sync_publisher_.publish(msg_to_send);
+            }
+        }
+    }
+
+    void RosHandShake::ThreeWayHandShakeTopicCallbackServer(const behavior_tree_ros::HandShake& _topic_msg)
+    {
+
+        if(my_seq_id_ == _topic_msg.seq_id)
+        {
+            // NORMAL CASE
+            if(_topic_msg.message == SYNC_MSG)
+            {
+                ROS_INFO("SERVER: Received SYNC message %d [%d-%s]", my_seq_id_, _topic_msg.seq_id, _topic_msg.message.c_str());
+                sync_received_.store(true); // RECEIVED SYNC of stage we're both in
+            }
+            
+            else if(_topic_msg.message == FINAL_ACK_MSG)
+            {
+                ROS_INFO("SERVER: Received ACK message %d [%d-%s]", my_seq_id_, _topic_msg.seq_id, _topic_msg.message.c_str());
+                ack_received_.store(true); // RECEIVED FINAL ACK of stage we're both in
+            }
+        }  
+        else if((my_seq_id_ > _topic_msg.seq_id) && (_topic_msg.seq_id != -1))
+        {
+            // SERVER IS AT STAGE N+x, COMMUNICATE SYNC ACK FOR STAGE N, SO THAT CLIENT CAN REACH US
+            if(_topic_msg.message == SYNC_MSG)
+            {
+                ROS_INFO("SERVER: Received PREV SYNC message %d [%d-%s] & Replying SYNC-ACK Message", my_seq_id_, _topic_msg.seq_id, _topic_msg.message.c_str());
+                HandShake msg_to_send;
+                msg_to_send.message = SYNC_ACK_MSG;
+                msg_to_send.seq_id = _topic_msg.seq_id;
+                sync_publisher_.publish(msg_to_send);
+            }
+        }
+        else if((my_seq_id_ < _topic_msg.seq_id) && (my_seq_id_ != -1))
+        {
+            // SERVER IS AT STAGE N-x, COMMUNICATE SYNC ACK FOR STAGE N-x, SO THAT CLIENT CAN SEND FINAL ACK AND SERVER CAN MOVE FORWARD
+            if(_topic_msg.message == SYNC_MSG)
+            {
+                ROS_INFO("SERVER: Received NEXT SYNC message %d [%d-%s] & Replying SYNC-ACK Message from previous sync", my_seq_id_, _topic_msg.seq_id, _topic_msg.message.c_str());
+                HandShake msg_to_send;
+                msg_to_send.message = SYNC_ACK_MSG;
+                msg_to_send.seq_id = my_seq_id_;
+                sync_publisher_.publish(msg_to_send);
+                sync_received_.store(true);
+            }
+        }
+    }
+    
+    RosExchangeInfo::RosExchangeInfo() :
         exchange_info_action_server_ (public_node_handle_, "behavior_tree/exchange_info", boost::bind(&RosExchangeInfo::ExchangeInfoActionCallback, this, _1), false)
     {
         // Get intercom topic name
@@ -107,13 +224,17 @@ namespace BT_ROS
         get_info_subscriber_ = public_node_handle_.subscribe(exchange_info_topic_name, 10, &RosExchangeInfo::ExchangeInfoTopicCallback, this);        // Actionlib
         exchange_info_action_server_.registerPreemptCallback(boost::bind(&RosExchangeInfo::ExchangeInfoActionPreemptCallback, this));
         exchange_info_action_server_.start();
-    }    void RosExchangeInfo::ExchangeInfoTopicCallback(const std_msgs::StringConstPtr& _topic_msg)
+    }    
+    
+    void RosExchangeInfo::ExchangeInfoTopicCallback(const std_msgs::StringConstPtr& _topic_msg)
     {
         ROS_INFO("Received Info topic message! [%s]", _topic_msg->data.c_str());
         std::unique_lock<std::mutex> lock (exchange_info_mutex_);
         exchange_info_topic_msgs_.emplace_back(_topic_msg->data);
         new_exchange_info_topic_msg_ = true;
-    }    void RosExchangeInfo::ExchangeInfoActionCallback(const behavior_tree_ros::ExchangeInfoGoalConstPtr& _goal_msg)
+    }    
+    
+    void RosExchangeInfo::ExchangeInfoActionCallback(const behavior_tree_ros::ExchangeInfoGoalConstPtr& _goal_msg)
     {
         ROS_INFO("Starting ExchangeInfo Action callback! [%s] [%s] [%s]", _goal_msg->bt_id.c_str(), _goal_msg->info_type.c_str(), _goal_msg->info_data.c_str());
         bool signal_sent = false;
@@ -173,10 +294,12 @@ namespace BT_ROS
             exchange_info_action_result_.info_received = false;
             exchange_info_action_server_.setAborted(exchange_info_action_result_, "Synchronization aborted!");
         }
-    }    void RosExchangeInfo::ExchangeInfoActionPreemptCallback()
+    }    
+    
+    void RosExchangeInfo::ExchangeInfoActionPreemptCallback()
     {
         ROS_INFO("ExchangeInfo Action Goal canceled!");
         exchange_info_action_result_.info_received = false;
         exchange_info_action_server_.setPreempted(exchange_info_action_result_, "Goal preempted");
-}
+    }
 }// namespace BT_ROS
