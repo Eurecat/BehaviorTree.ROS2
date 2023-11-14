@@ -40,12 +40,13 @@ add_service_files(
 add_action_files(
   FILES
   BehaviorTree.action
-  HandShake.action
+  PerformHandShake.action
   ExchangeInfo.action
 )
 
 add_message_files(
     FILES
+        HandShake.msg
         ExecutionStatus.msg
 )
 
