@@ -13,15 +13,7 @@ class PublisherNode final : public BT::ActionNodeBase, public DeserializationPol
     public:
         PublisherNode(const std::string& _name, const BT::NodeConfiguration& _config) : ActionNodeBase(_name, _config)
         {
-            const auto& topic      = getInput<std::string>("topic");
-            const auto& queue_size = getInput<uint32_t>("queue_size");
-            const auto& latch      = getInput<bool>("latch");
-
-            if(!topic)      { throw BT::RuntimeError { name() + ": " + topic.error() };      }
-            if(!queue_size) { throw BT::RuntimeError { name() + ": " + queue_size.error() }; }
-            if(!latch)      { throw BT::RuntimeError { name() + ": " + latch.error() };      }
-
-            publisher_ = node_handle_.advertise<MessageType>(topic.value(), queue_size.value(), latch.value());
+            advertisePublisherIfNeeded(false); //do not trigger a fatal failure if you don't have the possibility to advertise topic now, i.e. instantiate publisher
         }
         ~PublisherNode() = default;
 
@@ -40,6 +32,7 @@ class PublisherNode final : public BT::ActionNodeBase, public DeserializationPol
 
         virtual BT::NodeStatus tick() override
         {
+            advertisePublisherIfNeeded(true); //advertise publisher if you haven't done it in the constructor
             setStatus(BT::NodeStatus::RUNNING);
 
             const auto& message = deserialization_policy_.buildMessage(*this);
@@ -50,6 +43,26 @@ class PublisherNode final : public BT::ActionNodeBase, public DeserializationPol
         virtual void halt() override {}
 
     private:
+        void advertisePublisherIfNeeded(const bool fatal_failure)
+        {
+            if(publisher_.getTopic().empty())
+            {
+                const auto& topic      = getInput<std::string>("topic");
+                const auto& queue_size = getInput<uint32_t>("queue_size");
+                const auto& latch      = getInput<bool>("latch");
+                
+                if(fatal_failure)
+                {
+                    if(!topic)      { throw BT::RuntimeError { name() + ": " + topic.error() };      }
+                    if(!queue_size) { throw BT::RuntimeError { name() + ": " + queue_size.error() }; }
+                    if(!latch)      { throw BT::RuntimeError { name() + ": " + latch.error() };      }
+                }
+                else if(!topic || !queue_size || !latch) return;
+
+                publisher_ = node_handle_.advertise<MessageType>(topic.value(), queue_size.value(), latch.value());
+            }
+        }
+
         ros::NodeHandle node_handle_;
         ros::Publisher publisher_;
 
