@@ -13,7 +13,7 @@ class PublisherNode final : public BT::ActionNodeBase, public DeserializationPol
     public:
         PublisherNode(const std::string& _name, const BT::NodeConfiguration& _config) : ActionNodeBase(_name, _config)
         {
-            advertisePublisherIfNeeded(false); //do not trigger a fatal failure if you don't have the possibility to advertise topic now, i.e. instantiate publisher
+            advertisePublisher(false); //do not trigger a fatal failure if you don't have the possibility to advertise topic now, i.e. instantiate publisher
         }
         ~PublisherNode() = default;
 
@@ -32,9 +32,8 @@ class PublisherNode final : public BT::ActionNodeBase, public DeserializationPol
 
         virtual BT::NodeStatus tick() override
         {
-            advertisePublisherIfNeeded(true); //advertise publisher if you haven't done it in the constructor
+            advertisePublisher(true); //advertise publisher if you haven't done it in the constructor
             setStatus(BT::NodeStatus::RUNNING);
-
             const auto& message = deserialization_policy_.buildMessage(*this);
             publisher_.publish(message);
             return BT::NodeStatus::SUCCESS;
@@ -43,7 +42,7 @@ class PublisherNode final : public BT::ActionNodeBase, public DeserializationPol
         virtual void halt() override {}
 
     private:
-        void advertisePublisherIfNeeded(const bool fatal_failure)
+        void advertisePublisher(const bool mandatory)
         {
             if(publisher_.getTopic().empty())
             {
@@ -51,15 +50,26 @@ class PublisherNode final : public BT::ActionNodeBase, public DeserializationPol
                 const auto& queue_size = getInput<uint32_t>("queue_size");
                 const auto& latch      = getInput<bool>("latch");
                 
-                if(fatal_failure)
+                if(mandatory)
                 {
                     if(!topic)      { throw BT::RuntimeError { name() + ": " + topic.error() };      }
                     if(!queue_size) { throw BT::RuntimeError { name() + ": " + queue_size.error() }; }
                     if(!latch)      { throw BT::RuntimeError { name() + ": " + latch.error() };      }
-                }
-                else if(!topic || !queue_size || !latch) return;
 
-                publisher_ = node_handle_.advertise<MessageType>(topic.value(), queue_size.value(), latch.value());
+                    publisher_ = node_handle_.advertise<MessageType>(topic.value(), queue_size.value(), latch.value());
+
+                    //PROBLEM: FIRST MESSAGE IS ALWAYS LOST when advertizing and publishing instantly
+                    //add sleep to avoid issues when using a ros::AsyncSpinner
+                    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+                }
+                else if(!topic || !queue_size || !latch) 
+                {
+                    return;
+                }
+                else {
+                    publisher_ = node_handle_.advertise<MessageType>(topic.value(), queue_size.value(), latch.value());
+                }
             }
         }
 
