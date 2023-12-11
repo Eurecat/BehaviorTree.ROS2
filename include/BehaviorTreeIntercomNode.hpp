@@ -5,7 +5,6 @@
 #include <vector>
 #include <atomic>
 #include <mutex>
-#include <thread> 
 
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
@@ -23,8 +22,8 @@ namespace BT_ROS
     {
         public:
             RosHandShake();
-            ~RosHandShake();
-        
+            ~RosHandShake() = default;
+
         private:
             void ThreeWayHandShakeTopicCallbackClient(const behavior_tree_ros::HandShake& _topic_msg);
             void ThreeWayHandShakeTopicCallbackServer(const behavior_tree_ros::HandShake& _topic_msg);
