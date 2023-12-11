@@ -11,8 +11,6 @@
 
 #include <behaviortree_cpp_v3/bt_factory.h>
 
-#include "behavior_tree_ros/details/types_conversion.hpp"
-
 #include "behavior_tree_ros/actions/GetMessageFieldNode.hpp"
 #include "behavior_tree_ros/actions/GetRandomMessageField.hpp"
 #include "behavior_tree_ros/actions/FindByFieldValueNode.hpp"
