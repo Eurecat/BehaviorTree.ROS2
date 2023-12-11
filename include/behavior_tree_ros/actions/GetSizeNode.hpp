@@ -5,7 +5,7 @@
 
 namespace BT_ROS
 {
-template <class T>
+template <class T, class OT>
 class GetSizeNode final : public BT::SyncActionNode
 {
     public:
@@ -15,7 +15,7 @@ class GetSizeNode final : public BT::SyncActionNode
         static BT::PortsList providedPorts()
         {
             return { BT::InputPort<T>("input", "Input sequence"),
-                     BT::OutputPort<size_t>("output", "Sequence size output") };
+                     BT::OutputPort<OT>("output", "Sequence size output") };
         }
 
         virtual BT::NodeStatus tick() override
@@ -23,7 +23,7 @@ class GetSizeNode final : public BT::SyncActionNode
             const auto& input = getInput<T>("input");
             if(!input) { throw BT::RuntimeError { name() + ": " + input.error() }; }
 
-            setOutput("output", input.value().size());
+            setOutput<OT>("output", static_cast<OT>(input.value().size()));
 
             return BT::NodeStatus::SUCCESS;
         }

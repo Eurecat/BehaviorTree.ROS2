@@ -11,8 +11,6 @@
 
 #include <behaviortree_cpp_v3/bt_factory.h>
 
-#include "behavior_tree_ros/details/types_conversion.hpp"
-
 #include "behavior_tree_ros/actions/GetMessageFieldNode.hpp"
 #include "behavior_tree_ros/actions/GetRandomMessageField.hpp"
 #include "behavior_tree_ros/actions/FindByFieldValueNode.hpp"
@@ -34,13 +32,15 @@
 #include "behavior_tree_ros/actions/GetTransformAnglesNode.hpp"
 #include "behavior_tree_ros/actions/LoadYamlFileNode.hpp"
 
+#include "behavior_tree_ros/actions/TfStampedTransformUtils.hpp"
+
 #include "behavior_tree_ros/PublisherNode.hpp"
 #include "behavior_tree_ros/SubscriberNode.hpp"
 #include "behavior_tree_ros/ServiceClientNode.hpp"
 #include "behavior_tree_ros/SimpleActionClientNode.hpp"
 
 #include <behavior_tree_ros/BehaviorTreeAction.h>
-#include <behavior_tree_ros/HandShakeAction.h> 
+#include <behavior_tree_ros/PerformHandShakeAction.h> 
 #include <behavior_tree_ros/ExchangeInfoAction.h>
 
 namespace BT_ROS
@@ -48,6 +48,11 @@ namespace BT_ROS
     std::string json2String(const nlohmann::json& _input)
     {
         return _input.dump();
+    }
+
+    double json2Double(const nlohmann::json& _input)
+    {
+        return atof( _input.dump().c_str() );
     }
 }
 
@@ -58,12 +63,17 @@ BT_REGISTER_NODES(factory)
     factory.registerNodeType<GetMessageFieldNode>("GetMessageField");
     factory.registerNodeType<ConvertJsonToNode<std::string>>("ConvertJsonToString");
     factory.registerNodeType<ConvertJsonToNode<double>>("ConvertJsonToDouble");
-    factory.registerNodeType<ConvertJsonToNode<int64_t>>("ConvertJsonToInt64");
-    factory.registerNodeType<ConvertJsonToNode<uint64_t>>("ConvertJsonToUint64");
+    factory.registerNodeType<ConvertJsonToNode<int16_t>>("ConvertJsonToShort");
+    factory.registerNodeType<ConvertJsonToNode<int32_t>>("ConvertJsonToInt32");
+    factory.registerNodeType<ConvertJsonToNode<int64_t>>("ConvertJsonToLong");
+    factory.registerNodeType<ConvertJsonToNode<uint16_t>>("ConvertJsonToUShort");
+    factory.registerNodeType<ConvertJsonToNode<uint32_t>>("ConvertJsonToUInt32");
+    factory.registerNodeType<ConvertJsonToNode<uint64_t>>("ConvertJsonToULong");
     factory.registerNodeType<GetRandomMessageFieldNode>("GetRandomMessageField");
     factory.registerNodeType<FindByFieldValueNode>("FindByFieldValue");
     factory.registerNodeType<ForEachLoopNode<nlohmann::json>>("ForEachLoop");
-    factory.registerNodeType<GetSizeNode<nlohmann::json>>("GetJsonSize");
+    factory.registerNodeType<GetSizeNode<nlohmann::json, size_t>>("GetJsonSize");
+    factory.registerNodeType<GetSizeNode<nlohmann::json, uint32_t>>("GetJsonSizeUInt");
     factory.registerNodeType<CopyNode<nlohmann::json>>("CopyJson");
     factory.registerNodeType<InitializeNode<nlohmann::json>>("InitializeJson");
     factory.registerNodeType<ConvertMessageFieldNode>("ConvertMessageField");
@@ -103,13 +113,14 @@ BT_REGISTER_NODES(factory)
     factory.registerNodeType<AutomaticServiceClient<std_srvs::SetBool>>("CallSetBoolService");
     factory.registerNodeType<AutomaticServiceClient<std_srvs::Trigger>>("CallTriggerService");
 
-    factory.registerTypeConverter<std::string, nlohmann::json>(BT::convertFromString<nlohmann::json>);
-    factory.registerTypeConverter<nlohmann::json, std::string>(json2String);
+    // factory.registerTypeConverter<std::string, nlohmann::json>(BT::convertFromString<nlohmann::json>);
+    // factory.registerTypeConverter<nlohmann::json, std::string>(json2String);
+    // factory.registerTypeConverter<nlohmann::json, double>(json2Double);
 
     factory.registerNodeType<SimpleActionClientNode<behavior_tree_ros::BehaviorTreeAction,
                                                     AutomaticDeserialization,
                                                     EmptySerialization,
                                                     EmptySerialization>>("ExecuteRemoteTree");
-    factory.registerNodeType<AutomaticSimpleActionClient<behavior_tree_ros::HandShakeAction>>("BTCommandHandShakeAction");
+    factory.registerNodeType<AutomaticSimpleActionClient<behavior_tree_ros::PerformHandShakeAction>>("BTCommandHandShakeAction");
     factory.registerNodeType<AutomaticSimpleActionClient<behavior_tree_ros::ExchangeInfoAction>>("BTCommandExchangeInfoAction");
 }

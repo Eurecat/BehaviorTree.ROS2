@@ -15,12 +15,12 @@ class Logger final : public BT::SyncActionNode
 
         static BT::PortsList providedPorts()
         {
-            return { BT::InputPort<std::string>("message", "Message to log") };
+            return { BT::InputPort<void>("message", "Message to log") };
         }
 
         virtual BT::NodeStatus tick() override
         {
-            const auto& message = getInput<std::string>("message");
+            const auto& message = getInputAsString("message");
             if(!message) { throw BT::RuntimeError { name() + ": " + message.error() }; }
 
             ROS_LOG(LogLevel, ROSCONSOLE_DEFAULT_NAME, "%s", message.value().c_str());
