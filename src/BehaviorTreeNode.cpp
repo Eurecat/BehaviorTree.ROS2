@@ -19,9 +19,8 @@ namespace BT_ROS
         enable_file_log_        = private_node_handle_.param("enable_file_log", false);
         enable_zmq_log_         = private_node_handle_.param("enable_zmq_log", false);
 
-        const char* home = getenv("HOME");
         log_folder_ = private_node_handle_.param<std::string>("log_folder", "/tmp/");
-        log_folder_ = log_folder_.front() == '~' ? std::string(home) + log_folder_.substr(1, log_folder_.size() - 1) : log_folder_;
+        log_folder_ = log_folder_.front() == '~' ? std::string(getenv("HOME")) + log_folder_.substr(1) : log_folder_;
 
         LoadAllPlugins();
 
@@ -325,9 +324,8 @@ namespace BT_ROS
     std::string BehaviorTreeNode::GetFullPath(const std::string& _file) const
     {
         std::string full_name = _file;
-        const char* home = getenv("HOME");
 
-        full_name = full_name.front() == '~' ? std::string(home) + full_name.substr(1, full_name.size() - 1) : full_name;
+        full_name = full_name.front() == '~' ? std::string(getenv("HOME")) + full_name.substr(1) : full_name;
         full_name = full_name.front() == '/' ? full_name : (trees_folder_.back() == '/' ? trees_folder_ : trees_folder_ + "/") + full_name;
 
         std::size_t pos = full_name.find_last_of('.');

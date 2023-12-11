@@ -30,9 +30,17 @@ class AddKeyValueToJson final : public BT::SyncActionNode
             if(!input_value) { throw BT::RuntimeError { name() + ": missing \"input_value\" required fields. Error: " + input_value.error() }; }
             if(!input_json) { throw BT::RuntimeError { name() + ": missing \"input_json\" required fields. Error: " + input_json.error() }; }
             
+            // If there's no input_json an error is thrown when getting the variable
+            // catch the error and do nothing to use an empty json as input_json
+            nlohmann::json json_store {};
+            try
+            {
+                const auto& input_json = getInput<nlohmann::json>("input_json");
+                json_store = input_json.value();
+            }
+            catch(const nlohmann::json::exception&) {}
+            
             try{
-                nlohmann::json json_store = input_json.value();
-
                 // Fill Json according to its type
                 if (json_store.is_array())
                 {
