@@ -56,9 +56,10 @@ class PublisherNode final : public BT::ActionNodeBase, public DeserializationPol
     private:
         void advertisePublisher(const bool mandatory)
         {
-            if(publisher_.getTopic().empty())
+            const auto& topic      = getInput<std::string>("topic");
+            if(publisher_.getTopic().empty() ||                                 // publisher never set up
+                (topic.has_value() && topic.value() != publisher_.getTopic()))  // new topic
             {
-                const auto& topic      = getInput<std::string>("topic");
                 const auto& queue_size = getInput<uint32_t>("queue_size");
                 const auto& latch      = getInput<bool>("latch");
                 
