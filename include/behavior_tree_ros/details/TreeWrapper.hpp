@@ -24,13 +24,17 @@
 
 namespace BT_ROS
 {
+    static int tree_UID = 1;
     class TreeWrapper final
     {
         public:
-            TreeWrapper(const std::string& _identifier) : identifier_(_identifier) {};
+            TreeWrapper(const std::string& _identifier) : identifier_(_identifier) {
+                tree_UID_ = tree_UID;
+                tree_UID++;
+            };
             ~TreeWrapper() = default;
 
-            void InitializeStatusPublisher(ros::NodeHandle& _public_node_handle);
+            void InitializeStatusPublisher(ros::NodeHandle& _public_node_handle, uint8_t uid = 0);
 
             void BuildTree(const std::string& _xml_file, BT::BehaviorTreeFactory& _bt_factory, 
                 const bool debug = false, const std::string& bb_init_abs_filepath = "");
@@ -43,7 +47,13 @@ namespace BT_ROS
             bool IsTreeLoaded() { return !!tree_; };
             bool AreLoggersInitialized() { return loggers_initialized_.load(); };
             BT::NodeStatus tickTree() { return tree_->tickRoot(); };
-
+            uint8_t tree_UID_;
+            std::string execution_tree_status {};
+            std::string execution_tree_error {};
+            std::string tree_filename {};
+            ros::Time execution_time;
+            unsigned server_port_;
+            unsigned publisher_port_;
         private:
             std::unique_ptr<BT::Tree> tree_;
 

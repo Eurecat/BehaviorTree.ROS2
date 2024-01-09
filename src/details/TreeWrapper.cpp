@@ -3,9 +3,9 @@
 #include "yaml-cpp/yaml.h"
 namespace BT_ROS
 {
-    void TreeWrapper::InitializeStatusPublisher(ros::NodeHandle& _public_node_handle)
+    void TreeWrapper::InitializeStatusPublisher(ros::NodeHandle& _public_node_handle, uint8_t uid)
     {
-        std::string topic_name = identifier_ == "service" ? "bt_status" : "bt_" + identifier_ + "_status";
+        std::string topic_name = identifier_ == "service" ? "bt_status" : "bt_" + identifier_ + "_status_" + std::to_string(uid);
         bt_status_publisher_ = _public_node_handle.advertise<std_msgs::String>(topic_name, 1);
     }
 
@@ -91,12 +91,13 @@ namespace BT_ROS
         #ifdef BEHAVIOR_TREE_CPP_ZMQ
         // Set default port for tree called with service and use a different port for the action one
         // TODO: Even if publisher ports are different, only one instance of ZMQ is allowed, check engine
-        unsigned publisher_port = identifier_ == "service" ? 1666 : 1665;
-
+       // unsigned publisher_port = identifier_ == "service" ? 1666 : 1665;
+       // unsigned server_port = identifier_ == "service" ? 1667 : 1668;
         if(_enable_zmq)
             try
             {
-                bt_logger_zmq_ = std::make_unique<BT::PublisherZMQ>(*tree_, 25, publisher_port);
+            
+                bt_logger_zmq_ = std::make_unique<BT::PublisherZMQ>(*tree_, 25, publisher_port_,server_port_);
             }
             catch(const BT::LogicError& ex)
             {

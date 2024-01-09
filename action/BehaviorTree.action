@@ -2,6 +2,8 @@
 std_msgs/String tree_file  
 bool debug
 std_msgs/String bb_init_file
+uint32 server_port
+uint32 publisher_port
 ---
 # Define the result
 bool result 

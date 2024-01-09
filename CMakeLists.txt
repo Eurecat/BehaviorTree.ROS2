@@ -30,11 +30,6 @@ find_package(catkin REQUIRED
 find_package(behaviortree_cpp_v3 3.2.0 REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
-add_service_files(
-    FILES
-        GetLoadedPlugins.srv
-        LoadTree.srv
-)
 
 ## Generate actions in the 'action' folder
 add_action_files(
@@ -48,6 +43,14 @@ add_message_files(
     FILES
         HandShake.msg
         ExecutionStatus.msg
+        TreeStatus.msg
+)
+
+add_service_files(
+    FILES
+        GetLoadedPlugins.srv
+        LoadTree.srv
+        GetTreeStatus.srv
 )
 
 generate_messages(DEPENDENCIES
