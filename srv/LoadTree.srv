@@ -1,6 +1,6 @@
 string tree_file
 bool debug
 string bb_init_file
-#uint32 server_port
-#uint32 publisher_port
+uint32 publisher_port
+uint32 server_port
 ---

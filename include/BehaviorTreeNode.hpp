@@ -10,6 +10,7 @@
 
 #include <behavior_tree_ros/GetLoadedPlugins.h>
 #include <behavior_tree_ros/LoadTree.h>
+#include <behavior_tree_ros/StopTree.h>
 #include <behavior_tree_ros/BehaviorTreeAction.h>
 #include <behavior_tree_ros/TreeStatus.h>
 #include <behavior_tree_ros/GetTreeStatus.h>
@@ -27,6 +28,7 @@ namespace BT_ROS
             using PluginsService  = behavior_tree_ros::GetLoadedPlugins;
             using LoadTreeService = behavior_tree_ros::LoadTree;
             using StatusService  = behavior_tree_ros::GetTreeStatus;
+            using StopTreeService  = behavior_tree_ros::StopTree;
 
         public:
             BehaviorTreeNode();
@@ -37,18 +39,18 @@ namespace BT_ROS
         private:
             bool GetLoadedPluginsService(PluginsService::Request& _request, PluginsService::Response& _response);
             bool LoadTree(LoadTreeService::Request& _request, LoadTreeService::Response& _response);
-            bool StopTree(std_srvs::Empty::Request& _request, std_srvs::Empty::Response& _response);
+            bool StopTree(StopTreeService::Request& _request, StopTreeService::Response& _response);
             bool StatusTree(StatusService::Request& _request, StatusService::Response& _response);
             void LoadAllPlugins();
             void LoadPluginsFromROS();
             void LoadPluginsFromFolder(const std::string& _plugins_folder);
             void LoadPlugin(const std::string& _plugin_path);
 
-            void RemoveTree();
+            void RemoveTree(BT_ROS::TreeWrapper * tree);
 
             std::string GetFullPath(const std::string& _file) const;
 
-            void PublishExecutionStatus();
+            void PublishExecutionStatus(BT_ROS::TreeWrapper * tree);
 
             // Behavior Tree action server callbacks
             void ActionGoalCB();
@@ -66,10 +68,13 @@ namespace BT_ROS
 
             ros::Publisher bt_execution_status_publisher_;
 
+            void execute_tick(BT_ROS::TreeWrapper * tree);
+            
             // Behavior Tree action server
             actionlib::SimpleActionServer<behavior_tree_ros::BehaviorTreeAction> bt_action_server_;
 
-            TreeWrapper service_tree_{"service"};
+            std::vector<TreeWrapper*> service_trees_;
+            //TreeWrapper service_tree_{"service"};
             std::vector<TreeWrapper*> action_trees_ ;
             //TreeWrapper action_tree_{"action"};
             BT::BehaviorTreeFactory bt_factory_;
@@ -84,8 +89,8 @@ namespace BT_ROS
             bool enable_zmq_log_;
 
             // Execution status report.
-            BT::NodeStatus status_ { BT::NodeStatus::IDLE };
-            std::string current_tree_ {};
+            //BT::NodeStatus status_ { BT::NodeStatus::IDLE };
+            //std::string current_tree_ {};
 
             // Action feedback and status
             behavior_tree_ros::BehaviorTreeFeedback action_feedback_;

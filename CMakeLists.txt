@@ -50,6 +50,7 @@ add_service_files(
     FILES
         GetLoadedPlugins.srv
         LoadTree.srv
+        StopTree.srv
         GetTreeStatus.srv
 )
 

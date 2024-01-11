@@ -54,6 +54,7 @@ namespace BT_ROS
             ros::Time execution_time;
             unsigned server_port_;
             unsigned publisher_port_;
+            BT::NodeStatus status_ { BT::NodeStatus::IDLE };
         private:
             std::unique_ptr<BT::Tree> tree_;
 
