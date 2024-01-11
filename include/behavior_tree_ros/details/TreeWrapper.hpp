@@ -24,7 +24,7 @@
 
 namespace BT_ROS
 {
-    static int tree_UID = 1;
+    static int tree_UID = 0;
     class TreeWrapper final
     {
         public:

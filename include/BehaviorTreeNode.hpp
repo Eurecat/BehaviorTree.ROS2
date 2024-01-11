@@ -75,8 +75,8 @@ namespace BT_ROS
 
             std::vector<TreeWrapper*> service_trees_;
             //TreeWrapper service_tree_{"service"};
-            std::vector<TreeWrapper*> action_trees_ ;
-            //TreeWrapper action_tree_{"action"};
+            //std::vector<TreeWrapper*> action_trees_ ;
+            TreeWrapper action_tree_{"action"};
             BT::BehaviorTreeFactory bt_factory_;
 
             std::set<std::string> loaded_plugins_;

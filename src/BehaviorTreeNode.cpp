@@ -34,7 +34,7 @@ namespace BT_ROS
         if(enable_rostopic_log_)
         {
            // service_tree_.InitializeStatusPublisher(public_node_handle_);
-           // action_tree_.InitializeStatusPublisher(public_node_handle_);
+           action_tree_.InitializeStatusPublisher(public_node_handle_);
         }
 
         // TODO: Move execution publisher to tree class
@@ -52,43 +52,43 @@ namespace BT_ROS
         //PublishExecutionStatus("");
     }
 
-    void BehaviorTreeNode::execute_tick(BT_ROS::TreeWrapper * tree)
+    void BehaviorTreeNode::execute_tick(BT_ROS::TreeWrapper * service_tree)
     {
-        if(tree->IsTreeLoaded() && tree->AreLoggersInitialized()) { 
+        if(service_tree->IsTreeLoaded() && service_tree->AreLoggersInitialized()) { 
             try
             {
-                ROS_INFO("START TICKING TREE %u", tree->tree_UID_);
-                const auto tree_status = tree->tickTree();
-                ROS_INFO("END TICKING TREE %u", tree->tree_UID_);
+                ROS_INFO("START TICKING TREE %u", service_tree->tree_UID_);
+                const auto tree_status = service_tree->tickTree();
+                ROS_INFO("END TICKING TREE %u", service_tree->tree_UID_);
                 // Publish the updated status if
                 // there have been changes.
-                if(tree_status != tree->status_)
+                if(tree_status != service_tree->status_)
                 {
-                    tree->status_ = tree_status;
-                    PublishExecutionStatus(tree);
+                    service_tree->status_ = tree_status;
+                    PublishExecutionStatus(service_tree);
                 }
 
                 if(tree_status == BT::NodeStatus::FAILURE)
                 {
                     ROS_ERROR("Tree finished with errors");
-                    RemoveTree(tree);
-                    tree->execution_tree_status = "FINISHED";
-                    tree->execution_tree_error = "FAILURE";
+                    RemoveTree(service_tree);
+                    service_tree->execution_tree_status = "FINISHED";
+                    service_tree->execution_tree_error = "FAILURE";
                 }
                 else if(tree_status == BT::NodeStatus::SUCCESS)
                 {
                     ROS_INFO("Tree finished with no errors");
-                    RemoveTree(tree);
-                    tree->execution_tree_status = "FINISHED";
+                    RemoveTree(service_tree);
+                    service_tree->execution_tree_status = "FINISHED";
                 }
             }
             catch(const BT::BehaviorTreeException& ex)
             {
                 ROS_ERROR("Tree crashed with exception: %s", ex.what());
-                RemoveTree(tree);
+                RemoveTree(service_tree);
 
-                tree->execution_tree_status = "CRASHED";
-                tree->execution_tree_error = ex.what() ;
+                service_tree->execution_tree_status = "CRASHED";
+                service_tree->execution_tree_error = ex.what() ;
             }
         }
     }
@@ -96,7 +96,7 @@ namespace BT_ROS
     void BehaviorTreeNode::Loop()
     {
         // Sleep if no tree running (main and remote)
-        bool action_tree_loaded = false;
+        /*bool action_tree_loaded = false;
         for (auto each_action_tree : action_trees_)
         {
             if (each_action_tree->IsTreeLoaded())
@@ -104,7 +104,7 @@ namespace BT_ROS
                 action_tree_loaded = true;
                 break;
             }
-        }
+        }*/
         bool service_tree_loaded = false;
         for (auto each_service_tree : service_trees_)
         {
@@ -114,7 +114,7 @@ namespace BT_ROS
                 break;
             }
         }
-        if(!service_tree_loaded && !action_tree_loaded)
+        if(!service_tree_loaded && !action_tree_.IsTreeLoaded())
         {
             loop_rate_.sleep();
             return;
@@ -124,42 +124,41 @@ namespace BT_ROS
         {
             execute_tick(each_service_tree);
         }
-        for (auto &each_action_tree : action_trees_)// Tick remote trees (loaded with action)
-        {
-            if(each_action_tree->IsTreeLoaded() && each_action_tree->AreLoggersInitialized()) { 
-                try
-                {
-                    ROS_INFO("START TICKING ACTION TREE %u", each_action_tree->tree_UID_);
-                    const auto action_tree_status = each_action_tree->tickTree();
-                    ROS_INFO("STOP TICKING ACTION TREE%u", each_action_tree->tree_UID_);
-                    action_feedback_.status.data = "RUNNING";
-                    bt_action_server_.publishFeedback(action_feedback_);
 
-                    if(action_tree_status == BT::NodeStatus::FAILURE)
-                    {
-                        ROS_ERROR("Action tree finished with errors");
-                        each_action_tree->RemoveTree();
-                        action_result_.result = false;
-                        bt_action_server_.setAborted(action_result_);
-                        each_action_tree->execution_tree_status = "FINISHED";
-                        each_action_tree->execution_tree_error = "FAILURE";
-                    }
-                    else if(action_tree_status == BT::NodeStatus::SUCCESS)
-                    {
-                        ROS_INFO("Action tree finished with no errors");
-                        each_action_tree->RemoveTree();
-                        action_result_.result = true;
-                        bt_action_server_.setSucceeded(action_result_);
-                        each_action_tree->execution_tree_status = "FINISHED";
-                    }
-                }
-                catch(const BT::BehaviorTreeException& ex)
+        if(action_tree_.IsTreeLoaded() && action_tree_.AreLoggersInitialized()) { // Tick remote tree (loaded with action)
+            try
+            {
+                ROS_INFO("START TICKING ACTION TREE %u", action_tree_.tree_UID_);
+                const auto action_tree_status = action_tree_.tickTree();
+                ROS_INFO("STOP TICKING ACTION TREE%u", action_tree_.tree_UID_);
+
+                action_feedback_.status.data = "RUNNING";
+                bt_action_server_.publishFeedback(action_feedback_);
+
+                if(action_tree_status == BT::NodeStatus::FAILURE)
                 {
-                    ROS_ERROR("Action tree crashed with exception: %s", ex.what());
-                    each_action_tree->RemoveTree();
-                    each_action_tree->execution_tree_status = "CRASHED";
-                    each_action_tree->execution_tree_error = ex.what() ;
+                    ROS_ERROR("Action tree finished with errors");
+                    action_tree_.RemoveTree();
+                    action_result_.result = false;
+                    bt_action_server_.setAborted(action_result_);
+                    action_tree_.execution_tree_status = "FINISHED";
+                    action_tree_.execution_tree_error = "FAILURE";
                 }
+                else if(action_tree_status == BT::NodeStatus::SUCCESS)
+                {
+                    ROS_INFO("Action tree finished with no errors");
+                    action_tree_.RemoveTree();
+                    action_result_.result = true;
+                    bt_action_server_.setSucceeded(action_result_);
+                    action_tree_.execution_tree_status = "FINISHED";
+                }
+            }
+            catch(const BT::BehaviorTreeException& ex)
+            {
+                ROS_ERROR("Action tree crashed with exception: %s", ex.what());
+                action_tree_.RemoveTree();
+                action_tree_.execution_tree_status = "CRASHED";
+                action_tree_.execution_tree_error = ex.what() ;
             }
         }
 
@@ -214,7 +213,7 @@ namespace BT_ROS
         for (auto &each_service_tree : service_trees_)
         {
             //TODO: ADD TREE_UID WHEN STOPPING THE TREE
-            if (_request.tree_uid == each_service_tree->tree_UID_)
+            if ( (_request.tree_uid == each_service_tree->tree_UID_) && (each_service_tree->IsTreeLoaded()) )
             {
                 RemoveTree(each_service_tree);
                 each_service_tree->execution_tree_status = "FINISHED";
@@ -222,18 +221,15 @@ namespace BT_ROS
                 return true;
             }
         }
-        for (auto &each_action_tree : action_trees_)
+
+        if ( (_request.tree_uid == action_tree_.tree_UID_) && (action_tree_.IsTreeLoaded()) )
         {
             ActionPreemptCB();
-            //TODO: ADD TREE_UID WHEN STOPPING THE TREE
-            if (_request.tree_uid == each_action_tree->tree_UID_)
-            {
-                RemoveTree(each_action_tree);
-                each_action_tree->execution_tree_status = "FINISHED";
-                each_action_tree->execution_tree_error = "Canceled by StopTree Service";
-                return true;
-            }
+            action_tree_.execution_tree_status = "FINISHED";
+            action_tree_.execution_tree_error = "Canceled by StopTree Service";
+            return true;
         }
+
         return false;
     }
     bool BehaviorTreeNode::StatusTree(StatusService::Request& _request, StatusService::Response& _response)
@@ -253,14 +249,14 @@ namespace BT_ROS
         }
 
         //Fill Action Tree info
-        for (auto &each_action_tree : action_trees_)
+        if (action_tree_.execution_tree_status!="")
         {
-            tree_status_msg.status = each_action_tree->execution_tree_status;
-            tree_status_msg.tree_file = each_action_tree->tree_filename;
-            tree_status_msg.time = each_action_tree->execution_time;
+            tree_status_msg.status = action_tree_.execution_tree_status;
+            tree_status_msg.tree_file = action_tree_.tree_filename;
+            tree_status_msg.time = action_tree_.execution_time;
             tree_status_msg.type = "Action";
-            tree_status_msg.uid = each_action_tree->tree_UID_;
-            tree_status_msg.error = each_action_tree->execution_tree_error;
+            tree_status_msg.uid = action_tree_.tree_UID_;
+            tree_status_msg.error = action_tree_.execution_tree_error;
             _response.tree_status.push_back(tree_status_msg);
         }
 
@@ -496,34 +492,29 @@ namespace BT_ROS
         const auto goal = bt_action_server_.acceptNewGoal();
         const std::string full_path = GetFullPath(goal->tree_file.data);
        
-        TreeWrapper *new_action_tree_ = new TreeWrapper ("action");
-        new_action_tree_->tree_filename = full_path;
-        if(enable_rostopic_log_)
-            new_action_tree_->InitializeStatusPublisher(public_node_handle_,new_action_tree_->tree_UID_);
-            
-        action_trees_.push_back(new_action_tree_);
-        new_action_tree_->execution_time = ros::Time::now();
+        action_tree_.tree_filename = full_path;
+        action_tree_.execution_time = ros::Time::now();
         try
         {
             //ROS_INFO("Loading action tree %s", full_path.c_str());
-            ROS_INFO("Loading action tree %u %s", new_action_tree_->tree_UID_, full_path.c_str());
+            ROS_INFO("Loading action tree %u %s", action_tree_.tree_UID_, full_path.c_str());
             //action_tree_.BuildTree(full_path, bt_factory_, goal->debug, goal->bb_init_file.data);
-            new_action_tree_->BuildTree(full_path, bt_factory_, goal->debug, goal->bb_init_file.data);
-            new_action_tree_->server_port_ = goal->server_port;
-            new_action_tree_->publisher_port_ = goal->publisher_port;
+            action_tree_.BuildTree(full_path, bt_factory_, goal->debug, goal->bb_init_file.data);
+            action_tree_.server_port_ = goal->server_port;
+            action_tree_.publisher_port_ = goal->publisher_port;
             // If the service tree is loaded it means that the action was called from the remote BT block
             // As such, don't show status messages through the terminal
-            new_action_tree_->InitializeLoggers(false, enable_minitrace_log_, enable_file_log_, enable_rostopic_log_, enable_zmq_log_, log_folder_);
+            action_tree_.InitializeLoggers(false, enable_minitrace_log_, enable_file_log_, enable_rostopic_log_, enable_zmq_log_, log_folder_);
 
-            new_action_tree_->execution_tree_status = "RUNNING";
+            action_tree_.execution_tree_status = "RUNNING";
         }
         catch(const std::runtime_error& ex)
         {
             //ROS_ERROR("Error loading tree %s: %s", full_path.c_str(), ex.what());
-            ROS_ERROR("Error loading tree %u %s: %s", new_action_tree_->tree_UID_, full_path.c_str(), ex.what());
+            ROS_ERROR("Error loading tree %u %s: %s", action_tree_.tree_UID_, full_path.c_str(), ex.what());
             bt_action_server_.setAborted();
-            new_action_tree_->execution_tree_status = "ERROR LOADING: ";
-            new_action_tree_->execution_tree_status.append (ex.what()) ;
+            action_tree_.execution_tree_status = "ERROR LOADING: ";
+            action_tree_.execution_tree_status.append (ex.what()) ;
         }
 
         // Preempts received for the new goal between checking if isNewGoalAvailabel
@@ -536,22 +527,10 @@ namespace BT_ROS
 
     void BehaviorTreeNode::ActionPreemptCB()
     {
-        for (auto &each_action_tree : action_trees_)
-        {
-           // if (each_action_tree->tree_UID_ == tree_uid)
-            {
-                each_action_tree->RemoveTree();
-                action_result_.result = false;
-                bt_action_server_.setPreempted(action_result_);
-                each_action_tree->execution_tree_status = "FINISHED";
-                each_action_tree->execution_tree_error = "CANCELED BY USER";
-            }
-
-        }
-       /*action_tree_.RemoveTree();
+        action_tree_.RemoveTree();
         action_result_.result = false;
         bt_action_server_.setPreempted(action_result_);
         action_tree_.execution_tree_status = "FINISHED";
-        action_tree_.execution_tree_error = "CANCELED BY USER";*/
+        action_tree_.execution_tree_error = "Action PreemptCB";
     }
 }
