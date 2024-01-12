@@ -5,6 +5,7 @@
 #include "yaml-cpp/yaml.h"
 #include "behavior_tree_ros/details/conversion_json.hpp"
 #include <pwd.h>
+#include <ros/package.h>
 
 namespace BT_ROS
 {
@@ -27,9 +28,20 @@ class LoadYamlFileNode final : public BT::SyncActionNode
             const auto& file_path  = getInput<std::string>("file_path");
             if(!file_path)  { throw BT::RuntimeError { name() + ": " + file_path.error()  }; }
             
-            // Check if it is a relative path to HOME and get the absolute one
             std::string absolute_file_path = file_path.value();
-            if(file_path.value()[0] == '~')
+
+            //1. Check for a ROS PATH
+            std::size_t found = absolute_file_path.find("$(find ");
+            if (found!=std::string::npos)
+            {
+                std::size_t end_package_pos = absolute_file_path.find(")");
+                std::string package_name = absolute_file_path.substr (7,(end_package_pos-7));
+                std::string package_relative_path = absolute_file_path.substr (end_package_pos+1); 
+                std::string ros_pkg_path = ros::package::getPath(package_name);
+                absolute_file_path = ros_pkg_path + package_relative_path;
+            }
+            //2. Check for a Relative Path to HOME and get the absolute one
+            else if(file_path.value()[0] == '~')
             {
                 absolute_file_path.erase(0, 1); // remove '~'
                 
