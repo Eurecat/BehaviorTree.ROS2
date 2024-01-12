@@ -31,11 +31,13 @@ class LoadYamlFileNode final : public BT::SyncActionNode
             std::string absolute_file_path = file_path.value();
 
             //1. Check for a ROS PATH
-            std::size_t found = absolute_file_path.find("$(find ");
+            std::string find_str = "$(find ";
+            std::size_t found = absolute_file_path.find(find_str);
             if (found!=std::string::npos)
             {
+                int index = found + find_str.size();
                 std::size_t end_package_pos = absolute_file_path.find(")");
-                std::string package_name = absolute_file_path.substr (7,(end_package_pos-7));
+                std::string package_name = absolute_file_path.substr (index,(end_package_pos-index));
                 std::string package_relative_path = absolute_file_path.substr (end_package_pos+1); 
                 std::string ros_pkg_path = ros::package::getPath(package_name);
                 absolute_file_path = ros_pkg_path + package_relative_path;
