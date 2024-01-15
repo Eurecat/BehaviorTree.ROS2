@@ -55,9 +55,12 @@ namespace BT_ROS
             unsigned server_port_;
             unsigned publisher_port_;
             BT::NodeStatus status_ { BT::NodeStatus::IDLE };
+            std::thread *t;
+            pthread_cond_t wakeup_signal_;
+            pthread_mutex_t mutex_;
+            bool thread_running_ = false;
         private:
             std::unique_ptr<BT::Tree> tree_;
-
             std::unique_ptr<BT::StdCoutLogger>   bt_logger_cout_;
             std::unique_ptr<BT::FileLogger>      bt_logger_file_;
             std::unique_ptr<BT::MinitraceLogger> bt_logger_trace_;

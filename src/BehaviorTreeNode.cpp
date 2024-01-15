@@ -5,6 +5,7 @@
 #include "behavior_tree_ros/ExecutionStatus.h"
 #include "behavior_tree_ros/TreeStatus.h"
 #include "behavior_tree_ros/3rdparty/tinyxml2/tinyxml2.h"
+#include <thread>
 
 namespace BT_ROS
 {
@@ -54,57 +55,55 @@ namespace BT_ROS
 
     void BehaviorTreeNode::execute_tick(BT_ROS::TreeWrapper * service_tree)
     {
-        if(service_tree->IsTreeLoaded() && service_tree->AreLoggersInitialized()) { 
-            try
-            {
-                ROS_INFO("START TICKING TREE %u", service_tree->tree_UID_);
-                const auto tree_status = service_tree->tickTree();
-                ROS_INFO("END TICKING TREE %u", service_tree->tree_UID_);
-                // Publish the updated status if
-                // there have been changes.
-                if(tree_status != service_tree->status_)
+        service_tree->thread_running_ = true;
+        while (service_tree->thread_running_)
+        {
+            pthread_mutex_lock(&service_tree->mutex_);
+            pthread_cond_wait(&service_tree->wakeup_signal_, &service_tree->mutex_);
+            ROS_INFO("EXECUTE TICK!! %u", service_tree->tree_UID_);
+            if(service_tree->IsTreeLoaded() && service_tree->AreLoggersInitialized()) { 
+                try
                 {
-                    service_tree->status_ = tree_status;
-                    PublishExecutionStatus(service_tree);
-                }
+                    ROS_INFO("START TICKING TREE %u", service_tree->tree_UID_);
+                    const auto tree_status = service_tree->tickTree();
+                    ROS_INFO("END TICKING TREE %u", service_tree->tree_UID_);
+                    // Publish the updated status if
+                    // there have been changes.
+                    if(tree_status != service_tree->status_)
+                    {
+                        service_tree->status_ = tree_status;
+                        PublishExecutionStatus(service_tree);
+                    }
 
-                if(tree_status == BT::NodeStatus::FAILURE)
-                {
-                    ROS_ERROR("Tree finished with errors");
-                    RemoveTree(service_tree);
-                    service_tree->execution_tree_status = "FINISHED";
-                    service_tree->execution_tree_error = "FAILURE";
+                    if(tree_status == BT::NodeStatus::FAILURE)
+                    {
+                        ROS_ERROR("Tree finished with errors");
+                        RemoveTree(service_tree);
+                        service_tree->execution_tree_status = "FINISHED";
+                        service_tree->execution_tree_error = "FAILURE";
+                    }
+                    else if(tree_status == BT::NodeStatus::SUCCESS)
+                    {
+                        ROS_INFO("Tree finished with no errors");
+                        RemoveTree(service_tree);
+                        service_tree->execution_tree_status = "FINISHED";
+                    }
                 }
-                else if(tree_status == BT::NodeStatus::SUCCESS)
+                catch(const BT::BehaviorTreeException& ex)
                 {
-                    ROS_INFO("Tree finished with no errors");
+                    ROS_ERROR("Tree crashed with exception: %s", ex.what());
                     RemoveTree(service_tree);
-                    service_tree->execution_tree_status = "FINISHED";
+
+                    service_tree->execution_tree_status = "CRASHED";
+                    service_tree->execution_tree_error = ex.what() ;
                 }
             }
-            catch(const BT::BehaviorTreeException& ex)
-            {
-                ROS_ERROR("Tree crashed with exception: %s", ex.what());
-                RemoveTree(service_tree);
-
-                service_tree->execution_tree_status = "CRASHED";
-                service_tree->execution_tree_error = ex.what() ;
-            }
+            pthread_mutex_unlock(&service_tree->mutex_);
         }
     }
 
     void BehaviorTreeNode::Loop()
     {
-        // Sleep if no tree running (main and remote)
-        /*bool action_tree_loaded = false;
-        for (auto each_action_tree : action_trees_)
-        {
-            if (each_action_tree->IsTreeLoaded())
-            {
-                action_tree_loaded = true;
-                break;
-            }
-        }*/
         bool service_tree_loaded = false;
         for (auto each_service_tree : service_trees_)
         {
@@ -114,18 +113,21 @@ namespace BT_ROS
                 break;
             }
         }
+        // Sleep if no tree running (main and remote)
         if(!service_tree_loaded && !action_tree_.IsTreeLoaded())
         {
             loop_rate_.sleep();
             return;
         }
 
-        for (auto each_service_tree : service_trees_)// Tick main tree (loaded with service)
+        //Tick services trees running in a thread
+        for (auto each_service_tree : service_trees_)
         {
-            execute_tick(each_service_tree);
+            pthread_cond_signal(&each_service_tree->wakeup_signal_);
         }
 
-        if(action_tree_.IsTreeLoaded() && action_tree_.AreLoggersInitialized()) { // Tick remote tree (loaded with action)
+        //Tick Action tree
+        if(action_tree_.IsTreeLoaded() && action_tree_.AreLoggersInitialized()) {
             try
             {
                 ROS_INFO("START TICKING ACTION TREE %u", action_tree_.tree_UID_);
@@ -205,6 +207,12 @@ namespace BT_ROS
         }
         new_service_tree_->execution_tree_status = "RUNNING";
         new_service_tree_->execution_tree_error = "";
+
+        //Thread Initialization
+        pthread_mutex_init(&new_service_tree_->mutex_, 0);
+        pthread_cond_init(&new_service_tree_->wakeup_signal_ , 0);
+        new_service_tree_->t = new std::thread(&BehaviorTreeNode::execute_tick, this, new_service_tree_);   // t starts running
+        new_service_tree_->t->detach();
         return true;
     }
 
@@ -215,6 +223,9 @@ namespace BT_ROS
             //TODO: ADD TREE_UID WHEN STOPPING THE TREE
             if ( (_request.tree_uid == each_service_tree->tree_UID_) && (each_service_tree->IsTreeLoaded()) )
             {
+                //Kill Thread
+                each_service_tree->thread_running_ = false;
+                //Remove Tree
                 RemoveTree(each_service_tree);
                 each_service_tree->execution_tree_status = "FINISHED";
                 each_service_tree->execution_tree_error = "Canceled by StopTree Service";
