@@ -33,14 +33,19 @@ class LoadYamlFileNode final : public BT::SyncActionNode
             //1. Check for a ROS PATH
             std::string find_str = "$(find ";
             std::size_t found = absolute_file_path.find(find_str);
-            if (found!=std::string::npos)
+            std::size_t end_package_pos = absolute_file_path.find(")");
+            if ((found!=std::string::npos) && (end_package_pos!=std::string::npos))
             {
                 int index = found + find_str.size();
-                std::size_t end_package_pos = absolute_file_path.find(")");
                 std::string package_name = absolute_file_path.substr (index,(end_package_pos-index));
                 std::string package_relative_path = absolute_file_path.substr (end_package_pos+1); 
                 std::string ros_pkg_path = ros::package::getPath(package_name);
-                absolute_file_path = ros_pkg_path + package_relative_path;
+                if (ros_pkg_path == "")
+                {
+                    throw BT::RuntimeError { "Error: " + package_name + " not found\n" };
+                }
+                else
+                    absolute_file_path = ros_pkg_path + package_relative_path;
             }
             //2. Check for a Relative Path to HOME and get the absolute one
             else if(file_path.value()[0] == '~')
