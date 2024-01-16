@@ -50,7 +50,7 @@ namespace BT_ROS
 
             std::string GetFullPath(const std::string& _file) const;
 
-            void PublishExecutionStatus(BT_ROS::TreeWrapper * tree);
+            void PublishExecutionStatus(BT_ROS::TreeWrapper * tree, bool error=false, std::string error_data="");
 
             // Behavior Tree action server callbacks
             void ActionGoalCB();
