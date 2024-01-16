@@ -42,7 +42,7 @@ class LoadYamlFileNode final : public BT::SyncActionNode
                 std::string ros_pkg_path = ros::package::getPath(package_name);
                 if (ros_pkg_path == "")
                 {
-                    throw BT::RuntimeError { "Error: " + package_name + " not found\n" };
+                    ROS_ERROR("Error loading tree %s: Package %s not found.", action_tree_.tree_UID_, full_path.c_str(), ex.what());
                 }
                 else
                     absolute_file_path = ros_pkg_path + package_relative_path;
