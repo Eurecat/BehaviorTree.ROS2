@@ -25,6 +25,7 @@ class RosTopicLogger : public BT::StatusChangeLogger
 
     //ros::NodeHandle nh_;
     ros::Publisher bt_status_publisher_;
+    bool status_paused {false};
 
   public:
     RosTopicLogger(const BT::Tree& tree, ros::Publisher pub);

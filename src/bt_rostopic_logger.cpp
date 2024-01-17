@@ -16,6 +16,7 @@ RosTopicLogger::RosTopicLogger(const BT::Tree& tree, ros::Publisher pub) : BT::S
     // {
     //     throw BT::LogicError("Only one instance of RosTopicLogger shall be created");
     // }
+    std::cout << "ROSTOPICLOGGER INIT" << std::endl;
 }
 RosTopicLogger::~RosTopicLogger()
 {
@@ -27,6 +28,19 @@ void RosTopicLogger::callback(BT::Duration timestamp, const BT::TreeNode& node, 
 {
     using namespace std::chrono;
 
+    if (!status_paused && status == BT::NodeStatus::PAUSED)
+    {
+        //PUBLISH TREE STATUS PAUSED
+
+        status_paused = true;
+    }
+    else if (status_paused && status != BT::NodeStatus::PAUSED)
+    {
+        //PUBLISH TREE STATUS RUNNING
+        
+        status_paused = false;
+    }
+    std::cout << "ROSTOPICLOGGER CALLBACK" << status << std::endl;
    // constexpr const char* whitespaces = "                         ";
     //constexpr const size_t ws_count = 25;
 

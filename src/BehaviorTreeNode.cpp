@@ -199,8 +199,10 @@ namespace BT_ROS
             // the full path to be consistent with the original request.
             new_service_tree_->tree_filename = _request.tree_file;
             new_service_tree_->BuildTree(full_path, bt_factory_, _request.debug, _request.bb_init_file);
-            new_service_tree_->server_port_ = _request.server_port;
-            new_service_tree_->publisher_port_ = _request.publisher_port;
+
+            new_service_tree_->server_port_ = _request.server_port == 0 ? 1667 : _request.server_port;
+            new_service_tree_->publisher_port_ = _request.publisher_port == 0 ? 1666 : _request.publisher_port;
+
             new_service_tree_->InitializeLoggers(enable_cout_log_, enable_minitrace_log_, enable_file_log_, enable_rostopic_log_, enable_zmq_log_, log_folder_);
 
             ROS_INFO("Loaded tree %s", full_path.c_str());
