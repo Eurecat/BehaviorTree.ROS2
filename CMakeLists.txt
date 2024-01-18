@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
-project(behavior_tree_ros VERSION 0.6.3)
+project(behavior_tree_ros)
 
 set(CMAKE_CXX_STANDARD 14)
 
@@ -21,13 +21,13 @@ find_package(catkin REQUIRED
         topic_tools
         actionlib
         # behavior_tree_core
-        behaviortree_cpp_v3
+        behavior_tree_cpp
         cmake_modules
         tf
         angles
 )
 # find_package(behavior_tree_core 3.2.0 REQUIRED)
-find_package(behaviortree_cpp_v3 3.2.0 REQUIRED)
+find_package(behavior_tree_cpp REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 
@@ -63,7 +63,7 @@ catkin_package(
         message_runtime
         ros_type_introspection
         # behavior_tree_core
-        behaviortree_cpp_v3
+        behavior_tree_cpp
         topic_tools
         actionlib
         cmake_modules

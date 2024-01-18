@@ -1,4 +1,4 @@
-name: Build and Release for ROS Noetic
+name: behavior_tree_ros -- Build and Release for ROS Noetic
 
 on: [push, pull_request]
 
@@ -9,8 +9,6 @@ jobs:
     strategy:
       matrix:
         container:
-        #  - "ghcr.io/haru-project/haru-generic-melodic:latest"
-        #  - "ghcr.io/haru-project/haru-generic-kinetic:latest"
           - "ghcr.io/haru-project/haru-generic-noetic:latest"
     container:
       image: ${{ matrix.container }}
@@ -27,7 +25,7 @@ jobs:
         UPO_KEY: ${{ secrets.UPO_KEY }}
     env:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_TOKEN }}
-      RELEASE: true
+      RELEASE: false
 
     defaults:
       run:
