@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
-project(behavior_tree_ros VERSION 0.6.4)
+project(behavior_tree_ros)
 
 set(CMAKE_CXX_STANDARD 14)
 
@@ -20,13 +20,14 @@ find_package(catkin REQUIRED
         ros_type_introspection
         topic_tools
         actionlib
-        behavior_tree_core
+        # behavior_tree_core
+        behavior_tree_cpp
         cmake_modules
         tf
         angles
 )
-find_package(behavior_tree_core 3.2.0 REQUIRED)
-
+# find_package(behavior_tree_core 3.2.0 REQUIRED)
+find_package(behavior_tree_cpp REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 add_service_files(
@@ -39,12 +40,13 @@ add_service_files(
 add_action_files(
   FILES
   BehaviorTree.action
-  HandShake.action
+  PerformHandShake.action
   ExchangeInfo.action
 )
 
 add_message_files(
     FILES
+        HandShake.msg
         ExecutionStatus.msg
 )
 
@@ -56,7 +58,8 @@ catkin_package(
         roscpp
         message_runtime
         ros_type_introspection
-        behavior_tree_core
+        # behavior_tree_core
+        behavior_tree_cpp
         topic_tools
         actionlib
         cmake_modules
@@ -82,7 +85,7 @@ list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_plugin)
 add_executable(${PROJECT_NAME}_node src/behavior_tree_node.cpp src/BehaviorTreeNode.cpp src/bt_rostopic_logger.cpp
                                     src/3rdparty/tinyxml2/tinyxml2.cpp src/details/TreeWrapper.cpp)
 target_include_directories(${PROJECT_NAME}_node PRIVATE include ${catkin_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}_node PRIVATE ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_node PRIVATE ${catkin_LIBRARIES} yaml-cpp)
 target_compile_options(${PROJECT_NAME}_node PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_node)

@@ -59,7 +59,7 @@ namespace BT_ROS
             return;
         }
 
-        if(service_tree_.IsTreeLoaded()) { // Tick main tree (loaded with service)
+        if(service_tree_.IsTreeLoaded() && service_tree_.AreLoggersInitialized()) { // Tick main tree (loaded with service)
             try
             {
                 const auto tree_status = service_tree_.tickTree();
@@ -90,7 +90,7 @@ namespace BT_ROS
             }
         }
 
-        if(action_tree_.IsTreeLoaded()) { // Tick remote tree (loaded with action)
+        if(action_tree_.IsTreeLoaded() && action_tree_.AreLoggersInitialized()) { // Tick remote tree (loaded with action)
             try
             {
                 const auto action_tree_status = action_tree_.tickTree();
@@ -137,7 +137,7 @@ namespace BT_ROS
             // the full path to be consistent with the original request.
             current_tree_ = _request.tree_file;
 
-            service_tree_.BuildTree(full_path, bt_factory_);
+            service_tree_.BuildTree(full_path, bt_factory_, _request.debug, _request.bb_init_file);
             service_tree_.InitializeLoggers(enable_cout_log_, enable_minitrace_log_, enable_file_log_, enable_rostopic_log_, enable_zmq_log_, log_folder_);
 
             ROS_INFO("Loaded tree %s", full_path.c_str());
@@ -366,6 +366,12 @@ namespace BT_ROS
                 case BT::NodeStatus::SUCCESS:
                     status = ExecutionStatus::SUCCESS;
                     break;
+                case BT::NodeStatus::SKIPPED:
+                    status = ExecutionStatus::SKIPPED;
+                    break;
+                case BT::NodeStatus::PAUSED:
+                    status = ExecutionStatus::PAUSED;
+                    break;
             }
 
             return status;
@@ -379,12 +385,13 @@ namespace BT_ROS
 
     void BehaviorTreeNode::ActionGoalCB()
     {
-        const std::string full_path = GetFullPath(bt_action_server_.acceptNewGoal()->tree_file.data);
+        const auto goal = bt_action_server_.acceptNewGoal();
+        const std::string full_path = GetFullPath(goal->tree_file.data);
 
         try
         {
             ROS_INFO("Loading action tree %s", full_path.c_str());
-            action_tree_.BuildTree(full_path, bt_factory_);
+            action_tree_.BuildTree(full_path, bt_factory_, goal->debug, goal->bb_init_file.data);
 
             // If the service tree is loaded it means that the action was called from the remote BT block
             // As such, don't show status messages through the terminal

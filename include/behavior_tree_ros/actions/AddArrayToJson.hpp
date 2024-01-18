@@ -16,7 +16,7 @@ class AddArrayToJson final : public BT::SyncActionNode
         static BT::PortsList providedPorts()
         {
             return { BT::InputPort<bool>("override", true, "1 to override the actual array; 0 to append value"),
-                     BT::InputPort<std::string>("input_key", "Key name of the array"),
+                     BT::InputPort<std::string>("input_key", "", "Key name of the array"),
                      BT::InputPort<std::string>("input_value", "New value or value to append to the array"),
                      BT::InputPort("input_json", "Input Json array"),
                      BT::OutputPort<nlohmann::json>("output_json", "Output Json array")
@@ -58,7 +58,7 @@ class AddArrayToJson final : public BT::SyncActionNode
                 }
                 else if(output_json.is_array()) // Json is an array
                 {
-                    if (input_key.value() != "") // Add array with key
+                    if (input_key.value_or("") != "") // Add array with key
                     {
                         bool filled = false;
                         // Check all the elements of the array for an object with the same key
@@ -94,7 +94,7 @@ class AddArrayToJson final : public BT::SyncActionNode
                 }
                 else // Empty Json
                 {
-                    if (input_key.value() != "")
+                    if (input_key.value_or("") != "")
                     {
                         if(value_is_json) { output_json[input_key.value()].push_back(input_value_json); }
                         else { output_json[input_key.value()].push_back(input_value.value()); }

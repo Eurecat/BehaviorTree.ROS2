@@ -11,8 +11,18 @@
 #include "behavior_tree_ros/policies/serialization_policies.hpp"
 #include "behavior_tree_ros/policies/deserialization_policies.hpp"
 
+namespace BT
+{
+    template <>
+    std::string toStr<actionlib::SimpleClientGoalState>(actionlib::SimpleClientGoalState goalState)
+    {
+        return goalState.toString() + ": " + goalState.getText();
+    }
+}
+
 namespace BT_ROS
 {
+
 template <class ActionType,  template <class> class GoalDeserializationPolicy,
                              template <class> class ResultSerializationPolicy,
                              template <class> class FeedbackSerializationPolicy>

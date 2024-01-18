@@ -1,5 +1,6 @@
 #include "behavior_tree_ros/details/TreeWrapper.hpp"
 
+#include "yaml-cpp/yaml.h"
 namespace BT_ROS
 {
     void TreeWrapper::InitializeStatusPublisher(ros::NodeHandle& _public_node_handle)
@@ -8,12 +9,37 @@ namespace BT_ROS
         bt_status_publisher_ = _public_node_handle.advertise<std_msgs::String>(topic_name, 1);
     }
 
-    void TreeWrapper::BuildTree(const std::string& _tree_file, BT::BehaviorTreeFactory& _bt_factory)
+    void TreeWrapper::BuildTree(const std::string& _tree_file, BT::BehaviorTreeFactory& _bt_factory, 
+        const bool debug, const std::string& bb_init_abs_filepath)
     {
+        ResetLoggers();
+        
+        BT::Blackboard::Ptr blackboard_ptr = BT::Blackboard::create();
+        
+        if(bb_init_abs_filepath.length() > 0)
+        {
+             try {
+                ROS_INFO("Initializing BB from YAML file %s", bb_init_abs_filepath.c_str());
+                YAML::Node config = YAML::LoadFile(bb_init_abs_filepath);
+                for(YAML::const_iterator it=config.begin();it!=config.end();++it)
+                {
+                    ROS_INFO("Init. BB key [\"%s\"] with value \"%s\"", it->first.as<std::string>().c_str(), it->second.as<std::string>().c_str());
+                    // use the string here and blackboard_ptr->set(...)
+                    blackboard_ptr->set(it->first.as<std::string>(), it->second.as<std::string>());
+                }
+            }
+            catch(const YAML::Exception& ex) 
+            { 
+                ROS_ERROR("Init. BB key: %s", ex.what());
+                /* */ 
+            }
+        }
+
         // Wait between creating and executing the Tree to fully initialize ROS publishers
-        auto temp_tree = std::make_unique<BT::Tree>(_bt_factory.createTreeFromFile(_tree_file));
+        auto temp_tree = std::make_unique<BT::Tree>(_bt_factory.createTreeFromFile(_tree_file, blackboard_ptr));
         ros::Duration(0.5).sleep();
         tree_.swap(temp_tree);
+        if(debug) tree_->setDebug(); // set tree in debug mode
     }
 
     void TreeWrapper::RemoveTree()
@@ -58,7 +84,7 @@ namespace BT_ROS
                 ROS_WARN("Error initializing Minitrace logger for %s: %s", identifier_.c_str(), ex.what());
             }
         if(_enable_file)
-            bt_logger_file_ = std::make_unique<BT::FileLogger>(*tree_, log_file.c_str());
+            bt_logger_file_ = std::make_unique<BT::FileLogger>(*tree_, log_file.c_str(), 20, true);
         if(_enable_topic)
             bt_logger_rostopic_ = std::make_unique<BT_ROS::RosTopicLogger>(*tree_, bt_status_publisher_);
 
@@ -79,10 +105,12 @@ namespace BT_ROS
         #else
         ROS_WARN("ZMQ logging is enabled but behavior_tree_core was not compiled with ZMQ support.");
         #endif
+        loggers_initialized_ = true;
     }
 
     void TreeWrapper::ResetLoggers()
     {
+        loggers_initialized_ = false;
         bt_logger_cout_.reset();
         bt_logger_trace_.reset();
         bt_logger_file_.reset();

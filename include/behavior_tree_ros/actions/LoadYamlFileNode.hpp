@@ -5,6 +5,7 @@
 #include "yaml-cpp/yaml.h"
 #include "behavior_tree_ros/details/conversion_json.hpp"
 #include <pwd.h>
+#include <ros/package.h>
 
 namespace BT_ROS
 {
@@ -17,8 +18,8 @@ class LoadYamlFileNode final : public BT::SyncActionNode
         static BT::PortsList providedPorts()
         {
             return { BT::InputPort<std::string>("file_path", "Path to the YAML config file"),
-                     //BT::OutputPort<nlohmann::json>("output", "Parameter list as json")
-                     BT::OutputPort<std::string>("output", "Parameter list as json")
+                     BT::OutputPort<nlohmann::json>("output", "Parameter list as json")
+                    //  BT::OutputPort<std::string>("output", "Parameter list as json")
                    };
         }
 
@@ -27,9 +28,27 @@ class LoadYamlFileNode final : public BT::SyncActionNode
             const auto& file_path  = getInput<std::string>("file_path");
             if(!file_path)  { throw BT::RuntimeError { name() + ": " + file_path.error()  }; }
             
-            // Check if it is a relative path to HOME and get the absolute one
             std::string absolute_file_path = file_path.value();
-            if(file_path.value()[0] == '~')
+
+            //1. Check for a ROS PATH
+            std::string find_str = "$(find ";
+            std::size_t found = absolute_file_path.find(find_str);
+            std::size_t end_package_pos = absolute_file_path.find(")");
+            if ((found!=std::string::npos) && (end_package_pos!=std::string::npos))
+            {
+                int index = found + find_str.size();
+                std::string package_name = absolute_file_path.substr (index,(end_package_pos-index));
+                std::string package_relative_path = absolute_file_path.substr (end_package_pos+1); 
+                std::string ros_pkg_path = ros::package::getPath(package_name);
+                if (ros_pkg_path == "")
+                {
+                    ROS_ERROR("Error: Package %s not found.", package_name.c_str());
+                }
+                else
+                    absolute_file_path = ros_pkg_path + package_relative_path;
+            }
+            //2. Check for a Relative Path to HOME and get the absolute one
+            else if(file_path.value()[0] == '~')
             {
                 absolute_file_path.erase(0, 1); // remove '~'
                 

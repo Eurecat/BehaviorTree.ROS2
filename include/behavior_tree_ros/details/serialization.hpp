@@ -69,6 +69,7 @@ namespace serialization
     inline void serializeField(const BT::ActionNodeBase& _node, const std::string& _port, std::vector<uint8_t>& _buffer)
     {
         const auto& field_value = _node.getInput<FieldType>(_port);
+        if(!field_value) throw BT::RuntimeError(BT::StrCat("serializeField with port ", _port, ". Error: ", field_value.error()));
         serializeField<FieldType>(field_value.value(), _buffer);
     }
 

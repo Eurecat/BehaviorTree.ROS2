@@ -112,6 +112,9 @@ struct AutomaticDeserialization
                 {
                     // Skip constant fields
                     if(field.isConstant()) { continue; }
+                    
+                    // if(field.isArray()) // TODO: array should be handled appropriately
+                    //     std::cout << "Found an array in " << BT::demangle(typeid(MessageType)) << " of length " << field.arraySize() << "\n";
 
                     // If the field is not a built-in type, then find the message definition of that type and
                     // call this function again recursively to extract its built-in fields
