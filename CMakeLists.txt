@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 project(behavior_tree_ros)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 execute_process(COMMAND cat "/etc/issue" OUTPUT_VARIABLE UBUNTU_VERSION)
 
@@ -20,7 +20,6 @@ find_package(catkin REQUIRED
         ros_type_introspection
         topic_tools
         actionlib
-        # behavior_tree_core
         behavior_tree_cpp
         cmake_modules
         tf
@@ -42,8 +41,8 @@ add_action_files(
 add_message_files(
     FILES
         HandShake.msg
-        ExecutionStatus.msg
-        TreeStatus.msg
+        TreeExecutionStatus.msg
+        Transition.msg
 )
 
 add_service_files(
@@ -52,6 +51,8 @@ add_service_files(
         LoadTree.srv
         StopTree.srv
         GetTreeStatus.srv
+        GetTreeStatusByID.srv
+        GetAllTreesStatus.srv
 )
 
 generate_messages(DEPENDENCIES
@@ -62,7 +63,6 @@ catkin_package(
         roscpp
         message_runtime
         ros_type_introspection
-        # behavior_tree_core
         behavior_tree_cpp
         topic_tools
         actionlib
@@ -100,6 +100,14 @@ target_link_libraries(${PROJECT_NAME}_intercom_node PRIVATE ${catkin_LIBRARIES})
 target_compile_options(${PROJECT_NAME}_intercom_node PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 add_dependencies(${PROJECT_NAME}_intercom_node ${${PROJECT_NAME}_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_intercom_node)
+
+
+add_executable(${PROJECT_NAME}_server src/behavior_tree_server.cpp src/BehaviorTreeServer.cpp )
+target_include_directories(${PROJECT_NAME}_server PRIVATE include ${catkin_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME}_server PRIVATE ${catkin_LIBRARIES})
+target_compile_options(${PROJECT_NAME}_server PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
+add_dependencies(${PROJECT_NAME}_server ${${PROJECT_NAME}_EXPORTED_TARGETS})
+list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_server)
 
 install(TARGETS ${${PROJECT_NAME}_targets}
         ARCHIVE  DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

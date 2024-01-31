@@ -219,9 +219,9 @@ namespace BT_ROS
         exchange_info_action_server_ (public_node_handle_, "behavior_tree/exchange_info", boost::bind(&RosExchangeInfo::ExchangeInfoActionCallback, this, _1), false)
     {
         // Get intercom topic name
-        std::string exchange_info_topic_name = private_node_handle_.param<std::string>("exhange_info_topic_name", "/remote/bt_info");        // Publisher
-        send_info_publisher_ = public_node_handle_.advertise<std_msgs::String>(exchange_info_topic_name, 1, true);        // Subscriber
-        get_info_subscriber_ = public_node_handle_.subscribe(exchange_info_topic_name, 10, &RosExchangeInfo::ExchangeInfoTopicCallback, this);        // Actionlib
+        std::string exchange_info_topic_name = private_node_handle_.param<std::string>("exhange_info_topic_name", "/remote/bt_info");               // Publisher
+        send_info_publisher_ = public_node_handle_.advertise<std_msgs::String>(exchange_info_topic_name, 1, true);                                  // Subscriber
+        get_info_subscriber_ = public_node_handle_.subscribe(exchange_info_topic_name, 10, &RosExchangeInfo::ExchangeInfoTopicCallback, this);      // Actionlib
         exchange_info_action_server_.registerPreemptCallback(boost::bind(&RosExchangeInfo::ExchangeInfoActionPreemptCallback, this));
         exchange_info_action_server_.start();
     }    

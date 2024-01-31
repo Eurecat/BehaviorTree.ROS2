@@ -1,0 +1,44 @@
+<launch>
+    <arg name="trees_folder"            default="$(find behavior_tree_ros)/resources/trees" />
+    <arg name="import_from_folder"      default="false" />
+    <arg name="plugins_folder"          default="$(find behavior_tree_ros)/resources/plugins" />
+    <arg name="tick_frequency"          default="30.0" />
+    <arg name="enable_cout_log"         default="true" />
+    <arg name="enable_minitrace_log"    default="false" />
+    <arg name="enable_file_log"         default="false" />
+    <arg name="enable_zmq_log"          default="true" />
+    <arg name="enable_rostopic_log"     default="true" />
+    <arg name="log_folder"              default="/tmp/" />
+    <arg name="robot_namespace"         default="" />
+    
+    <arg name="tree_name"         	    default="BehaviorTreeName" />
+    <arg name="tree_file"         	    default="" />
+    <arg name="tree_uid"         	    default="0" />
+    <arg name="tree_debug"         	    default="true" />
+    <arg name="tree_bb_init"            default="" />
+    <arg name="server_port"             default="0" />
+    <arg name="publisher_port"         	default="0" />
+
+
+    <node pkg="behavior_tree_ros" name="behavior_tree_ros_node" type="behavior_tree_ros_node" output="screen" ns="$(arg tree_name)">
+	<param name="trees_folder"         type="string" value="$(arg trees_folder)" />
+	<param name="import_from_folder"   type="bool"   value="$(arg import_from_folder)" />
+	<param name="plugins_folder"       type="string" value="$(arg plugins_folder)" />
+	<param name="tick_frequency"       type="double" value="$(arg tick_frequency)"   />
+	<param name="enable_cout_log"      type="bool"   value="$(arg enable_cout_log)" />
+	<param name="enable_minitrace_log" type="bool"   value="$(arg enable_minitrace_log)" />
+	<param name="enable_file_log"      type="bool"   value="$(arg enable_file_log)" />
+	<param name="enable_zmq_log"       type="bool"   value="$(arg enable_zmq_log)" />
+	<param name="enable_rostopic_log"  type="bool"   value="$(arg enable_rostopic_log)" />
+	<param name="log_folder"           type="string" value="$(arg log_folder)" />
+
+	<param name="tree_name" 		 type="string" value="$(arg tree_name)"/>
+	<param name="tree_file" 		 type="string" value="$(arg tree_file)"/>
+	<param name="tree_uid" 		     type="int" value="$(arg tree_uid)"/>
+	<param name="tree_debug" 		 type="bool" value="$(arg tree_debug)"/>
+	<param name="tree_bb_init" 	 	 type="string" value="$(arg tree_bb_init)"/>
+	<param name="server_port" 	 	 type="int" value="$(arg server_port)"/>
+	<param name="publisher_port" 	 type="int" value="$(arg publisher_port)"/>
+    </node>
+
+</launch>

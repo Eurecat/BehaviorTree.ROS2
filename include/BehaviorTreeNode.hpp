@@ -12,9 +12,9 @@
 #include <behavior_tree_ros/LoadTree.h>
 #include <behavior_tree_ros/StopTree.h>
 #include <behavior_tree_ros/BehaviorTreeAction.h>
-#include <behavior_tree_ros/TreeStatus.h>
+#include <behavior_tree_ros/TreeExecutionStatus.h>
 #include <behavior_tree_ros/GetTreeStatus.h>
-
+#include <behavior_tree_ros/GetAllTreesStatus.h>
 #include <behaviortree_cpp_v3/bt_factory.h>
 #include <behaviortree_cpp_v3/xml_parsing.h>
 
@@ -28,29 +28,26 @@ namespace BT_ROS
             using PluginsService  = behavior_tree_ros::GetLoadedPlugins;
             using LoadTreeService = behavior_tree_ros::LoadTree;
             using StatusService  = behavior_tree_ros::GetTreeStatus;
+            using StatusAllService  = behavior_tree_ros::GetAllTreesStatus;
             using StopTreeService  = behavior_tree_ros::StopTree;
 
         public:
             BehaviorTreeNode();
             ~BehaviorTreeNode() = default;
-
             void Loop();
 
         private:
             bool GetLoadedPluginsService(PluginsService::Request& _request, PluginsService::Response& _response);
-            bool LoadTree(LoadTreeService::Request& _request, LoadTreeService::Response& _response);
-            bool StopTree(StopTreeService::Request& _request, StopTreeService::Response& _response);
+            bool LoadTree();
+            bool StopTree(std_srvs::Empty::Request& _request, std_srvs::Empty::Response& _response);
             bool StatusTree(StatusService::Request& _request, StatusService::Response& _response);
             void LoadAllPlugins();
             void LoadPluginsFromROS();
             void LoadPluginsFromFolder(const std::string& _plugins_folder);
             void LoadPlugin(const std::string& _plugin_path);
 
-            void RemoveTree(BT_ROS::TreeWrapper * tree);
-
+            void RemoveTree();
             std::string GetFullPath(const std::string& _file) const;
-
-            void PublishExecutionStatus(BT_ROS::TreeWrapper * tree, bool error=false, std::string error_data="");
 
             // Behavior Tree action server callbacks
             void ActionGoalCB();
@@ -63,20 +60,16 @@ namespace BT_ROS
 
             ros::ServiceServer get_loaded_plugins_srv_;
             ros::ServiceServer get_tree_status_srv_;
-            ros::ServiceServer load_tree_srv_;
             ros::ServiceServer stop_tree_srv_;
-
-            ros::Publisher bt_execution_status_publisher_;
 
             void execute_tick(BT_ROS::TreeWrapper * tree);
             
             // Behavior Tree action server
             actionlib::SimpleActionServer<behavior_tree_ros::BehaviorTreeAction> bt_action_server_;
 
-            std::vector<TreeWrapper*> service_trees_;
-            //TreeWrapper service_tree_{"service"};
-            //std::vector<TreeWrapper*> action_trees_ ;
+            TreeWrapper service_tree_{"service"};
             TreeWrapper action_tree_{"action"};
+
             BT::BehaviorTreeFactory bt_factory_;
 
             std::set<std::string> loaded_plugins_;
@@ -87,10 +80,6 @@ namespace BT_ROS
             bool enable_rostopic_log_;
             bool enable_file_log_;
             bool enable_zmq_log_;
-
-            // Execution status report.
-            //BT::NodeStatus status_ { BT::NodeStatus::IDLE };
-            //std::string current_tree_ {};
 
             // Action feedback and status
             behavior_tree_ros::BehaviorTreeFeedback action_feedback_;

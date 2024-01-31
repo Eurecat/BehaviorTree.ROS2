@@ -3,10 +3,13 @@
 #include "yaml-cpp/yaml.h"
 namespace BT_ROS
 {
-    void TreeWrapper::InitializeStatusPublisher(ros::NodeHandle& _public_node_handle, uint8_t uid)
+    void TreeWrapper::InitializeStatusPublisher(ros::NodeHandle& _public_node_handle, std::string tree_name)
     {
-        std::string topic_name = identifier_ == "service" ? "bt_status" : "bt_" + identifier_ + "_status_" + std::to_string(uid);
-        bt_status_publisher_ = _public_node_handle.advertise<std_msgs::String>(topic_name, 1);
+        std::string transition_topic_name = identifier_ == "service" ? "/"+tree_name+"/transition_status" : "/"+tree_name+"/transition_status_" + identifier_;
+        std::string status_topic_name = identifier_ == "service" ? "/"+tree_name+"/execution_status" : "/"+tree_name+"/execution_status_" + identifier_;
+        bt_transition_publisher_ = _public_node_handle.advertise<behavior_tree_ros::Transition>(transition_topic_name, 1);
+        bt_execution_status_publisher_ = _public_node_handle.advertise<behavior_tree_ros::TreeExecutionStatus>(status_topic_name, 100, true);
+        tree_name_ = tree_name;
     }
 
     void TreeWrapper::BuildTree(const std::string& _tree_file, BT::BehaviorTreeFactory& _bt_factory, 
@@ -86,7 +89,10 @@ namespace BT_ROS
         if(_enable_file)
             bt_logger_file_ = std::make_unique<BT::FileLogger>(*tree_, log_file.c_str(), 20, true);
         if(_enable_topic)
-            bt_logger_rostopic_ = std::make_unique<BT_ROS::RosTopicLogger>(*tree_, bt_status_publisher_);
+        {
+            bt_logger_transition_rostopic_ = std::make_unique<BT_ROS::RosTopicTransitionLogger>(*tree_, bt_transition_publisher_);
+            bt_logger_status_rostopic_  = std::make_unique<BT_ROS::RosTopicStatusLogger>(*tree_, bt_execution_status_publisher_,tree_uid_,tree_name_,tree_filename_,execution_time_);
+        }
 
         #ifdef BEHAVIOR_TREE_CPP_ZMQ
         // Set default port for tree called with service and use a different port for the action one
@@ -115,9 +121,49 @@ namespace BT_ROS
         bt_logger_cout_.reset();
         bt_logger_trace_.reset();
         bt_logger_file_.reset();
-        bt_logger_rostopic_.reset();
+        bt_logger_transition_rostopic_.reset();
+        bt_logger_status_rostopic_.reset();
         #ifdef BEHAVIOR_TREE_CPP_ZMQ
         bt_logger_zmq_.reset();
         #endif
+    }
+
+    void TreeWrapper::PublishExecutionStatus(bool error, std::string error_data)
+    {
+        behavior_tree_ros::TreeExecutionStatus status_msg {};
+        status_msg.time_start = execution_time_;
+        status_msg.time = ros::Time::now();
+        status_msg.uid = tree_uid_;
+        status_msg.name = tree_name_;
+        status_msg.file = tree_filename_;
+        if (!error)
+        {
+            switch(status_)
+            {
+                case BT::NodeStatus::FAILURE:
+                    status_msg.status  = "FINISHED";
+                    status_msg.data = "FAILURE";
+                    break;
+                case BT::NodeStatus::RUNNING:
+                    status_msg.status  = "RUNNING";
+                    break;
+                case BT::NodeStatus::SUCCESS:
+                    status_msg.status  = "FINISHED";
+                    status_msg.data = "SUCCESS";
+                    break;
+                case BT::NodeStatus::PAUSED:
+                    status_msg.status  = "PAUSED";
+                    break;
+                default:
+                    status_msg.status  = "IDLE";
+                    break;
+            }
+        }
+        else
+        {
+            status_msg.status    = "CRASHED";
+            status_msg.data      = error_data;
+        }
+        bt_execution_status_publisher_.publish(status_msg);
     }
 }

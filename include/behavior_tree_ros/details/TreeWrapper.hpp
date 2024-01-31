@@ -8,14 +8,13 @@
 #include <atomic>
 
 #include <ros/ros.h>
-#include <std_msgs/String.h>
-
+#include "behavior_tree_ros/Transition.h"
+#include "behavior_tree_ros/TreeExecutionStatus.h"
 #include <behaviortree_cpp_v3/bt_factory.h>
 
 #include <behaviortree_cpp_v3/loggers/bt_cout_logger.h>
 #include <behaviortree_cpp_v3/loggers/bt_file_logger.h>
 #include <behaviortree_cpp_v3/loggers/bt_minitrace_logger.h>
-
 #ifdef BEHAVIOR_TREE_CPP_ZMQ
 #include <behaviortree_cpp_v3/loggers/bt_zmq_publisher.h>
 #endif
@@ -24,17 +23,13 @@
 
 namespace BT_ROS
 {
-    static int tree_UID = 0;
     class TreeWrapper final
     {
         public:
-            TreeWrapper(const std::string& _identifier) : identifier_(_identifier) {
-                tree_UID_ = tree_UID;
-                tree_UID++;
-            };
+            TreeWrapper(const std::string& _identifier) : identifier_(_identifier) {};
             ~TreeWrapper() = default;
 
-            void InitializeStatusPublisher(ros::NodeHandle& _public_node_handle, uint8_t uid = 0);
+            void InitializeStatusPublisher(ros::NodeHandle& _public_node_handle, std::string tree_name);
 
             void BuildTree(const std::string& _xml_file, BT::BehaviorTreeFactory& _bt_factory, 
                 const bool debug = false, const std::string& bb_init_abs_filepath = "");
@@ -43,22 +38,22 @@ namespace BT_ROS
             void InitializeLoggers(const bool& _enable_cout, const bool& _enable_minitrace, const bool& _enable_file,
                                    const bool& _enable_topic, const bool& _enable_zmq, const std::string& _log_folder);
             void ResetLoggers();
-
+            void PublishExecutionStatus(bool error=false, std::string error_data="");
             bool IsTreeLoaded() { return !!tree_; };
             bool AreLoggersInitialized() { return loggers_initialized_.load(); };
             BT::NodeStatus tickTree() { return tree_->tickRoot(); };
-            uint8_t tree_UID_;
-            std::string execution_tree_status {};
-            std::string execution_tree_error {};
-            std::string tree_filename {};
-            ros::Time execution_time;
+
+            std::string execution_tree_status_ {};
+            std::string execution_tree_error_ {};
+            std::string tree_filename_ {};
+            std::string tree_name_ {};
+            std::string tree_bb_init_ {};
+            bool tree_debug_ {false};
+            ros::Time execution_time_;
+            unsigned int tree_uid_;
             unsigned server_port_;
             unsigned publisher_port_;
             BT::NodeStatus status_ { BT::NodeStatus::IDLE };
-            std::thread *t;
-            pthread_cond_t wakeup_signal_;
-            pthread_mutex_t mutex_;
-            bool thread_running_ = false;
         private:
             std::unique_ptr<BT::Tree> tree_;
             std::unique_ptr<BT::StdCoutLogger>   bt_logger_cout_;
@@ -68,8 +63,13 @@ namespace BT_ROS
             std::unique_ptr<BT::PublisherZMQ>    bt_logger_zmq_;
             #endif
 
-            ros::Publisher bt_status_publisher_;
-            std::unique_ptr<BT_ROS::RosTopicLogger> bt_logger_rostopic_;
+            //Transition Publisher
+            ros::Publisher bt_transition_publisher_;
+            std::unique_ptr<BT_ROS::RosTopicTransitionLogger> bt_logger_transition_rostopic_;
+
+            //Status Publisher
+            ros::Publisher bt_execution_status_publisher_;
+            std::unique_ptr<BT_ROS::RosTopicStatusLogger> bt_logger_status_rostopic_;
 
             // Var to differenciate between service and action tree
             std::string identifier_;

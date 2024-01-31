@@ -1,76 +1,111 @@
 #include "bt_rostopic_logger.h"
-
-#include <std_msgs/String.h>
-
+#include "behavior_tree_ros/Transition.h"
+#include "behavior_tree_ros/TreeExecutionStatus.h"
 namespace BT_ROS
 {
-std::atomic<bool> RosTopicLogger::ref_count(false);
+    //std::atomic<bool> RosTopicLogger::ref_count(false);
 
-RosTopicLogger::RosTopicLogger(const BT::Tree& tree, ros::Publisher pub) : BT::StatusChangeLogger(tree.rootNode()), bt_status_publisher_(pub)
-{
-    // It should be ok to have more than one rostopic logger
-    // The user should be responsible of using different topics for each tree if wanted
-
-    // bool expected = false;
-    // if (!ref_count.compare_exchange_strong(expected, true))
-    // {
-    //     throw BT::LogicError("Only one instance of RosTopicLogger shall be created");
-    // }
-    std::cout << "ROSTOPICLOGGER INIT" << std::endl;
-}
-RosTopicLogger::~RosTopicLogger()
-{
-    ref_count.store(false);
-}
-
-void RosTopicLogger::callback(BT::Duration timestamp, const BT::TreeNode& node, BT::NodeStatus prev_status,
-                             BT::NodeStatus status)
-{
-    using namespace std::chrono;
-
-    if (!status_paused && status == BT::NodeStatus::PAUSED)
+    RosTopicTransitionLogger::RosTopicTransitionLogger(const BT::Tree& tree, ros::Publisher pub) : BT::StatusChangeLogger(tree.rootNode()), bt_transition_publisher_(pub)
     {
-        //PUBLISH TREE STATUS PAUSED
-
-        status_paused = true;
     }
-    else if (status_paused && status != BT::NodeStatus::PAUSED)
+    RosTopicTransitionLogger::~RosTopicTransitionLogger()
     {
-        //PUBLISH TREE STATUS RUNNING
-        
-        status_paused = false;
+        //ref_count.store(false);
     }
-    std::cout << "ROSTOPICLOGGER CALLBACK" << status << std::endl;
-   // constexpr const char* whitespaces = "                         ";
-    //constexpr const size_t ws_count = 25;
 
-    //We only publish for action nodes to avoid flooding the channel and ease debugging
-    if(node.type()!=BT::NodeType::ACTION)
-	return;
+    void RosTopicTransitionLogger::callback(BT::Duration timestamp, const BT::TreeNode& node, BT::NodeStatus prev_status,
+                                BT::NodeStatus status)
+    {
+        //We only publish transitions for action nodes to avoid flooding the channel and ease debugging
+        if(node.type()!=BT::NodeType::ACTION)
+        return;
 
-    std_msgs::String msg;
+        behavior_tree_ros::Transition msg;
 
-    std::stringstream ss;
+        msg.uid = node.UID();
+        msg.name = node.name();
+        msg.model = node.registrationName();
+        msg.status = ConvertStatusToString(status);
+        msg.prev_status = ConvertStatusToString(prev_status);
+        bt_transition_publisher_.publish(msg);
+    }
 
-    ss << node.name().c_str() << ": " << toStr(status, true).c_str();
+    void RosTopicTransitionLogger::flush()
+    {
+        //ref_count = false;
+    }
 
-    msg.data = ss.str();
+    std::string RosTopicTransitionLogger::ConvertStatusToString(BT::NodeStatus status)
+    {
+        switch(status)
+        {
+            case BT::NodeStatus::IDLE:
+                return "IDLE";
+                break;
+            case BT::NodeStatus::RUNNING:
+                return "RUNNING";
+                break;
+            case BT::NodeStatus::SUCCESS:
+                return "SUCCESS";
+                break;
+            case BT::NodeStatus::FAILURE:
+                return "FAILURE";
+                break;
+            case BT::NodeStatus::SKIPPED:
+                return "SKIPPED";
+                break;
+            case BT::NodeStatus::PAUSED:
+                return "PAUSED";
+                break;
+            default:
+                return "IDLE";
+                break;
+        }
+    }
 
-    bt_status_publisher_.publish(msg);
+    RosTopicStatusLogger::RosTopicStatusLogger(const BT::Tree& tree, ros::Publisher pub, unsigned int tree_uid, std::string tree_name, std::string tree_file_name, ros::Time start_time) : BT::StatusChangeLogger(tree.rootNode()), bt_execution_status_publisher_(pub)
+    {
+        tree_filename_ = tree_file_name;
+        tree_uid_ = tree_uid;
+        execution_time_ = start_time;
+        tree_name_ = tree_name;
+    }
+    RosTopicStatusLogger::~RosTopicStatusLogger()
+    {
+        //ref_count.store(false);
+    }
 
-    /*double since_epoch = duration<double>(timestamp).count();
-    printf("[%.3f]: %s%s %s -> %s",
-           since_epoch, node.name().c_str(),
-           &whitespaces[std::min(ws_count, node.name().size())],
-           toStr(prev_status, true).c_str(),
-           toStr(status, true).c_str() );
-    std::cout << std::endl;*/
-}
+    void RosTopicStatusLogger::callback(BT::Duration timestamp, const BT::TreeNode& node, BT::NodeStatus prev_status,
+                                BT::NodeStatus status)
+    {
+        if (status == BT::NodeStatus::PAUSED)
+        {
+            behavior_tree_ros::TreeExecutionStatus status_msg {};
+            status_msg.time_start = execution_time_;
+            status_msg.name = tree_name_;
+            status_msg.time = ros::Time::now();
+            status_msg.uid = tree_uid_;
+            status_msg.file = tree_filename_;
+            status_msg.status  = "PAUSED";
+            was_paused = true;
+            bt_execution_status_publisher_.publish(status_msg);
+        }
+        else if (was_paused)
+        {
+            behavior_tree_ros::TreeExecutionStatus status_msg {};
+            status_msg.time_start = execution_time_;
+            status_msg.name = tree_name_;
+            status_msg.time = ros::Time::now();
+            status_msg.uid = tree_uid_;
+            status_msg.file = tree_filename_;
+            status_msg.status  = "RUNNING";
+            was_paused = false;
+            bt_execution_status_publisher_.publish(status_msg);
+        }
+    }
 
-void RosTopicLogger::flush()
-{
-    //std::cout << std::flush;
-	ref_count = false;
-}
-
+    void RosTopicStatusLogger::flush()
+    {
+        //ref_count = false;
+    }
 }   // end namespace
