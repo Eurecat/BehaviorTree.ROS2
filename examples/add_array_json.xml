@@ -64,7 +64,7 @@
             <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
             <output_port name="output" type="double">Output variable</output_port>
         </Action>
-        <Action ID="ConvertJsonToInt64">
+        <Action ID="ConvertJsonToLong">
             <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
             <output_port name="output" type="long">Output variable</output_port>
         </Action>
@@ -72,7 +72,7 @@
             <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
             <output_port name="output" type="std::string">Output variable</output_port>
         </Action>
-        <Action ID="ConvertJsonToUint64">
+        <Action ID="ConvertJsonToULong">
             <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
             <output_port name="output" type="unsigned long">Output variable</output_port>
         </Action>
