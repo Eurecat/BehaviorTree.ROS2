@@ -43,5 +43,6 @@
 
   <export>
       <behavior_tree_ros plugin="${prefix}/plugin_description.xml" />
+      <behavior_tree_ros palette="${prefix}/palette_description.xml" />
   </export>
 </package>
