@@ -161,6 +161,11 @@
         <Action ID="InitializeJson">
             <output_port name="output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Output variable to initialize</output_port>
         </Action>
+        <Action ID="LoadJsonFromFile">
+            <input_port name="file_name" type="std::string">Name of the file</input_port>
+            <input_port name="prefix" type="std::string">Prefix path of the file</input_port>
+            <output_port name="json_object" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Parameter to load as json</output_port>
+        </Action>
         <Action ID="LoadYamlFile">
             <input_port name="file_path" type="std::string">Path to the YAML config file</input_port>
             <output_port name="output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Parameter list as json</output_port>
@@ -254,6 +259,11 @@
             <input_port name="queue_size" type="unsigned int" default="1">Internal publisher queue size</input_port>
             <input_port name="topic" type="std::string">Topic to publish to</input_port>
             <input_port name="wait_subscribers" type="int" default="-1">Wait a certain number of subscribers before publishing. If -1, default behavior, don't wait</input_port>
+        </Action>
+        <Action ID="SaveJsonToFile">
+            <input_port name="file_name" type="std::string">Name of the file</input_port>
+            <input_port name="json_object" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Parameter to save as json</input_port>
+            <input_port name="prefix" type="std::string">Prefix path of the file</input_port>
         </Action>
         <Action ID="SplitStringToJsonArray">
             <input_port name="delimiter" type="std::string" default=";">delimiter to split the sequence</input_port>

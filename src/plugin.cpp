@@ -32,6 +32,8 @@
 #include "behavior_tree_ros/actions/GetTransformOriginNode.hpp"
 #include "behavior_tree_ros/actions/GetTransformAnglesNode.hpp"
 #include "behavior_tree_ros/actions/LoadYamlFileNode.hpp"
+#include "behavior_tree_ros/actions/SaveJsonToFile.hpp"
+#include "behavior_tree_ros/actions/LoadJsonFromFile.hpp"
 
 #include "behavior_tree_ros/actions/TfStampedTransformUtils.hpp"
 
@@ -96,6 +98,8 @@ BT_REGISTER_NODES(factory)
     factory.registerNodeType<GetTransformOriginNode>("GetTransformOrigin");
     factory.registerNodeType<GetTransformAnglesNode>("GetTransformAngles");
     factory.registerNodeType<LoadYamlFileNode>("LoadYamlFile");
+    factory.registerNodeType<SaveJsonToFile>("SaveJsonToFile");
+    factory.registerNodeType<LoadJsonFromFile>("LoadJsonFromFile");
 
     factory.registerNodeType<SerializedSubscriber<std_msgs::Int32>>("MonitorStdInt32");
     factory.registerNodeType<SerializedSubscriber<std_msgs::UInt16>>("MonitorStdUInt16");
