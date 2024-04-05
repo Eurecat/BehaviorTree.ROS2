@@ -109,6 +109,9 @@ using Subscriber = SubscriberNode<MessageType, NoSerialization>;
 
 template <class MessageType>
 using SerializedSubscriber = SubscriberNode<MessageType, JsonSerialization>;
+
+template <class MessageType>
+using SmartSerializedSubscriber = SubscriberNode<MessageType, SmartJsonSerialization>;
 }
 
 #endif

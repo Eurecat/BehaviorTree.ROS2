@@ -162,27 +162,58 @@ namespace serialization
 //Type safety is ensured
 namespace nlohmann
 {
-    template <>
-    struct adl_serializer<RosIntrospection::FlatMessage>
+    struct FlatMessagePtrWithIgnoredFields
     {
-        static void to_json(json& _json, const RosIntrospection::FlatMessage& _flat_message)
-        {
-            const auto& base_name = _flat_message.tree->croot()->value();
+        FlatMessagePtrWithIgnoredFields(RosIntrospection::FlatMessage* base_flat_message_raw_ptr, const int ignore_fields_size = 0)
+            : 
+            flat_msg_ptr_(base_flat_message_raw_ptr),
+            ignore_fields_ptr_(std::make_unique<std::vector<std::string>>(ignore_fields_size))
+        {} 
 
-            for(const auto& entry : _flat_message.name)
+        FlatMessagePtrWithIgnoredFields(RosIntrospection::FlatMessage* base_flat_message_raw_ptr, const std::vector<std::string>& ignore_fields)
+            : FlatMessagePtrWithIgnoredFields(base_flat_message_raw_ptr, ignore_fields.size())
+        {
+            for(const std::string& field : ignore_fields)
+                ignore_fields_ptr_->push_back(field);
+        } 
+
+        std::unique_ptr<RosIntrospection::FlatMessage> flat_msg_ptr_;
+        std::unique_ptr<std::vector<std::string>> ignore_fields_ptr_;
+    };
+
+    template <>
+    struct adl_serializer<FlatMessagePtrWithIgnoredFields>
+    {
+        static void to_json(json& _json, const FlatMessagePtrWithIgnoredFields& _flat_message_ignore_fields)
+        {
+            // /result/avatars/0/data/1
+            // /result/avatars
+            auto fieldShallBeIgnore = [&_flat_message_ignore_fields](const std::string& field_name) -> bool {
+                for(auto it_prefix_to_ignore = _flat_message_ignore_fields.ignore_fields_ptr_->begin(); it_prefix_to_ignore != _flat_message_ignore_fields.ignore_fields_ptr_->end(); it_prefix_to_ignore++)
+                {
+                    if(field_name.find(it_prefix_to_ignore->c_str()) != std::string::npos) return true;
+                }
+                return false;
+            };
+
+            const auto& base_name = _flat_message_ignore_fields.flat_msg_ptr_->tree->croot()->value();
+
+            for(const auto& entry : _flat_message_ignore_fields.flat_msg_ptr_->name)
             {
                 auto field_name = entry.first.toStdString().substr(base_name.size());
                 std::replace(field_name.begin(), field_name.end(), '.', '/');
                 _json[field_name] = entry.second;
             }
 
-            for(const auto& entry : _flat_message.value)
+            for(const auto& entry : _flat_message_ignore_fields.flat_msg_ptr_->value)
             {
                 auto field_name = entry.first.toStdString().substr(base_name.size());
                 std::replace(field_name.begin(), field_name.end(), '.', '/');
 
                 try
                 {
+                    if(fieldShallBeIgnore(field_name)) continue; //field to be ignored
+
                     BT_ROS::serialization::deserializeField(field_name, entry.second, _json);
                 }
                 catch(const std::out_of_range&)
@@ -195,7 +226,7 @@ namespace nlohmann
             //ROS empty messages/services responses are not considered objects
             if(!_json.is_object()) { return; }
             _json = _json.unflatten();
-        }
+        };
     };
 }
 
