@@ -162,50 +162,50 @@ namespace serialization
 //Type safety is ensured
 namespace nlohmann
 {
-    struct FlatMessagePtrWithIgnoredFields
+    struct FlatMessageWithIgnoredFields
     {
-        FlatMessagePtrWithIgnoredFields(RosIntrospection::FlatMessage* base_flat_message_raw_ptr, const int ignore_fields_size = 0)
+        FlatMessageWithIgnoredFields(const RosIntrospection::FlatMessage& base_flat_message, const int ignore_fields_size = 0)
             : 
-            flat_msg_ptr_(base_flat_message_raw_ptr),
-            ignore_fields_ptr_(std::make_unique<std::vector<std::string>>(ignore_fields_size))
+            flat_msg_(base_flat_message),
+            ignore_fields_(std::vector<std::string>(ignore_fields_size))
         {} 
 
-        FlatMessagePtrWithIgnoredFields(RosIntrospection::FlatMessage* base_flat_message_raw_ptr, const std::vector<std::string>& ignore_fields)
-            : FlatMessagePtrWithIgnoredFields(base_flat_message_raw_ptr, ignore_fields.size())
+        FlatMessageWithIgnoredFields(const RosIntrospection::FlatMessage& base_flat_message, const std::vector<std::string>& ignore_fields)
+            : FlatMessageWithIgnoredFields(flat_msg_, ignore_fields.size())
         {
             for(const std::string& field : ignore_fields)
-                ignore_fields_ptr_->push_back(field);
+                ignore_fields_.push_back(field);
         } 
 
-        std::unique_ptr<RosIntrospection::FlatMessage> flat_msg_ptr_;
-        std::unique_ptr<std::vector<std::string>> ignore_fields_ptr_;
+        const RosIntrospection::FlatMessage& flat_msg_;
+        std::vector<std::string> ignore_fields_;
     };
 
     template <>
-    struct adl_serializer<FlatMessagePtrWithIgnoredFields>
+    struct adl_serializer<FlatMessageWithIgnoredFields>
     {
-        static void to_json(json& _json, const FlatMessagePtrWithIgnoredFields& _flat_message_ignore_fields)
+        static void to_json(json& _json, const FlatMessageWithIgnoredFields& _flat_message_ignore_fields)
         {
             // /result/avatars/0/data/1
             // /result/avatars
             auto fieldShallBeIgnore = [&_flat_message_ignore_fields](const std::string& field_name) -> bool {
-                for(auto it_prefix_to_ignore = _flat_message_ignore_fields.ignore_fields_ptr_->begin(); it_prefix_to_ignore != _flat_message_ignore_fields.ignore_fields_ptr_->end(); it_prefix_to_ignore++)
+                for(const auto& prefix_to_ignore : _flat_message_ignore_fields.ignore_fields_)
                 {
-                    if(field_name.find(it_prefix_to_ignore->c_str()) != std::string::npos) return true;
+                    if(field_name.find(prefix_to_ignore.c_str()) != std::string::npos) return true;
                 }
                 return false;
             };
 
-            const auto& base_name = _flat_message_ignore_fields.flat_msg_ptr_->tree->croot()->value();
+            const auto& base_name = _flat_message_ignore_fields.flat_msg_.tree->croot()->value();
 
-            for(const auto& entry : _flat_message_ignore_fields.flat_msg_ptr_->name)
+            for(const auto& entry : _flat_message_ignore_fields.flat_msg_.name)
             {
                 auto field_name = entry.first.toStdString().substr(base_name.size());
                 std::replace(field_name.begin(), field_name.end(), '.', '/');
                 _json[field_name] = entry.second;
             }
 
-            for(const auto& entry : _flat_message_ignore_fields.flat_msg_ptr_->value)
+            for(const auto& entry : _flat_message_ignore_fields.flat_msg_.value)
             {
                 auto field_name = entry.first.toStdString().substr(base_name.size());
                 std::replace(field_name.begin(), field_name.end(), '.', '/');

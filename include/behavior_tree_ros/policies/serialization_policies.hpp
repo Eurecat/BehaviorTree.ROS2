@@ -73,7 +73,7 @@ struct JsonSerialization
                                                   RosIntrospection::Span<uint8_t>(buffer_), &flat_message_, buffer_.size());
  
             //Serialization is done in to_json() function (serialization.hpp)
-            nlohmann::json serialized_json = flat_deserialize_result? nlohmann::FlatMessagePtrWithIgnoredFields(&flat_message_) : nlohmann::json{};
+            nlohmann::json serialized_json = flat_deserialize_result? nlohmann::FlatMessageWithIgnoredFields(flat_message_) : nlohmann::json{};
             _tree_node.setOutput("serialized_" + _base_port_name, serialized_json);
         }
  
@@ -133,7 +133,7 @@ struct SmartJsonSerialization
                                                   RosIntrospection::Span<uint8_t>(buffer_), &flat_message_, buffer_.size());
 
             //Serialization is done in to_json() function (serialization.hpp)
-            nlohmann::json serialized_json = flat_deserialize_result? nlohmann::FlatMessagePtrWithIgnoredFields(&flat_message_, ignore_fields) : nlohmann::json{};
+            nlohmann::json serialized_json = flat_deserialize_result? nlohmann::FlatMessageWithIgnoredFields(flat_message_, ignore_fields) : nlohmann::json{};
             processMsgPostSerialization(_message, serialized_json, _tree_node);
             _tree_node.setOutput("serialized_" + _base_port_name, serialized_json);
         }
