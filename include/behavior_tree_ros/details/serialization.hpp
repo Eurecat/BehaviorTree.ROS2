@@ -173,7 +173,11 @@ namespace nlohmann
         FlatMessageWithIgnoredFields(const RosIntrospection::FlatMessage& base_flat_message, const std::vector<std::string>& ignore_fields)
             : FlatMessageWithIgnoredFields(base_flat_message, ignore_fields.size())
         {
-            ignore_fields_ = ignore_fields; 
+            for(size_t i = 0; i<ignore_fields_.size(); i++)
+                if(ignore_fields[i].find_last_of('/') != std::string::npos && ignore_fields[i].find_last_of('/') == ignore_fields[i].size()-1)
+                    ignore_fields_[i] = ignore_fields[i];
+                else
+                    ignore_fields_[i] = ignore_fields[i] + "/"; // add slash if missing to consider only "whole-name" for fields
         } 
 
         const RosIntrospection::FlatMessage& flat_msg_;
