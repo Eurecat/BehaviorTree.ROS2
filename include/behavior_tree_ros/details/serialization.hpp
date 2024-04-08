@@ -171,7 +171,7 @@ namespace nlohmann
         {} 
 
         FlatMessageWithIgnoredFields(const RosIntrospection::FlatMessage& base_flat_message, const std::vector<std::string>& ignore_fields)
-            : FlatMessageWithIgnoredFields(flat_msg_, ignore_fields.size())
+            : FlatMessageWithIgnoredFields(base_flat_message, ignore_fields.size())
         {
             for(const std::string& field : ignore_fields)
                 ignore_fields_.push_back(field);
@@ -186,8 +186,6 @@ namespace nlohmann
     {
         static void to_json(json& _json, const FlatMessageWithIgnoredFields& _flat_message_ignore_fields)
         {
-            // /result/avatars/0/data/1
-            // /result/avatars
             auto fieldShallBeIgnore = [&_flat_message_ignore_fields](const std::string& field_name) -> bool {
                 for(const auto& prefix_to_ignore : _flat_message_ignore_fields.ignore_fields_)
                 {
@@ -195,16 +193,13 @@ namespace nlohmann
                 }
                 return false;
             };
-
             const auto& base_name = _flat_message_ignore_fields.flat_msg_.tree->croot()->value();
-
             for(const auto& entry : _flat_message_ignore_fields.flat_msg_.name)
             {
                 auto field_name = entry.first.toStdString().substr(base_name.size());
                 std::replace(field_name.begin(), field_name.end(), '.', '/');
                 _json[field_name] = entry.second;
             }
-
             for(const auto& entry : _flat_message_ignore_fields.flat_msg_.value)
             {
                 auto field_name = entry.first.toStdString().substr(base_name.size());
@@ -213,7 +208,6 @@ namespace nlohmann
                 try
                 {
                     if(fieldShallBeIgnore(field_name)) continue; //field to be ignored
-
                     BT_ROS::serialization::deserializeField(field_name, entry.second, _json);
                 }
                 catch(const std::out_of_range&)
