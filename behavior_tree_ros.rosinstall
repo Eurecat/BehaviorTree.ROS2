@@ -1,0 +1,4 @@
+- git:
+    local-name: behavior_tree_cpp
+    uri: git@github.com:haru-project/BehaviorTree.CPP.git
+    version: develop
