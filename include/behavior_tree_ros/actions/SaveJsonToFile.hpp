@@ -46,11 +46,7 @@ class SaveJsonToFile final : public BT::SyncActionNode
             }
 
             path_ += prefix.value();
-            boost::filesystem::path dir2(path_);
-            if(!(boost::filesystem::exists(dir2))){
-                if ( !boost::filesystem::create_directory(dir2) )
-                    return BT::NodeStatus::FAILURE;
-            }
+            boost::filesystem::create_directories(path_);
 
 
             //check if the path exist
