@@ -23,9 +23,21 @@ namespace BT_ROS
                 YAML::Node config = YAML::LoadFile(bb_init_abs_filepath);
                 for(YAML::const_iterator it=config.begin();it!=config.end();++it)
                 {
-                    ROS_INFO("Init. BB key [\"%s\"] with value \"%s\"", it->first.as<std::string>().c_str(), it->second.as<std::string>().c_str());
+                    const std::string& bbentry_key = it->first.as<std::string>();
+                    std::string bbentry_value = it->second.as<std::string>();
+                    if(BT::TreeNode::isBlackboardPointer(bbentry_value))
+                    {
+                        const auto opt_val = blackboard_ptr->getAsString(static_cast<std::string>(BT::TreeNode::stripBlackboardPointer(bbentry_value)).c_str());
+                        if(!opt_val)
+                        {
+                            ROS_ERROR("Init. BB key %s did not succeed because it references entry %s which is unknown yet", bbentry_key.c_str(), static_cast<std::string>(BT::TreeNode::stripBlackboardPointer(bbentry_value)).c_str());
+                            continue;
+                        }
+                        bbentry_value = opt_val.value();
+                    }
+                    ROS_INFO("Init. BB key [\"%s\"] with value \"%s\"", bbentry_key.c_str(), bbentry_value.c_str());
                     // use the string here and blackboard_ptr->set(...)
-                    blackboard_ptr->set(it->first.as<std::string>(), it->second.as<std::string>());
+                    blackboard_ptr->set(bbentry_key, bbentry_value);
                 }
             }
             catch(const YAML::Exception& ex) 
