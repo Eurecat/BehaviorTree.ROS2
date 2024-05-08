@@ -1,4 +1,4 @@
 string tree_file
 bool debug
-string bb_init_file
+string[] bb_init_files
 ---
