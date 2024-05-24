@@ -108,7 +108,7 @@ install(TARGETS ${${PROJECT_NAME}_targets}
 add_custom_command(
   OUTPUT ${CATKIN_DEVEL_PREFIX}/btros_so2xml.sh
   POST_BUILD 
-  COMMAND ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_BIN_DESTINATION}/bt3_so2xml.sh ${CMAKE_CURRENT_SOURCE_DIR}/plugin_description.xml ${CMAKE_CURRENT_SOURCE_DIR}/palette_description.xml ${CMAKE_CURRENT_SOURCE_DIR} ${CATKIN_DEVEL_PREFIX}
+  COMMAND ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_BIN_DESTINATION}/bt3_so2xml.sh ${CMAKE_CURRENT_SOURCE_DIR}/plugin_description.xml ${CMAKE_CURRENT_SOURCE_DIR}/palette_description.xml ${CMAKE_CURRENT_SOURCE_DIR} ${CATKIN_DEVEL_PREFIX} --source-ros
   VERBATIM
 )
 add_custom_target(execute_script ALL DEPENDS ${CATKIN_DEVEL_PREFIX}/btros_so2xml.sh)
