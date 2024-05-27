@@ -10,28 +10,48 @@ namespace BT_ROS
     }
 
     void TreeWrapper::BuildTree(const std::string& _tree_file, BT::BehaviorTreeFactory& _bt_factory, 
-        const bool debug, const std::string& bb_init_abs_filepath)
+        const bool debug, const std::vector<std::string>& bb_init_abs_filepaths)
     {
         ResetLoggers();
         
         BT::Blackboard::Ptr blackboard_ptr = BT::Blackboard::create();
         
-        if(bb_init_abs_filepath.length() > 0)
+        if(bb_init_abs_filepaths.size() > 0)
         {
-             try {
-                ROS_INFO("Initializing BB from YAML file %s", bb_init_abs_filepath.c_str());
-                YAML::Node config = YAML::LoadFile(bb_init_abs_filepath);
-                for(YAML::const_iterator it=config.begin();it!=config.end();++it)
+            for(const auto& bb_init_abs_filepath: bb_init_abs_filepaths)
+            {
+                if(bb_init_abs_filepath.length() < 1) continue;
+
+                try 
                 {
-                    ROS_INFO("Init. BB key [\"%s\"] with value \"%s\"", it->first.as<std::string>().c_str(), it->second.as<std::string>().c_str());
-                    // use the string here and blackboard_ptr->set(...)
-                    blackboard_ptr->set(it->first.as<std::string>(), it->second.as<std::string>());
+                    ROS_INFO("Initializing BB from YAML file %s", bb_init_abs_filepath.c_str());
+                    YAML::Node config = YAML::LoadFile(bb_init_abs_filepath);
+                    for(YAML::const_iterator it=config.begin();it!=config.end();++it)
+                    {
+                        const std::string& bb_key = it->first.as<std::string>();
+                        std::string bb_val = it->second.as<std::string>();
+                        const BT::Optional<std::string> bbentry_value_inferred_keyvalues = blackboard_ptr->replaceKeysWithStringValues(bb_val, true); // no effect if it has no key
+                        if(!bbentry_value_inferred_keyvalues)
+                        {
+                            // but will complain if it has a reference to a wrong key
+                            ROS_ERROR("Init. of BB key %s for value %s did not succeed: %s", 
+                                bb_key.c_str(), 
+                                bb_val.c_str(),
+                                bbentry_value_inferred_keyvalues.error().c_str());
+                            continue; // and skip this init
+                        }
+                        else
+                            bb_val = bbentry_value_inferred_keyvalues.value();
+
+                        ROS_INFO("Init. BB key [\"%s\"] with value \"%s\"", bb_key.c_str(), bb_val.c_str());
+                        // use the string here and blackboard_ptr->set(...)
+                        blackboard_ptr->set(bb_key, bb_val);
+                    }
                 }
-            }
-            catch(const YAML::Exception& ex) 
-            { 
-                ROS_ERROR("Init. BB key: %s", ex.what());
-                /* */ 
+                catch(const YAML::Exception& ex) 
+                { 
+                    ROS_ERROR("Init. BB key from file '%s' did not succeed: %s", bb_init_abs_filepath.c_str(), ex.what());
+                }
             }
         }
 

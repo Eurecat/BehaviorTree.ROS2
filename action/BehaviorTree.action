@@ -1,7 +1,7 @@
 # Define the goal
 std_msgs/String tree_file  
 bool debug
-std_msgs/String bb_init_file
+std_msgs/String[] bb_init_files
 ---
 # Define the result
 bool result 
