@@ -8,10 +8,12 @@ int main(int argc, char **argv)
 
     BT_ROS::BehaviorTreeServer behavior_tree_server ;
 
-   // ros::spin();
+    //ros::spin();
+    ros::Rate r(10);
     while(ros::ok())
     {
         ros::spinOnce();
+        r.sleep();
     }
 
     return 0;

@@ -99,6 +99,8 @@
             <input_port name="action" type="std::string">Actionlib action server name</input_port>
             <input_port name="bb_init_files.data" type="std::string">Auto-generated field from behavior_tree_ros::BehaviorTreeGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
             <input_port name="debug" type="bool">Auto-generated field from behavior_tree_ros::BehaviorTreeGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
+            <input_port name="publisher_port" type="unsigned int">Auto-generated field from behavior_tree_ros::BehaviorTreeGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
+            <input_port name="server_port" type="unsigned int">Auto-generated field from behavior_tree_ros::BehaviorTreeGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
             <input_port name="tree_file.data" type="std::string">Auto-generated field from behavior_tree_ros::BehaviorTreeGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
             <output_port name="state" type="actionlib::SimpleClientGoalState">Actionlib reported state</output_port>
         </Action>

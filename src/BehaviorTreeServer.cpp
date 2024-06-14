@@ -105,22 +105,37 @@ namespace BT_ROS
         std::string param_file = " tree_file:="+_request.tree_file;
         std::string param_uid = " tree_uid:="+std::to_string(trees_UID);
         std::string param_debug =" tree_debug:="+std::to_string(_request.debug);
-        std::string param_bb_init = " tree_bb_init:="+_request.bb_init_file;
+
+        std::string param_bb_init = " tree_bb_init:='";
+        if (_request.bb_init_files.size()> 0)
+        {
+            param_bb_init += "[";
+            for (long unsigned int i = 0; i < _request.bb_init_files.size(); i++)
+            {
+                param_bb_init += _request.bb_init_files[i];
+                if (i != (_request.bb_init_files.size()-1))
+                     param_bb_init += ",";
+            }
+            param_bb_init += "]'";
+        }
+        else
+            param_bb_init += "";
+
         std::string param_server_port = " server_port:="+std::to_string(_request.server_port);  
         std::string param_pub_port =" publisher_port:="+std::to_string(_request.publisher_port);
         
         ////////////////////////Version1////////////////////////
-       /* std::string command = "roslaunch behavior_tree_ros behavior_tree_spawner.launch"+param_name+param_file+param_uid+param_debug+param_bb_init+param_server_port+param_pub_port;
+        std::string command = "roslaunch behavior_tree_ros behavior_tree_spawner.launch"+param_name+param_file+param_uid+param_debug+param_bb_init+param_server_port+param_pub_port;
         int result = system(command.c_str());
         if (result == -1)
         {
             ROS_ERROR("Failed to execute roslaunch command");
             return false;
-        }*/
+        }
         ////////////////////////////////////////////////////////
         
         ////////////////////////Version2////////////////////////
-        pid_t pid;
+        /*pid_t pid;
         try {
             pid = ros_launch_manager.start(
                  "behavior_tree_ros", "behavior_tree_spawner.launch",
@@ -141,7 +156,7 @@ namespace BT_ROS
         std::string topic_name = "/"+tree_name+"/execution_status";
         new_process_info.status_subscriber =  public_node_handle_.subscribe(topic_name, 10, &BehaviorTreeServer::StatusTopicCallbackServer, this);
         uids_to_tree_info.emplace(trees_UID,new_process_info);
-        ////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////*/
         
         ROS_INFO("LOADING %s OK", tree_name.c_str());
         return true;

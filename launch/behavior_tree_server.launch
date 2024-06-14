@@ -2,13 +2,5 @@
     # Load Behavior Tree Server Node
     <node pkg="behavior_tree_ros" name="behavior_tree_ros_server" type="behavior_tree_ros_server" output="screen"/>
 
-    # Load the Trees using the load_tree Service
-    <node pkg="rosservice" type="rosservice" name="load_hem2_tree"
-          args="call --wait /behavior_tree_server/load_tree '{tree_file: '$(find haru_encouraging_mediator)/trees/episodes/talking_room_episode_2.te.xml', debug: false, bb_init_file: '$(find haru_encouraging_mediator)/configuration/hem_configuration_2.yaml', publisher_port: 1666, server_port: 1667, }'" />
     
-    <node pkg="rosservice" type="rosservice" name="load_gaze_test_tree"
-          args="call --wait /behavior_tree_server/load_tree '{tree_file: '/home/coghri/Data/gaze_test.xml', debug: false, bb_init_file:'', publisher_port: 1668, server_port: 1669 }'" />
-    
-    <node pkg="rosservice" type="rosservice" name="load_gaze_test1_tree"
-          args="call --wait /behavior_tree_server/load_tree '{tree_file: '/home/coghri/Data/gaze_test.xml', debug: false, bb_init_file:'', publisher_port: 1670, server_port: 1671 }'" />
 </launch>

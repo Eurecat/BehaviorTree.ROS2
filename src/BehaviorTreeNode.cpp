@@ -12,6 +12,7 @@ namespace BT_ROS
         loop_rate_(private_node_handle_.param("tick_frequency", 30.0)),
         bt_action_server_(public_node_handle_, "behavior_tree/load_tree_action", false)
     {
+        ROS_INFO("INSTANTIATING BTNODE");
         private_node_handle_.getParam("trees_folder", trees_folder_);
 
         enable_cout_log_        = private_node_handle_.param("enable_cout_log", false);
@@ -24,13 +25,25 @@ namespace BT_ROS
         int uid = 0;
         int server_port = 0;
         int publisher_port = 0;
+
+        std::string bb_init = "";
         private_node_handle_.param<std::string>("tree_name",service_tree_.tree_name_, "");
         private_node_handle_.param<std::string>("tree_file",service_tree_.tree_filename_, "");
-        private_node_handle_.param<std::string>("tree_bb_init",service_tree_.tree_bb_init_, "");
+        private_node_handle_.param<std::string>("tree_bb_init",bb_init, "");
         private_node_handle_.param<int>("tree_uid",uid, 1);
         service_tree_.tree_debug_ = private_node_handle_.param("tree_debug", false);
         private_node_handle_.param<int>("server_port", server_port, 0);
         private_node_handle_.param<int>("publisher_port", publisher_port,0);
+
+        bb_init.erase(std::remove(bb_init.begin(), bb_init.end(),'['), bb_init.end());
+        bb_init.erase(std::remove(bb_init.begin(), bb_init.end(),']'), bb_init.end());
+        
+        std::stringstream bb_init_stream(bb_init);
+        std::string s;
+        while (getline(bb_init_stream, s, ',')) {
+            // store token string in the vector
+            service_tree_.tree_bb_init_.push_back(s);
+        }   
 
         const char* home = getenv("HOME");
         log_folder_ = private_node_handle_.param<std::string>("log_folder", "/tmp/");

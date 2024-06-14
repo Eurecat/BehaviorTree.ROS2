@@ -48,7 +48,7 @@ namespace BT_ROS
             std::string execution_tree_error_ {};
             std::string tree_filename_ {};
             std::string tree_name_ {};
-            std::string tree_bb_init_ {};
+            std::vector<std::string> tree_bb_init_ {};
             bool tree_debug_ {false};
             ros::Time execution_time_;
             unsigned int tree_uid_;
