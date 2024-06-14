@@ -191,6 +191,12 @@ template <class ActionType>
 using AutomaticSimpleActionClient = SimpleActionClientNode<ActionType, AutomaticDeserialization,
                                                                        JsonSerialization,
                                                                        JsonSerialization>;
+
+
+template <class ActionType>
+using AutomaticSmartSimpleActionClient = SimpleActionClientNode<ActionType, AutomaticDeserialization,
+                                                                       SmartJsonSerialization,
+                                                                       SmartJsonSerialization>;
 }
 
 #endif

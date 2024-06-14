@@ -176,9 +176,7 @@ namespace BT_ROS
             // Note: I'm saving the tree_file instead of
             // the full path to be consistent with the original request.
 
-            service_tree_.BuildTree(full_path, bt_factory_, service_tree_.tree_debug_, service_tree_.tree_bb_init_);
-            service_tree_.server_port_ = service_tree_.server_port_ == 0 ? 1667 : service_tree_.server_port_;
-            service_tree_.publisher_port_ = service_tree_.publisher_port_ == 0 ? 1666 : service_tree_.publisher_port_;
+            service_tree_.BuildTree(full_path, bt_factory_, _request.debug, _request.bb_init_files);
             service_tree_.InitializeLoggers(enable_cout_log_, enable_minitrace_log_, enable_file_log_, enable_rostopic_log_, enable_zmq_log_, log_folder_);
 
             ROS_INFO("Loaded tree %s", full_path.c_str());
@@ -417,7 +415,12 @@ namespace BT_ROS
         try
         {
             ROS_INFO("Loading action tree %s", full_path.c_str());
-            action_tree_.BuildTree(full_path, bt_factory_, goal->debug, goal->bb_init_file.data);
+            std::vector<std::string> initbb_yaml_filepaths{};
+            for(auto initbbyaml_path_it = goal->bb_init_files.begin(); initbbyaml_path_it != goal->bb_init_files.end(); initbbyaml_path_it++)
+            {
+                initbb_yaml_filepaths.push_back(std::string{initbbyaml_path_it->data});
+            }
+            action_tree_.BuildTree(full_path, bt_factory_, goal->debug, initbb_yaml_filepaths);
 
             // If the service tree is loaded it means that the action was called from the remote BT block
             // As such, don't show status messages through the terminal

@@ -116,7 +116,23 @@ install(TARGETS ${${PROJECT_NAME}_targets}
         INCLUDES DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
+#Generate Automatically the Palette .xml
+add_custom_command(
+  OUTPUT ${CATKIN_DEVEL_PREFIX}/btros_so2xml.sh
+  POST_BUILD 
+  COMMAND ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_BIN_DESTINATION}/bt3_so2xml.sh ${CMAKE_CURRENT_SOURCE_DIR}/plugin_description.xml ${CMAKE_CURRENT_SOURCE_DIR}/palette_description.xml ${CMAKE_CURRENT_SOURCE_DIR} ${CATKIN_DEVEL_PREFIX} --source-ros
+  VERBATIM
+)
+add_custom_target(execute_script ALL DEPENDS ${CATKIN_DEVEL_PREFIX}/btros_so2xml.sh)
+
+add_dependencies(
+  execute_script ${PROJECT_NAME}_plugin
+)
+
+
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 install(DIRECTORY launch/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
 
 install(FILES plugin_description.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+install(FILES palette_description.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+install(DIRECTORY palettes/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/palettes)

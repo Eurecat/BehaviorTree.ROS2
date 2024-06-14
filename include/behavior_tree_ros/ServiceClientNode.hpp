@@ -135,6 +135,9 @@ using SerializedResponseServiceClient = ServiceClientNode<MessageType, NoDeseria
 
 template <class MessageType>
 using AutomaticServiceClient = ServiceClientNode<MessageType, AutomaticDeserialization, JsonSerialization>;
+
+template <class MessageType>
+using AutomaticSmartServiceClient = ServiceClientNode<MessageType, AutomaticDeserialization, SmartJsonSerialization>;
 }
 
 #endif

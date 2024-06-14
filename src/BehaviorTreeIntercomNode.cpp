@@ -82,10 +82,13 @@ namespace BT_ROS
 
         // Wait for SYNC handshake message from the other side every 2 second
         ROS_INFO("SERVER: Waiting FOR SYNC message %d [%d-%s]", my_seq_id_, _goal_msg->request.seq_id, _goal_msg->request.message.c_str());
-        while(!sync_received_.load() && !action_cancelled_.load())
+        bool cancelled = action_cancelled_.load();
+        while(!sync_received_.load() && !cancelled)
         {
             usleep(100000);
+            cancelled = action_cancelled_.load();
         }
+        if (cancelled) return;
 
         //Send SYNC_ACK periodically
         msg_to_send_.message = SYNC_ACK_MSG;
