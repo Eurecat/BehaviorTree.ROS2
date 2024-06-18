@@ -189,7 +189,7 @@ namespace BT_ROS
             // Note: I'm saving the tree_file instead of
             // the full path to be consistent with the original request.
 
-            service_tree_.BuildTree(full_path, bt_factory_, _request.debug, _request.bb_init_files);
+            service_tree_.BuildTree(full_path, bt_factory_, service_tree_.tree_debug_, service_tree_.tree_bb_init_);
             service_tree_.InitializeLoggers(enable_cout_log_, enable_minitrace_log_, enable_file_log_, enable_rostopic_log_, enable_zmq_log_, log_folder_);
 
             ROS_INFO("Loaded tree %s", full_path.c_str());
