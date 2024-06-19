@@ -32,8 +32,8 @@ namespace BT_ROS
         private_node_handle_.param<std::string>("tree_bb_init",bb_init, "");
         private_node_handle_.param<int>("tree_uid",uid, 1);
         service_tree_.tree_debug_ = private_node_handle_.param("tree_debug", false);
-        private_node_handle_.param<int>("server_port", server_port, 0);
-        private_node_handle_.param<int>("publisher_port", publisher_port,0);
+        private_node_handle_.param<int>("server_port", server_port, 1667);
+        private_node_handle_.param<int>("publisher_port", publisher_port,1666);
 
         bb_init.erase(std::remove(bb_init.begin(), bb_init.end(),'['), bb_init.end());
         bb_init.erase(std::remove(bb_init.begin(), bb_init.end(),']'), bb_init.end());

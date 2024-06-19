@@ -121,8 +121,18 @@ namespace BT_ROS
         else
             param_bb_init += "";
 
-        std::string param_server_port = " server_port:="+std::to_string(_request.server_port);  
-        std::string param_pub_port =" publisher_port:="+std::to_string(_request.publisher_port);
+        //Set default port IDs
+        int server_port = 1667;
+        int publisher_port = 1666;
+
+        //Get port parameters
+        if (_request.server_port > 0)
+            server_port = _request.server_port;
+        if (_request.publisher_port > 0)
+            publisher_port = _request.publisher_port;
+
+        std::string param_server_port = " server_port:="+std::to_string(server_port);  
+        std::string param_pub_port =" publisher_port:="+std::to_string(publisher_port);
         
         ////////////////////////Version1////////////////////////
         std::string command = "roslaunch behavior_tree_ros behavior_tree_spawner.launch"+param_name+param_file+param_uid+param_debug+param_bb_init+param_server_port+param_pub_port;
