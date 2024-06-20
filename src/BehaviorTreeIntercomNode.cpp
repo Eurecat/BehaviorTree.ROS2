@@ -150,9 +150,9 @@ namespace BT_ROS
 
     void RosHandShake::ThreeWayHandShakeTopicCallbackClient(const behavior_tree_ros::HandShake& _topic_msg)
     {
-                if(my_seq_id_ == _topic_msg.seq_id)
+        if(my_seq_id_ == _topic_msg.seq_id)
         {
-                        // NORMAL CASE
+            // NORMAL CASE
             if(_topic_msg.message == SYNC_ACK_MSG)
             {
                 data_rx = _topic_msg.data;
@@ -172,7 +172,7 @@ namespace BT_ROS
             // CLIENT IS AT STAGE N+x, COMMUNICATE FINAL ACK FOR STAGE N, SO THAT SERVER CAN REACH US
             if(_topic_msg.message == SYNC_ACK_MSG)
             {
-		 data_rx = _topic_msg.data;
+		        data_rx = _topic_msg.data;
                 HandShake msg_to_send;
                 msg_to_send.message = FINAL_ACK_MSG;
                 msg_to_send.seq_id = _topic_msg.seq_id;
