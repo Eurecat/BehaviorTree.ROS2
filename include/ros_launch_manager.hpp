@@ -62,9 +62,9 @@ public:
                 
                 ::signal(SIGINT, SIG_IGN);
                 
-                ::fclose(stdout);
+                /*::fclose(stdout);
                 ::fclose(stdin);
-                ::fclose(stderr);
+                ::fclose(stderr);*/
 
                 ::execlp("roslaunch", "roslaunch", args..., nullptr);
             }
