@@ -41,14 +41,12 @@ add_action_files(
   FILES
   BehaviorTree.action
   PerformHandShake.action
-  PerformHandShakeData.action
   ExchangeInfo.action
 )
 
 add_message_files(
     FILES
         HandShake.msg
-        HandShakeData.msg
         ExecutionStatus.msg
 )
 

@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <root main_tree_to_execute="BehaviorTree">
+    <include path="palettes/behavior_tree_ros_palette.xml" ros_pkg="behavior_tree_ros"/>
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
         <Sequence>
@@ -7,7 +8,7 @@
             <Loop>
                 <Sequence>
                     <WaitSeconds duration="2"/>
-                    <Action ID="BTCommandHandShakeAction" action="/behavior_tree/handshake" request.message="TEST" request.seq_id="${seq_id}" serialized_feedback="${feed}" serialized_result="${res}" state="${state}"/>
+                    <Action ID="BTCommandHandShakeAction" action="/behavior_tree/handshake" request.data=" " request.message="TEST" request.seq_id="${seq_id}" serialized_feedback="${feed}" serialized_result="${res}" state="${state}"/>
                     <MathOperationShort first="${seq_id}" operator="+" output="${seq_id}" second="1"/>
                 </Sequence>
             </Loop>
@@ -15,14 +16,7 @@
     </BehaviorTree>
     <!-- ////////// -->
     <TreeNodesModel>
-        <Action ID="BTCommandHandShakeAction" description="">
-            <input_port name="action" type="std::string">Actionlib action server name</input_port>
-            <input_port name="request.message" type="std::string">Auto-generated field from behavior_tree_ros::PerformHandShakeGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
-            <input_port name="request.seq_id" type="unsigned short">Auto-generated field from behavior_tree_ros::PerformHandShakeGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
-            <output_port name="serialized_feedback" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [behavior_tree_ros::PerformHandShakeFeedback_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
-            <output_port name="serialized_result" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [behavior_tree_ros::PerformHandShakeResult_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
-            <output_port name="state" type="actionlib::SimpleClientGoalState">Actionlib reported state</output_port>
-        </Action>
+        <SubTree ID="BehaviorTree" description=""/>
     </TreeNodesModel>
     <!-- ////////// -->
 </root>

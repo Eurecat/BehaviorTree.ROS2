@@ -1,5 +1,6 @@
 HandShake request
 ---
 bool result
+string data
 ---
 string feedback
