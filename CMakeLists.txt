@@ -13,6 +13,8 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}  "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
 find_package(catkin REQUIRED
     COMPONENTS
         roscpp
@@ -29,6 +31,15 @@ find_package(catkin REQUIRED
 find_package(behavior_tree_cpp REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
+
+find_package(ZMQ)
+if( ZMQ_FOUND )
+    add_definitions( -DBT_SERVER_SYNC )
+    message(STATUS "ZeroMQ found.")
+    add_definitions( -DZMQ_FOUND )
+else()
+    message(WARNING "ZeroMQ NOT found.")
+endif()
 
 ## Generate actions in the 'action' folder
 add_action_files(
@@ -108,6 +119,16 @@ target_link_libraries(${PROJECT_NAME}_server PRIVATE ${catkin_LIBRARIES})
 target_compile_options(${PROJECT_NAME}_server PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 add_dependencies(${PROJECT_NAME}_server ${${PROJECT_NAME}_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_server)
+
+if(ZMQ_FOUND)
+    target_link_libraries(${PROJECT_NAME}_server PRIVATE
+    zmq)
+    target_link_libraries(${PROJECT_NAME}_node PRIVATE
+    zmq)
+    target_include_directories(${PROJECT_NAME}_server PRIVATE
+        ${ZMQ_INCLUDE_DIRS} )
+    target_compile_definitions(${PROJECT_NAME}_server PRIVATE ZMQ_FOUND)
+endif()
 
 install(TARGETS ${${PROJECT_NAME}_targets}
         ARCHIVE  DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

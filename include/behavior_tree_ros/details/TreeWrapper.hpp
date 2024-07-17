@@ -21,13 +21,14 @@
 #endif
 
 #include "bt_rostopic_logger.h"
-
+#include <zmq.hpp>
+#include <behaviortree_cpp_v3/flatbuffers/bt_flatbuffer_helper.h>
 namespace BT_ROS
 {
     class TreeWrapper final
     {
         public:
-            TreeWrapper(const std::string& _identifier) : identifier_(_identifier) {};
+            TreeWrapper(const std::string& _identifier) : context_(1), client_sub_(context_, ZMQ_SUB), client_pub_(context_, ZMQ_PUB) , identifier_(_identifier) {}  ;
             ~TreeWrapper() = default;
 
             void InitializeStatusPublisher(ros::NodeHandle& _public_node_handle, std::string tree_name);
@@ -43,7 +44,11 @@ namespace BT_ROS
             bool IsTreeLoaded() { return !!tree_; };
             bool AreLoggersInitialized() { return loggers_initialized_.load(); };
             BT::NodeStatus tickTree() { return tree_->tickRoot(); };
-
+            void UpdateBlackBoardPortFromServer(std::string key, std::string val);
+            void TransmitNewBBDataChanged(std::unordered_map<std::string, std::string> sync_ports_changed);
+            void InitSyncBB();
+            void CheckSyncPortsChanged();
+            std::unordered_map<std::string, std::string> unflattenValueMap(const char* req_data_raw);
             std::string execution_tree_status_ {};
             std::string execution_tree_error_ {};
             std::string tree_filename_ {};
@@ -55,6 +60,12 @@ namespace BT_ROS
             unsigned server_port_;
             unsigned publisher_port_;
             BT::NodeStatus status_ { BT::NodeStatus::IDLE };
+
+            zmq::context_t context_;
+            zmq::socket_t client_sub_;
+            zmq::socket_t client_pub_;
+            std::thread thread_rx;
+            std::thread thread_tx;
         private:
             std::unique_ptr<BT::Tree> tree_;
             std::unique_ptr<BT::StdCoutLogger>   bt_logger_cout_;

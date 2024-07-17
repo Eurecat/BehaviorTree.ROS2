@@ -73,6 +73,9 @@ namespace BT_ROS
             service_tree_.publisher_port_ = publisher_port;
             service_tree_.server_port_ = server_port ;
             service_tree_.tree_uid_ = uid;
+
+             std::cout << "LOADING TREE " << std::endl;
+
             if (!LoadTree())
             {
                 ROS_ERROR("ERROR: FAILED TO LOAD THE TREE");
@@ -188,10 +191,11 @@ namespace BT_ROS
 
             // Note: I'm saving the tree_file instead of
             // the full path to be consistent with the original request.
-
+            std::cout << "BUILDING TREE ... " << std::endl;
             service_tree_.BuildTree(full_path, bt_factory_, service_tree_.tree_debug_, service_tree_.tree_bb_init_);
+             std::cout << "BUILD TREE OK " << std::endl;
             service_tree_.InitializeLoggers(enable_cout_log_, enable_minitrace_log_, enable_file_log_, enable_rostopic_log_, enable_zmq_log_, log_folder_);
-
+            std::cout << "INIT LOGGERS OK " << std::endl;
             ROS_INFO("Loaded tree %s", full_path.c_str());
         }
         catch(const std::runtime_error& ex)

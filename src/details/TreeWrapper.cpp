@@ -18,12 +18,15 @@ namespace BT_ROS
         ResetLoggers();
         
         BT::Blackboard::Ptr blackboard_ptr = BT::Blackboard::create();
-        
+
+        //TEST 
+        blackboard_ptr->setSyncKey("sync_val","0");
+
         if(bb_init_abs_filepaths.size() > 0)
         {
             for(const auto& bb_init_abs_filepath: bb_init_abs_filepaths)
             {
-                if(bb_init_abs_filepath.length() < 1) continue;
+                if(bb_init_abs_filepath.length() < 3) continue;
 
                 try 
                 {
@@ -124,6 +127,7 @@ namespace BT_ROS
             {
             
                 bt_logger_zmq_ = std::make_unique<BT::PublisherZMQ>(*tree_, 25, publisher_port_,server_port_);
+                InitSyncBB();
             }
             catch(const BT::LogicError& ex)
             {
@@ -146,6 +150,8 @@ namespace BT_ROS
         #ifdef BEHAVIOR_TREE_CPP_ZMQ
         bt_logger_zmq_.reset();
         #endif
+        //if(client_pub_.connected()) client_pub_.disconnect("tcp://127.0.0.1:2000");
+        //if(client_sub_.connected()) client_sub_.disconnect("tcp://127.0.0.1:2001");
     }
 
     void TreeWrapper::PublishExecutionStatus(bool error, std::string error_data)
@@ -186,4 +192,135 @@ namespace BT_ROS
         }
         bt_execution_status_publisher_.publish(status_msg);
     }
+
+    void TreeWrapper::CheckSyncPortsChanged ()
+    {
+        std::unordered_map<std::string, std::string> sync_ports_changed = tree_->rootBlackboard()->get_sync_values_changed();
+        //SEND SYNC DATA
+        if (!sync_ports_changed.empty())
+        {
+            std::cout << "CheckSyncPortsChanged OK " << std::endl;
+            TransmitNewBBDataChanged(sync_ports_changed);
+        }
+    }
+    void TreeWrapper::TransmitNewBBDataChanged(std::unordered_map<std::string, std::string> sync_ports_changed)
+    {
+         std::cout << "TransmitNewBBDataChanged START " << std::endl;
+
+        for (auto syncport : sync_ports_changed)
+            std::cout << "TransmitNewBBDataChanged 1 KEY: " << syncport.first << " VAL: " << syncport.second << std::endl;
+
+        //CONSTRUCT SERIALIZED MESSAGE
+        std::string message_str = sync_ports_changed.size() > 0? BT::flattenValueMap(sync_ports_changed) : "";
+
+        std::cout << "TransmitNewBBDataChanged 2 STR: " << message_str << std::endl;
+        char* msg  = new char[message_str.size()];
+        msg = message_str.data();
+        zmq::message_t message(msg, strlen(msg));
+        std::cout << "TransmitNewBBDataChanged 3 SIZE " << strlen(msg) << std::endl;
+        //SEND MESSAGE
+        client_pub_.send(message, zmq::send_flags::none);
+        std::cout << "TransmitNewBBDataChanged OK" << std::endl;
+    }
+    void TreeWrapper::InitSyncBB()  
+    {
+        std::cout << "STARTING InitSyncBB ... " << std::endl;
+        int timeout_ms = 100;
+        const std::string endpoint = "tcp://127.0.0.1:2001";
+        client_sub_.setsockopt(ZMQ_RCVTIMEO,&timeout_ms, sizeof(int) );
+        client_sub_.connect(endpoint);
+
+        std::cout << "client_sub_  CONNECTED" <<  client_sub_.connected() << std::endl;
+        std::cout << "InitSyncBB 1 " << std::endl;
+        thread_rx = std::thread([this]()
+        {
+            zmq::message_t req;
+            bool active_client = true;
+            while (active_client)
+            {
+                try
+                {
+                   // std::cout << "ReceiveNewBBDataChanged 2 " << std::endl;
+                    zmq::recv_result_t received = client_sub_.recv(req);
+                    if (received)
+                    {
+                        //RECEIVE BB_UPDATES from Server
+                        //size_t received_data_size = received.value();
+                        const char* req_data_raw = static_cast<const char*>(req.data());
+                        std::cout << "ReceiveNewBBDataChanged 1 " << std::endl;
+                        //DESERIALIZE DATA
+                        std::unordered_map<std::string, std::string> PortsValueMap = unflattenValueMap(req_data_raw);
+                        std::cout << "ReceiveNewBBDataChanged 2 " << std::endl;
+                        for (auto portvalue : PortsValueMap)
+                        {
+                             std::cout << "ReceiveNewBBDataChanged 3 " << std::endl;
+                            UpdateBlackBoardPortFromServer(portvalue.first,portvalue.second);
+                        }
+                         std::cout << "ReceiveNewBBDataChanged 4 " << std::endl;
+                    }
+                }
+                catch (zmq::error_t& err)
+                {
+                    if (err.num() == ETERM)
+                    {
+                        std::cout << "[ZMQ CLIENT] Client quitting." << std::endl;
+                    }
+                    std::cout << "[ZMQ CLIENT]  just died. Exception " << err.what() << std::endl;
+                    active_client = false;
+                }
+                req.rebuild();//clean req message after processing
+            }
+        });
+         std::cout << "InitSyncBB 2 " << std::endl;
+        thread_tx = std::thread([this]()
+        {
+            //SEND SYNC DATA Changed to BT server node
+            //CONNECT TO SERVER
+            int timeout_ms = 100;
+             const std::string endpoint = "tcp://127.0.0.1:2000";
+            client_pub_.setsockopt(ZMQ_RCVTIMEO,&timeout_ms, sizeof(int) );
+            client_pub_.connect(endpoint);
+
+            std::cout << "client_pub_  CONNECTED" <<  client_pub_.connected() << std::endl;
+
+            bool active_client = true;
+            while (active_client)
+            {
+                CheckSyncPortsChanged();
+                usleep(100);
+            }
+        });
+         std::cout << "InitSyncBB 3" << std::endl;
+    }
+    void TreeWrapper::UpdateBlackBoardPortFromServer(std::string key, std::string val)
+    {
+        if (tree_->rootBlackboard()->getEntry(key) != nullptr /*&& tree_->rootBlackboard()->getEntry(key)->getSync()*/)
+            tree_->rootBlackboard()->set(key,val,true);
+    }
+    std::unordered_map<std::string, std::string> TreeWrapper::unflattenValueMap(const char* req_data_raw)
+    {
+        std::unordered_map<std::string, std::string> sync_ports_changed;
+        std::string req_data_raw_str(req_data_raw);
+        auto parts = BT::splitString(req_data_raw_str, ',');
+        for (auto part : parts)
+        {
+            //Extract KEY VALUE
+            std::cout << "RX " << part << std::endl;
+            auto key = part.substr(part.find_first_of("{")+1, part.find_first_of(":")-part.find_first_of("{")-1);
+            auto val = part.substr(1+part.find_first_of(":"), part.find_last_of("}")-part.find_first_of(":")-1);
+            std::cout << "key" << key << std::endl;
+            std::cout << "val" << val << std::endl;
+            //Replace
+            sync_ports_changed.insert(std::make_pair(std::string{key},std::string{key}));
+
+        }
+        for(auto& it : sync_ports_changed)
+        {
+            // remove escape characters in values
+            it.second = boost::replace_all_copy(it.second,  "\\{", "{");
+            it.second = boost::replace_all_copy(it.second,  "\\}", "}");
+        }
+        return sync_ports_changed;
+    }
+
 }
