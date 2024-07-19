@@ -8,7 +8,6 @@ int main(int argc, char **argv)
 
     BT_ROS::RosHandShake handshake;
     BT_ROS::RosExchangeInfo exchange_info;
-
     ros::spin();
 
     return 0;

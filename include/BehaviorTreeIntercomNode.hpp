@@ -49,7 +49,8 @@ namespace BT_ROS
             std::atomic<bool> action_cancelled_ {false};
 
             int16_t my_seq_id_{0};
-
+            std::string data_to_send;
+            std::string data_rx;
             std::string handshake_mode_;
 
             ros::Timer pub_timer_;
@@ -85,35 +86,7 @@ namespace BT_ROS
             std::mutex exchange_info_mutex_;
 
             std::vector<std::string> exchange_info_topic_msgs_;
-    }; // class RosExchangeInfo
-
-    // class RosExchangeImage final
-    // {
-    //     public:
-    //         RosExchangeImage();
-    //         ~RosExchangeImage() = default;
-
-    //     private:
-    //         void ExchangeImageTopicCallback(const std_msgs::StringConstPtr& _topic_msg);
-
-    //         void ExchangeImageActionCallback(const behavior_tree_ros::ExchangeImageGoalConstPtr& _goal_msg);
-    //         void ExchangeImageActionPreemptCallback();
-
-    //     private:
-    //         ros::NodeHandle public_node_handle_;
-    //         ros::NodeHandle private_node_handle_ { "~" };
-
-    //         ros::Publisher  send_image_publisher_;
-    //         ros::Subscriber get_image_subscriber_;
-
-    //         actionlib::SimpleActionServer<behavior_tree_ros::ExchangeImageAction> exchange_image_action_server_;
-    //         behavior_tree_ros::ExchangeImageResult exhange_image_action_result_;
-
-    //         std::atomic<bool> new_exhange_image_topic_msg_ { false };
-    //         std::mutex exhange_image_mutex_;
-
-    //         std::vector<behavior_tree_ros::Image> exhange_image_topic_msgs_;
-    // }; // class RosExchangeImage
+    }; 
 
 } // namespace BT_ROS
 
