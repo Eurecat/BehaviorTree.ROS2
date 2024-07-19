@@ -25,6 +25,7 @@
         </Action>
         <Action ID="BTCommandHandShakeAction">
             <input_port name="action" type="std::string">Actionlib action server name</input_port>
+            <input_port name="request.data" type="std::string">Auto-generated field from behavior_tree_ros::PerformHandShakeGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
             <input_port name="request.message" type="std::string">Auto-generated field from behavior_tree_ros::PerformHandShakeGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
             <input_port name="request.seq_id" type="short">Auto-generated field from behavior_tree_ros::PerformHandShakeGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
             <output_port name="serialized_feedback" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [behavior_tree_ros::PerformHandShakeFeedback_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
