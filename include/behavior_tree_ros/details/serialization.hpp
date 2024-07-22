@@ -192,7 +192,8 @@ namespace nlohmann
             auto fieldShallBeIgnore = [&_flat_message_ignore_fields](const std::string& field_name) -> bool {
                 for(const auto& prefix_to_ignore : _flat_message_ignore_fields.ignore_fields_)
                 {
-                    if(field_name.find(prefix_to_ignore.c_str()) != std::string::npos) return true;
+                    const auto pos_it = field_name.find(prefix_to_ignore.c_str());
+                    if(pos_it != std::string::npos && pos_it == 0) return true; // consider just field path starting from zero and not sub-path
                 }
                 return false;
             };
