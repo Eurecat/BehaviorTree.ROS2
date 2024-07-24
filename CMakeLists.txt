@@ -30,20 +30,6 @@ find_package(behavior_tree_cpp REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem system)
 
-
-
-message(STATUS "behavior_tree_cpp PATH: ${behavior_tree_cpp_DIR}")
-message(STATUS "behavior_tree_cpp TARGETS: ${behavior_tree_cpp_TARGETS}")
-message(STATUS "behavior_tree_cpp_INCLUDE_DIRS: ${behavior_tree_cpp_INCLUDE_DIRS}")
-message(STATUS "behavior_tree_cpp_LIBRARIES: ${behavior_tree_cpp_LIBRARIES}")
-
-# Do the same for bt3_plugin_to_xml
-message(STATUS "bt3_plugin_to_xml PATH: ${bt3_plugin_to_xml_DIR}")
-message(STATUS "bt3_plugin_to_xml TARGETS: ${bt3_plugin_to_xml_TARGETS}")
-message(STATUS "bt3_plugin_to_xml_INCLUDE_DIRS: ${bt3_plugin_to_xml_INCLUDE_DIRS}")
-message(STATUS "bt3_plugin_to_xml_LIBRARIES: ${bt3_plugin_to_xml_LIBRARIES}")
-
-
 add_service_files(
     FILES
         GetLoadedPlugins.srv
