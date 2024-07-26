@@ -48,10 +48,8 @@ class SimpleActionClientNode final : public BT::CoroActionNode,
     public:
         SimpleActionClientNode(const std::string& _name, const BT::NodeConfiguration& _config) : CoroActionNode(_name, _config)
         {
-            const auto& action = getInput<std::string>("action");
-            if(!action) { throw BT::RuntimeError { name() + ": " + action.error() }; }
-
-            client_ = std::make_unique<SimpleClient>(node_handle_, action.value(), false);
+            client_instantiated_ = false;
+            instantiateClient(false);
         }
 
         ~SimpleActionClientNode(){ halt();}
@@ -76,6 +74,7 @@ class SimpleActionClientNode final : public BT::CoroActionNode,
 
         virtual BT::NodeStatus tick() override
         {
+            instantiateClient(true);
             if (client_->isServerConnected())
             {
                 {
@@ -166,8 +165,25 @@ class SimpleActionClientNode final : public BT::CoroActionNode,
         }
 
     private:
+        void instantiateClient(const bool mandatory)
+        {
+            if(client_instantiated_) return;
+            
+            const auto& action = getInput<std::string>("action");
+            if(!action) 
+            { 
+                if(mandatory)
+                    throw BT::RuntimeError { name() + ": " + action.error() }; 
+                else
+                    return;
+            }
+            client_ = std::make_unique<SimpleClient>(node_handle_, action.value(), false);
+            client_instantiated_ = true;
+        }
+
         ros::NodeHandle node_handle_;
         SimpleClientPtr client_;
+        bool client_instantiated_;
 
         GoalPolicy     goal_policy_     {};
         ResultPolicy   result_policy_   {};
