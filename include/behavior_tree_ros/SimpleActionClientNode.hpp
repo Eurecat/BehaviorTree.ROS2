@@ -86,7 +86,11 @@ class SimpleActionClientNode final : public BT::CoroActionNode,
                 while(!goal_finished_)
                 {
                     // Check connection to prevent lock if server dies processing goal
-                    if (!client_->isServerConnected()) { return BT::NodeStatus::FAILURE; }
+                    if (!client_->isServerConnected()) 
+                    {
+                        client_instantiated_ = false; // reinit on a later tick 
+                        return BT::NodeStatus::FAILURE; 
+                    }
 
                     // Get state, save it in the output and save it in the output variable
                     goal_state_ = client_->getState();
@@ -112,9 +116,15 @@ class SimpleActionClientNode final : public BT::CoroActionNode,
                     if(!goal_finished_) { setStatusRunningAndYield(); }
                 }
 
-                return GoalState2Status(goal_state_);
+                const auto bt_status = GoalState2Status(goal_state_);
+                if(bt_status != BT::NodeStatus::RUNNING) 
+                {
+                    client_instantiated_ = false; // reinit on a later tick 
+                }
+                return bt_status;
             }
-
+            
+            client_instantiated_ = false; // reinit on a later tick 
             return BT::NodeStatus::FAILURE;;
         }
 

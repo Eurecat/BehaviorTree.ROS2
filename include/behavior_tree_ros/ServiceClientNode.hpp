@@ -79,6 +79,7 @@ class ServiceClientNode final : public BT::ActionNodeBase,
                     if (service_call_thread_.joinable()) { service_call_thread_.join(); }
                     service_state_ = 0;
                     service_called_ = false;
+                    client_instantiated_ = false; // reinit on a later tick
                     return BT::NodeStatus::FAILURE;
                 }
                 else if (service_state_ == 2) // service finishes successfully
@@ -88,6 +89,7 @@ class ServiceClientNode final : public BT::ActionNodeBase,
                     if (service_call_thread_.joinable()) { service_call_thread_.join(); }
                     service_state_ = 0;
                     service_called_ = false;
+                    client_instantiated_ = false; // reinit on a later tick
                     return BT::NodeStatus::SUCCESS;
                 }
                 else

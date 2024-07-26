@@ -14,7 +14,7 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
     public:
         SubscriberNode(const std::string& _name, const BT::NodeConfiguration& _config) : ActionNodeBase(_name, _config)
         {
-            fetched_sub_values_ = false;
+            subscriber_initialized_ = false;
             fetchSubscriberValues(false);
         }
 
@@ -22,9 +22,13 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
 
         static BT::PortsList providedPorts()
         {
-            BT::PortsList ports { BT::InputPort<std::string>("topic", "Topic to subscribe"),
+            BT::PortsList ports 
+            { 
+                BT::InputPort<std::string>("topic", "Topic to subscribe"),
                 BT::InputPort<uint32_t>("queue_size", 1, "Subscriber callback queue size"),
                 BT::InputPort<bool>("consume_msgs", false, "Should messages be consumed?"),
+                BT::InputPort<bool>("reinit", false, "Instantiate the subscriber at every new tick"),
+                BT::InputPort<uint32_t>("wait_ms_new_msg", 200, "How many ms you want to wait after instantiation to receive a new msg"),
             };
 
             const auto& policy_ports = SerializationPolicy<MessageType>::requiredPorts();
@@ -40,11 +44,11 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
 
             //Subscribe if not already subscribed (this is done here instead of the constructor
             //to avoid issues when using a ros::AsyncSpinner)
-            if(subscriber_ == nullptr)
+            if(subscriber_ == nullptr || !subscriber_initialized_)
             {
                 fetchSubscriberValues(true);
                 subscriber_ = node_handle_.subscribe(topic_, queue_size_, &SubscriberNode::callback, this);
-                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                std::this_thread::sleep_for(std::chrono::milliseconds(200)); //TODO: use wait_ms_ here and return RUNNING instead of block in the tick
             }
 
             std::lock_guard<std::mutex> lock (message_mutex_);
@@ -56,6 +60,12 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
                 serialization_policy_.onNewMessage(*message_, *this);
                 message_.reset();
                 new_message_written = true;
+            }
+
+            if(reinit_)// reinit?
+            {
+                subscriber_.shutdown();
+                subscriber_initialized_ = false; 
             }
 
             // If messages are not expected to be consumed, return success only if at least one message has been received
@@ -73,22 +83,26 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
     private:
         void fetchSubscriberValues(const bool mandatory)
         {
-            if(fetched_sub_values_) return;
+            if(subscriber_initialized_) return;
             
-            const auto& topic        = getInput<std::string>("topic");
+            const auto& topic        = getInput<std::string>("topic"); // only required input with no default value
+
+            // tunable input with default values
             const auto& queue_size   = getInput<uint32_t>("queue_size");
             const auto& consume_msgs = getInput<bool>("consume_msgs");
+            const auto& reinit = getInput<bool>("reinit");
+            const auto& wait_ms   = getInput<uint32_t>("wait_ms_new_msg");
 
             if(!topic && mandatory)        { throw BT::RuntimeError { name() + ": " + topic.error() };        }
-            if(!queue_size && mandatory)   { throw BT::RuntimeError { name() + ": " + queue_size.error() };   }
-            if(!consume_msgs && mandatory) { throw BT::RuntimeError { name() + ": " + consume_msgs.error() }; }
-            if(!topic || !queue_size || !consume_msgs) return; // not mandatory
+            else if(!topic) return; // not mandatory
 
             consume_msgs_ = consume_msgs.value();
             topic_        = topic.value();
             queue_size_   = queue_size.value();
+            reinit_ = reinit.value();
+            wait_ms_ = wait_ms.value();
 
-            fetched_sub_values_ = true;
+            subscriber_initialized_ = true;
         }
 
         //TODO: let users choose thread policies (aka do not assume that this is running in a different thread)
@@ -104,11 +118,13 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
         ros::NodeHandle node_handle_;
         ros::Subscriber subscriber_;
 
-        bool fetched_sub_values_;
+        bool subscriber_initialized_;
 
         std::string topic_;
         uint32_t    queue_size_;
         bool        consume_msgs_;
+        bool        reinit_;
+        uint32_t    wait_ms_;
 
         typename MessageType::Ptr message_ {};
         bool message_received_ {};
