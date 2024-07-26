@@ -14,17 +14,8 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
     public:
         SubscriberNode(const std::string& _name, const BT::NodeConfiguration& _config) : ActionNodeBase(_name, _config)
         {
-            const auto& topic        = getInput<std::string>("topic");
-            const auto& queue_size   = getInput<uint32_t>("queue_size");
-            const auto& consume_msgs = getInput<bool>("consume_msgs");
-
-            if(!topic)        { throw BT::RuntimeError { name() + ": " + topic.error() };        }
-            if(!queue_size)   { throw BT::RuntimeError { name() + ": " + queue_size.error() };   }
-            if(!consume_msgs) { throw BT::RuntimeError { name() + ": " + consume_msgs.error() }; }
-
-            consume_msgs_ = consume_msgs.value();
-            topic_        = topic.value();
-            queue_size_   = queue_size.value();
+            fetched_sub_values_ = false;
+            fetchSubscriberValues(false);
         }
 
         ~SubscriberNode() = default;
@@ -51,6 +42,7 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
             //to avoid issues when using a ros::AsyncSpinner)
             if(subscriber_ == nullptr)
             {
+                fetchSubscriberValues(true);
                 subscriber_ = node_handle_.subscribe(topic_, queue_size_, &SubscriberNode::callback, this);
                 std::this_thread::sleep_for(std::chrono::milliseconds(200));
             }
@@ -79,6 +71,26 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
         virtual void halt() override {};
 
     private:
+        void fetchSubscriberValues(const bool mandatory)
+        {
+            if(fetched_sub_values_) return;
+            
+            const auto& topic        = getInput<std::string>("topic");
+            const auto& queue_size   = getInput<uint32_t>("queue_size");
+            const auto& consume_msgs = getInput<bool>("consume_msgs");
+
+            if(!topic && mandatory)        { throw BT::RuntimeError { name() + ": " + topic.error() };        }
+            if(!queue_size && mandatory)   { throw BT::RuntimeError { name() + ": " + queue_size.error() };   }
+            if(!consume_msgs && mandatory) { throw BT::RuntimeError { name() + ": " + consume_msgs.error() }; }
+            if(!topic || !queue_size || !consume_msgs) return; // not mandatory
+
+            consume_msgs_ = consume_msgs.value();
+            topic_        = topic.value();
+            queue_size_   = queue_size.value();
+
+            fetched_sub_values_ = true;
+        }
+
         //TODO: let users choose thread policies (aka do not assume that this is running in a different thread)
         void callback(const typename MessageType::Ptr& _message)
         {
@@ -91,6 +103,8 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
     private:
         ros::NodeHandle node_handle_;
         ros::Subscriber subscriber_;
+
+        bool fetched_sub_values_;
 
         std::string topic_;
         uint32_t    queue_size_;
