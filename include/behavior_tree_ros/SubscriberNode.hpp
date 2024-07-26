@@ -2,6 +2,7 @@
 #define SUBSCRIBER_NODE_HPP
 
 #include <mutex>
+#include <chrono>
 #include <behaviortree_cpp_v3/action_node.h>
 
 #include "behavior_tree_ros/policies/serialization_policies.hpp"
@@ -9,10 +10,10 @@
 namespace BT_ROS
 {
 template <class MessageType, template <class> class SerializationPolicy>
-class SubscriberNode final : public BT::ActionNodeBase, public SerializationPolicy<MessageType>
+class SubscriberNode final : public BT::CoroActionNode, public SerializationPolicy<MessageType>
 {
     public:
-        SubscriberNode(const std::string& _name, const BT::NodeConfiguration& _config) : ActionNodeBase(_name, _config)
+        SubscriberNode(const std::string& _name, const BT::NodeConfiguration& _config) : BT::CoroActionNode(_name, _config)
         {
             subscriber_initialized_ = false;
             fetchSubscriberValues(false);
@@ -48,7 +49,14 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
             {
                 fetchSubscriberValues(true);
                 subscriber_ = node_handle_.subscribe(topic_, queue_size_, &SubscriberNode::callback, this);
-                std::this_thread::sleep_for(std::chrono::milliseconds(200)); //TODO: use wait_ms_ here and return RUNNING instead of block in the tick
+                start_waiting_time_ = std::chrono::system_clock::now();
+                wait_duration_ = std::chrono::milliseconds{wait_ms_};
+                // std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                while(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_waiting_time_) < wait_duration_)
+                {
+                    setStatusRunningAndYield();
+                }
+
             }
 
             std::lock_guard<std::mutex> lock (message_mutex_);
@@ -119,6 +127,9 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
         ros::Subscriber subscriber_;
 
         bool subscriber_initialized_;
+
+        std::chrono::system_clock::time_point start_waiting_time_;
+        std::chrono::milliseconds wait_duration_;
 
         std::string topic_;
         uint32_t    queue_size_;

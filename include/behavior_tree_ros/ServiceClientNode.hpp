@@ -63,11 +63,10 @@ class ServiceClientNode final : public BT::ActionNodeBase,
 
             if (!client_.exists()) { return BT::NodeStatus::FAILURE; }
 
-            // TODO: re-think thread things
             if(!service_called_)
             {
                 service_call_thread_ = std::thread(&ServiceClientNode::callService, this, service_request);
-                std::this_thread::sleep_for(std::chrono::milliseconds(200)); // sleep this thread for 200 ms
+                // std::this_thread::sleep_for(std::chrono::milliseconds(200)); // should not be needed
                 service_called_ = true;
             }
 
