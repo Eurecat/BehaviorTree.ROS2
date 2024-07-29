@@ -29,6 +29,7 @@ find_package(catkin REQUIRED
 # find_package(behavior_tree_core 3.2.0 REQUIRED)
 find_package(behavior_tree_cpp REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(Boost REQUIRED COMPONENTS filesystem system)
 
 add_service_files(
     FILES
@@ -75,7 +76,7 @@ target_link_libraries(${PROJECT_NAME} INTERFACE ${catkin_LIBRARIES})
 target_compile_options(${PROJECT_NAME} INTERFACE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 
 add_library(${PROJECT_NAME}_plugin src/plugin.cpp src/details/conversion_json.cpp)
-target_link_libraries(${PROJECT_NAME}_plugin ${catkin_LIBRARIES} yaml-cpp)
+target_link_libraries(${PROJECT_NAME}_plugin ${catkin_LIBRARIES} yaml-cpp  ${Boost_LIBRARIES})
 target_include_directories(${PROJECT_NAME}_plugin PUBLIC include PRIVATE ${catkin_INCLUDE_DIRS})
 target_compile_options(${PROJECT_NAME}_plugin PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 target_compile_definitions(${PROJECT_NAME}_plugin PRIVATE BT_PLUGIN_EXPORT)
@@ -85,7 +86,7 @@ list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_plugin)
 add_executable(${PROJECT_NAME}_node src/behavior_tree_node.cpp src/BehaviorTreeNode.cpp src/bt_rostopic_logger.cpp
                                     src/3rdparty/tinyxml2/tinyxml2.cpp src/details/TreeWrapper.cpp)
 target_include_directories(${PROJECT_NAME}_node PRIVATE include ${catkin_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}_node PRIVATE ${catkin_LIBRARIES} yaml-cpp)
+target_link_libraries(${PROJECT_NAME}_node PRIVATE ${catkin_LIBRARIES} yaml-cpp ${Boost_LIBRARIES})
 target_compile_options(${PROJECT_NAME}_node PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_node)
