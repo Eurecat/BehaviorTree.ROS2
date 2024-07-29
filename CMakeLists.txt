@@ -20,7 +20,6 @@ find_package(catkin REQUIRED
         ros_type_introspection
         topic_tools
         actionlib
-        # behavior_tree_core
         behavior_tree_cpp
         cmake_modules
         tf
@@ -59,7 +58,6 @@ catkin_package(
         roscpp
         message_runtime
         ros_type_introspection
-        # behavior_tree_core
         behavior_tree_cpp
         topic_tools
         actionlib
@@ -69,6 +67,8 @@ catkin_package(
     INCLUDE_DIRS
         include
 )
+
+include_directories(include ${behavior_tree_cpp_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME} INTERFACE ${catkin_INCLUDE_DIRS})
@@ -105,19 +105,17 @@ install(TARGETS ${${PROJECT_NAME}_targets}
         INCLUDES DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
-#Generate Automatically the Palette .xml
+# Generate the XML files
 add_custom_command(
-  OUTPUT ${CATKIN_DEVEL_PREFIX}/btros_so2xml.sh
-  POST_BUILD 
-  COMMAND ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_BIN_DESTINATION}/bt3_so2xml.sh ${CMAKE_CURRENT_SOURCE_DIR}/plugin_description.xml ${CMAKE_CURRENT_SOURCE_DIR}/palette_description.xml ${CMAKE_CURRENT_SOURCE_DIR} ${CATKIN_DEVEL_PREFIX} --source-ros
-  VERBATIM
-)
-add_custom_target(execute_script ALL DEPENDS ${CATKIN_DEVEL_PREFIX}/btros_so2xml.sh)
-
-add_dependencies(
-  execute_script ${PROJECT_NAME}_plugin
+    OUTPUT SO_TO_PALETTE
+    COMMAND ${CMAKE_COMMAND} -Dbehavior_tree_cpp_DIR=${behavior_tree_cpp_DIR} -DCATKIN_DEVEL_PREFIX=${CATKIN_DEVEL_PREFIX} -P ${behavior_tree_cpp_DIR}/plugin_to_xml.cmake
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Running bt3_plugin_to_xml"
 )
 
+# Add a custom target that depends on the custom command
+add_custom_target(generate_nodemodels ALL DEPENDS SO_TO_PALETTE)
+add_dependencies(generate_nodemodels ${${PROJECT_NAME}_targets})
 
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 install(DIRECTORY launch/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
