@@ -153,6 +153,9 @@ using SerializedSubscriber = SubscriberNode<MessageType, JsonSerialization>;
 
 template <class MessageType>
 using SmartSerializedSubscriber = SubscriberNode<MessageType, SmartJsonSerialization>;
+
+template <class MessageType>
+using SmartTimeEnabledSerializedSubscriber = SubscriberNode<MessageType, SmartTimeEnabledJsonSerialization>;
 }
 
 #endif

@@ -89,7 +89,8 @@ template <class MessageType>
 struct SmartJsonSerialization
 {
     public:
-        SmartJsonSerialization()
+        SmartJsonSerialization(bool time_enabled = false) :
+        time_enabled_serialization_(time_enabled)
         {
             parser().registerMessageDefinition(serialization::msgDataType<MessageType>(),
                                                serialization::msgType<MessageType>(),
@@ -133,7 +134,7 @@ struct SmartJsonSerialization
                                                   RosIntrospection::Span<uint8_t>(buffer_), &flat_message_, buffer_.size());
 
             //Serialization is done in to_json() function (serialization.hpp)
-            nlohmann::json serialized_json = flat_deserialize_result? nlohmann::FlatMessageWithIgnoredFields(flat_message_, ignore_fields) : nlohmann::json{};
+            nlohmann::json serialized_json = flat_deserialize_result? nlohmann::FlatMessageWithIgnoredFields(flat_message_, ignore_fields, time_enabled_serialization_) : nlohmann::json{};
             processMsgPostSerialization(_message, serialized_json, _tree_node);
             _tree_node.setOutput("serialized_" + _base_port_name, serialized_json);
         }
@@ -144,6 +145,14 @@ struct SmartJsonSerialization
     private:
         RosIntrospection::FlatMessage flat_message_;
         std::vector<uint8_t> buffer_;
+        bool time_enabled_serialization_;
+};
+
+template <class MessageType>
+struct SmartTimeEnabledJsonSerialization : public SmartJsonSerialization<MessageType>
+{
+    public:
+        SmartTimeEnabledJsonSerialization() : SmartJsonSerialization<MessageType>(true) {};
 };
 
 template <class MessageType>

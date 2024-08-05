@@ -148,9 +148,31 @@ namespace serialization
         { RosIntrospection::DURATION, [] (const auto& _field_name, const auto& _variant, auto& _json) {}}, //Don't do anything
     };
 
-    inline void deserializeField(const std::string& _field_name, const RosIntrospection::Variant& _value, nlohmann::json& _json)
+    static const Utils::UnorderedMap<RosIntrospection::BuiltinType, InsertVariantInJsonFieldFunction> variant_to_json_map_for_time
+    {
+        { 
+            RosIntrospection::TIME,     
+            [] (const auto& _field_name, const auto& _variant, auto& _json) 
+            {
+                _json.emplace(_field_name + "/sec", _variant.template extract<ros::Time>().toSec());   
+                _json.emplace(_field_name + "/nsec", _variant.template extract<ros::Time>().toNSec());     
+            }
+        }, 
+        { 
+            RosIntrospection::DURATION, 
+            [] (const auto& _field_name, const auto& _variant, auto& _json) 
+            {
+                _json.emplace(_field_name + "/sec", _variant.template extract<ros::Duration>().toSec());   
+                _json.emplace(_field_name + "/nsec", _variant.template extract<ros::Duration>().toNSec());    
+            }
+        }, 
+    };
+
+    inline void deserializeField(const std::string& _field_name, const RosIntrospection::Variant& _value, nlohmann::json& _json, const bool time_enabled = false)
     {
         variant_to_json_map.at(_value.getTypeID())(_field_name, _value, _json);
+        if(time_enabled && (_value.getTypeID() == RosIntrospection::TIME || _value.getTypeID() == RosIntrospection::DURATION))
+            variant_to_json_map_for_time.at(_value.getTypeID())(_field_name, _value, _json);
     }
 }
 }
@@ -164,14 +186,15 @@ namespace nlohmann
 {
     struct FlatMessageWithIgnoredFields
     {
-        FlatMessageWithIgnoredFields(const RosIntrospection::FlatMessage& base_flat_message, const int ignore_fields_size = 0)
+        FlatMessageWithIgnoredFields(const RosIntrospection::FlatMessage& base_flat_message, const int ignore_fields_size = 0, const bool time_enabled = false)
             : 
             flat_msg_(base_flat_message),
-            ignore_fields_(std::vector<std::string>(ignore_fields_size))
+            ignore_fields_(std::vector<std::string>(ignore_fields_size)),
+            time_enabled_(time_enabled)
         {} 
 
-        FlatMessageWithIgnoredFields(const RosIntrospection::FlatMessage& base_flat_message, const std::vector<std::string>& ignore_fields)
-            : FlatMessageWithIgnoredFields(base_flat_message, ignore_fields.size())
+        FlatMessageWithIgnoredFields(const RosIntrospection::FlatMessage& base_flat_message, const std::vector<std::string>& ignore_fields, const bool time_enabled = false)
+            : FlatMessageWithIgnoredFields(base_flat_message, ignore_fields.size(), time_enabled)
         {
             for(size_t i = 0; i<ignore_fields_.size(); i++)
                 if(ignore_fields[i].find_last_of('/') != std::string::npos && ignore_fields[i].find_last_of('/') == ignore_fields[i].size()-1)
@@ -182,6 +205,7 @@ namespace nlohmann
 
         const RosIntrospection::FlatMessage& flat_msg_;
         std::vector<std::string> ignore_fields_;
+        bool time_enabled_;
     };
 
     template <>
@@ -213,7 +237,7 @@ namespace nlohmann
                 try
                 {
                     if(fieldShallBeIgnore(field_name)) continue; //field to be ignored
-                    BT_ROS::serialization::deserializeField(field_name, entry.second, _json);
+                    BT_ROS::serialization::deserializeField(field_name, entry.second, _json, _flat_message_ignore_fields.time_enabled_);
                 }
                 catch(const std::out_of_range&)
                 {
