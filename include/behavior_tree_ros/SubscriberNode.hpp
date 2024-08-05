@@ -86,7 +86,7 @@ class SubscriberNode final : public BT::CoroActionNode, public SerializationPoli
             return new_message_written ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
         }
 
-        virtual void halt() override {};
+        virtual void halt() override {CoroActionNode::halt();};
 
     private:
         void fetchSubscriberValues(const bool mandatory)
