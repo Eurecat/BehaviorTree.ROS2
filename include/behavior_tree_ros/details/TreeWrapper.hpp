@@ -43,6 +43,7 @@ namespace BT_ROS
 
             bool IsTreeLoaded() { return !!tree_; };
             bool AreLoggersInitialized() { return loggers_initialized_.load(); };
+            size_t TreeNodesCount() { return tree_->nodes.size();}
             BT::NodeStatus tickTree() { return tree_->tickRoot(); };
 
         private:
