@@ -196,7 +196,7 @@ namespace BT_ROS
              std::cout << "BUILD TREE OK " << std::endl;
             service_tree_.InitializeLoggers(enable_cout_log_, enable_minitrace_log_, enable_file_log_, enable_rostopic_log_, enable_zmq_log_, log_folder_);
             std::cout << "INIT LOGGERS OK " << std::endl;
-            ROS_INFO("Loaded tree %s", full_path.c_str());
+            ROS_INFO("Loaded srv tree %s counting of %ld nodes", full_path.c_str(), service_tree_.TreeNodesCount());
         }
         catch(const std::runtime_error& ex)
         {
@@ -445,6 +445,8 @@ namespace BT_ROS
                 action_tree_.InitializeLoggers(false, enable_minitrace_log_, enable_file_log_, enable_rostopic_log_, enable_zmq_log_, log_folder_);
             else
                 action_tree_.InitializeLoggers(enable_cout_log_, enable_minitrace_log_, enable_file_log_, enable_rostopic_log_, enable_zmq_log_, log_folder_);
+
+            ROS_INFO("Loaded action tree %s counting of %ld nodes", full_path.c_str(), service_tree_.TreeNodesCount());
         }
         catch(const std::runtime_error& ex)
         {

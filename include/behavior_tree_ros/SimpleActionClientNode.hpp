@@ -3,6 +3,7 @@
 
 #include <mutex>
 #include <atomic>
+#include <chrono>
 #include <memory>
 
 #include <behaviortree_cpp_v3/action_node.h>
@@ -10,6 +11,8 @@
 
 #include "behavior_tree_ros/policies/serialization_policies.hpp"
 #include "behavior_tree_ros/policies/deserialization_policies.hpp"
+
+#define WAIT_SRV_CONN_TIMEOUT_MS 2000
 
 namespace BT
 {
@@ -22,6 +25,15 @@ namespace BT
 
 namespace BT_ROS
 {
+
+    enum ClientStatus
+    {
+        INVALID = 0,
+        NOT_INSTANTIATED = 1,
+        WAITING_CONN = 2,
+        WAITING_RES = 3,
+        RECEIVED_RES = 4
+    };
 
 template <class ActionType,  template <class> class GoalDeserializationPolicy,
                              template <class> class ResultSerializationPolicy,
@@ -46,12 +58,10 @@ class SimpleActionClientNode final : public BT::CoroActionNode,
         using FeedbackPolicy = FeedbackSerializationPolicy<Feedback>;
 
     public:
-        SimpleActionClientNode(const std::string& _name, const BT::NodeConfiguration& _config) : CoroActionNode(_name, _config)
+        SimpleActionClientNode(const std::string& _name, const BT::NodeConfiguration& _config) : CoroActionNode(_name, _config),
+            client_status_(ClientStatus::NOT_INSTANTIATED)
         {
-            const auto& action = getInput<std::string>("action");
-            if(!action) { throw BT::RuntimeError { name() + ": " + action.error() }; }
-
-            client_ = std::make_unique<SimpleClient>(node_handle_, action.value(), false);
+            instantiateClient(false);
         }
 
         ~SimpleActionClientNode(){ halt();}
@@ -76,18 +86,31 @@ class SimpleActionClientNode final : public BT::CoroActionNode,
 
         virtual BT::NodeStatus tick() override
         {
+            instantiateClient(true);
+            
+            // NON blocking wait for server
+            if(!client_->isServerConnected() && client_status_ == ClientStatus::WAITING_CONN && 
+                (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - client_instantiated_time_) < std::chrono::milliseconds{WAIT_SRV_CONN_TIMEOUT_MS}))
+            {    
+                return BT::NodeStatus::RUNNING;
+            }
+            
             if (client_->isServerConnected())
             {
                 {
                     const auto& goal_msg = goal_policy_.buildMessage(*this);
                     client_->sendGoal(goal_msg, {}, {}, boost::bind(&SimpleActionClientNode::FeedbackCallback, this, _1));
-                    goal_finished_ = false;
+                    client_status_ = ClientStatus::WAITING_RES;
                 }
 
-                while(!goal_finished_)
+                while(client_status_ == ClientStatus::WAITING_RES)
                 {
                     // Check connection to prevent lock if server dies processing goal
-                    if (!client_->isServerConnected()) { return BT::NodeStatus::FAILURE; }
+                    if (!client_->isServerConnected()) 
+                    {
+                        client_status_ = ClientStatus::NOT_INSTANTIATED; // reinit on a later tick 
+                        return BT::NodeStatus::FAILURE; 
+                    }
 
                     // Get state, save it in the output and save it in the output variable
                     goal_state_ = client_->getState();
@@ -96,7 +119,7 @@ class SimpleActionClientNode final : public BT::CoroActionNode,
                     {
                         std::unique_lock<std::mutex> lock (feedback_mutex_);
                         if(new_feedback_)
-                        {
+                        {  
                             new_feedback_ = false;
                             feedback_policy_.onNewMessage(feedback_msg_, *this, "feedback");
                         }
@@ -107,15 +130,21 @@ class SimpleActionClientNode final : public BT::CoroActionNode,
                         const auto& result_ptr = client_->getResult();
                         result_policy_.onNewMessage(*result_ptr, *this, "result");
 
-                        goal_finished_ = true;
+                        client_status_ = ClientStatus::RECEIVED_RES;
                     }
 
-                    if(!goal_finished_) { setStatusRunningAndYield(); }
+                    if(client_status_ != ClientStatus::RECEIVED_RES) { setStatusRunningAndYield(); }
                 }
 
-                return GoalState2Status(goal_state_);
+                const auto bt_status = GoalState2Status(goal_state_);
+                if(bt_status != BT::NodeStatus::RUNNING) 
+                {
+                    client_status_ = ClientStatus::NOT_INSTANTIATED; // reinit on a later tick 
+                }
+                return bt_status;
             }
-
+            
+            client_status_ = ClientStatus::NOT_INSTANTIATED; // reinit on a later tick 
             return BT::NodeStatus::FAILURE;;
         }
 
@@ -127,7 +156,7 @@ class SimpleActionClientNode final : public BT::CoroActionNode,
                 const auto& result_ptr = client_->getResult();
                 result_policy_.onNewMessage(*result_ptr, *this, "result");
 		    }
-            goal_finished_ = false;
+            client_status_ = ClientStatus::NOT_INSTANTIATED; // reinit on a later tick 
             CoroActionNode::halt();
         }
     
@@ -166,14 +195,33 @@ class SimpleActionClientNode final : public BT::CoroActionNode,
         }
 
     private:
+        void instantiateClient(const bool mandatory)
+        {
+            if(client_status_ > ClientStatus::NOT_INSTANTIATED) return;
+            
+            const auto& action = getInput<std::string>("action");
+            if(!action) 
+            { 
+                if(mandatory)
+                    throw BT::RuntimeError { name() + ": " + action.error() }; 
+                else
+                    return;
+            }
+            if(client_) client_.reset();
+            client_ = std::make_unique<SimpleClient>(node_handle_, action.value(), false);
+            client_status_ = ClientStatus::WAITING_CONN;
+            client_instantiated_time_ = std::chrono::steady_clock::now();
+        }
+
         ros::NodeHandle node_handle_;
         SimpleClientPtr client_;
+        ClientStatus client_status_{NOT_INSTANTIATED};
+        std::chrono::steady_clock::time_point client_instantiated_time_;
 
         GoalPolicy     goal_policy_     {};
         ResultPolicy   result_policy_   {};
         FeedbackPolicy feedback_policy_ {};
 
-        bool goal_finished_ { false };
         GoalState goal_state_ { GoalState::StateEnum::PENDING, "" };
 
         std::mutex        feedback_mutex_;

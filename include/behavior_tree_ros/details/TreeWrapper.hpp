@@ -43,6 +43,7 @@ namespace BT_ROS
             void PublishExecutionStatus(bool error=false, std::string error_data="");
             bool IsTreeLoaded() { return !!tree_; };
             bool AreLoggersInitialized() { return loggers_initialized_.load(); };
+            size_t TreeNodesCount() { return tree_->nodes.size();}
             BT::NodeStatus tickTree() { return tree_->tickRoot(); };
             void UpdateBlackBoardPortFromServer(std::string key, std::string val);
             void TransmitNewBBDataChanged(std::unordered_map<std::string, std::string> sync_ports_changed);

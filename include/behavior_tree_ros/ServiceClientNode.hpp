@@ -20,10 +20,8 @@ class ServiceClientNode final : public BT::ActionNodeBase,
     public:
         ServiceClientNode(const std::string& _name, const BT::NodeConfiguration& _config) : ActionNodeBase(_name, _config)
         {
-            const auto& service = getInput<std::string>("service");
-            if(!service) { throw BT::RuntimeError { name() + ": " + service.error() }; }
-
-            client_ = node_handle_.serviceClient<MessageType>(service.value());
+            client_instantiated_ = false;
+            instantiateClient(false);
         }
         ~ServiceClientNode()
         {
@@ -57,6 +55,7 @@ class ServiceClientNode final : public BT::ActionNodeBase,
 
         virtual BT::NodeStatus tick() override
         {
+            instantiateClient(true);
             setStatus(BT::NodeStatus::RUNNING);
 
             const auto& service_request = request_policy_.buildMessage(*this);
@@ -64,11 +63,10 @@ class ServiceClientNode final : public BT::ActionNodeBase,
 
             if (!client_.exists()) { return BT::NodeStatus::FAILURE; }
 
-            // TODO: re-think thread things
             if(!service_called_)
             {
                 service_call_thread_ = std::thread(&ServiceClientNode::callService, this, service_request);
-                std::this_thread::sleep_for(std::chrono::milliseconds(200)); // sleep this thread for 200 ms
+                // std::this_thread::sleep_for(std::chrono::milliseconds(200)); // should not be needed
                 service_called_ = true;
             }
 
@@ -80,6 +78,7 @@ class ServiceClientNode final : public BT::ActionNodeBase,
                     if (service_call_thread_.joinable()) { service_call_thread_.join(); }
                     service_state_ = 0;
                     service_called_ = false;
+                    client_instantiated_ = false; // reinit on a later tick
                     return BT::NodeStatus::FAILURE;
                 }
                 else if (service_state_ == 2) // service finishes successfully
@@ -89,6 +88,7 @@ class ServiceClientNode final : public BT::ActionNodeBase,
                     if (service_call_thread_.joinable()) { service_call_thread_.join(); }
                     service_state_ = 0;
                     service_called_ = false;
+                    client_instantiated_ = false; // reinit on a later tick
                     return BT::NodeStatus::SUCCESS;
                 }
                 else
@@ -110,8 +110,26 @@ class ServiceClientNode final : public BT::ActionNodeBase,
         }
 
     private:
+        void instantiateClient(const bool mandatory)
+        {
+            if(client_instantiated_) return;
+            
+            const auto& service = getInput<std::string>("service");
+            if(!service) 
+            { 
+                if(mandatory)
+                    throw BT::RuntimeError { name() + ": " + service.error() }; 
+                else
+                    return;
+            }
+
+            client_ = node_handle_.serviceClient<MessageType>(service.value());
+            client_instantiated_ = true;
+        }
+
         ros::NodeHandle node_handle_;
         ros::ServiceClient client_;
+        bool client_instantiated_;
 
         RequestDeserializationPolicy<typename MessageType::Request> request_policy_ {};
         ResponseSerializationPolicy<typename MessageType::Response> response_policy_ {};

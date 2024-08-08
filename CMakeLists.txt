@@ -30,6 +30,7 @@ find_package(catkin REQUIRED
 # find_package(behavior_tree_core 3.2.0 REQUIRED)
 find_package(behavior_tree_cpp REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(Boost REQUIRED COMPONENTS filesystem system)
 
 
 find_package(ZMQ)
@@ -84,13 +85,15 @@ catkin_package(
         include
 )
 
+include_directories(include ${behavior_tree_cpp_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
+
 add_library(${PROJECT_NAME} INTERFACE)
 target_include_directories(${PROJECT_NAME} INTERFACE ${catkin_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} INTERFACE ${catkin_LIBRARIES})
 target_compile_options(${PROJECT_NAME} INTERFACE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 
 add_library(${PROJECT_NAME}_plugin src/plugin.cpp src/details/conversion_json.cpp)
-target_link_libraries(${PROJECT_NAME}_plugin ${catkin_LIBRARIES} yaml-cpp)
+target_link_libraries(${PROJECT_NAME}_plugin ${catkin_LIBRARIES} yaml-cpp  ${Boost_LIBRARIES})
 target_include_directories(${PROJECT_NAME}_plugin PUBLIC include PRIVATE ${catkin_INCLUDE_DIRS})
 target_compile_options(${PROJECT_NAME}_plugin PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 target_compile_definitions(${PROJECT_NAME}_plugin PRIVATE BT_PLUGIN_EXPORT)
@@ -100,7 +103,7 @@ list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_plugin)
 add_executable(${PROJECT_NAME}_node src/behavior_tree_node.cpp src/BehaviorTreeNode.cpp src/bt_rostopic_logger.cpp
                                     src/3rdparty/tinyxml2/tinyxml2.cpp src/details/TreeWrapper.cpp)
 target_include_directories(${PROJECT_NAME}_node PRIVATE include ${catkin_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}_node PRIVATE ${catkin_LIBRARIES} yaml-cpp)
+target_link_libraries(${PROJECT_NAME}_node PRIVATE ${catkin_LIBRARIES} yaml-cpp ${Boost_LIBRARIES})
 target_compile_options(${PROJECT_NAME}_node PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_node)
@@ -137,19 +140,17 @@ install(TARGETS ${${PROJECT_NAME}_targets}
         INCLUDES DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
-#Generate Automatically the Palette .xml
+# Generate the XML files
 add_custom_command(
-  OUTPUT ${CATKIN_DEVEL_PREFIX}/btros_so2xml.sh
-  POST_BUILD 
-  COMMAND ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_BIN_DESTINATION}/bt3_so2xml.sh ${CMAKE_CURRENT_SOURCE_DIR}/plugin_description.xml ${CMAKE_CURRENT_SOURCE_DIR}/palette_description.xml ${CMAKE_CURRENT_SOURCE_DIR} ${CATKIN_DEVEL_PREFIX} --source-ros
-  VERBATIM
-)
-add_custom_target(execute_script ALL DEPENDS ${CATKIN_DEVEL_PREFIX}/btros_so2xml.sh)
-
-add_dependencies(
-  execute_script ${PROJECT_NAME}_plugin
+    OUTPUT SO_TO_PALETTE
+    COMMAND ${CMAKE_COMMAND} -Dbehavior_tree_cpp_DIR=${behavior_tree_cpp_DIR} -DCATKIN_DEVEL_PREFIX=${CATKIN_DEVEL_PREFIX} -P ${behavior_tree_cpp_DIR}/plugin_to_xml.cmake
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Running bt3_plugin_to_xml"
 )
 
+# Add a custom target that depends on the custom command
+add_custom_target(generate_nodemodels ALL DEPENDS SO_TO_PALETTE)
+add_dependencies(generate_nodemodels ${${PROJECT_NAME}_targets})
 
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 install(DIRECTORY launch/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)

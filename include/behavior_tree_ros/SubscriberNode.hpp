@@ -2,6 +2,7 @@
 #define SUBSCRIBER_NODE_HPP
 
 #include <mutex>
+#include <chrono>
 #include <behaviortree_cpp_v3/action_node.h>
 
 #include "behavior_tree_ros/policies/serialization_policies.hpp"
@@ -9,31 +10,26 @@
 namespace BT_ROS
 {
 template <class MessageType, template <class> class SerializationPolicy>
-class SubscriberNode final : public BT::ActionNodeBase, public SerializationPolicy<MessageType>
+class SubscriberNode final : public BT::CoroActionNode, public SerializationPolicy<MessageType>
 {
     public:
-        SubscriberNode(const std::string& _name, const BT::NodeConfiguration& _config) : ActionNodeBase(_name, _config)
+        SubscriberNode(const std::string& _name, const BT::NodeConfiguration& _config) : BT::CoroActionNode(_name, _config)
         {
-            const auto& topic        = getInput<std::string>("topic");
-            const auto& queue_size   = getInput<uint32_t>("queue_size");
-            const auto& consume_msgs = getInput<bool>("consume_msgs");
-
-            if(!topic)        { throw BT::RuntimeError { name() + ": " + topic.error() };        }
-            if(!queue_size)   { throw BT::RuntimeError { name() + ": " + queue_size.error() };   }
-            if(!consume_msgs) { throw BT::RuntimeError { name() + ": " + consume_msgs.error() }; }
-
-            consume_msgs_ = consume_msgs.value();
-            topic_        = topic.value();
-            queue_size_   = queue_size.value();
+            subscriber_initialized_ = false;
+            fetchSubscriberValues(false);
         }
 
         ~SubscriberNode() = default;
 
         static BT::PortsList providedPorts()
         {
-            BT::PortsList ports { BT::InputPort<std::string>("topic", "Topic to subscribe"),
+            BT::PortsList ports 
+            { 
+                BT::InputPort<std::string>("topic", "Topic to subscribe"),
                 BT::InputPort<uint32_t>("queue_size", 1, "Subscriber callback queue size"),
                 BT::InputPort<bool>("consume_msgs", false, "Should messages be consumed?"),
+                BT::InputPort<bool>("reinit", false, "Instantiate the subscriber at every new tick"),
+                BT::InputPort<uint32_t>("wait_ms_new_msg", 200, "How many ms you want to wait after instantiation to receive a new msg"),
             };
 
             const auto& policy_ports = SerializationPolicy<MessageType>::requiredPorts();
@@ -49,10 +45,18 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
 
             //Subscribe if not already subscribed (this is done here instead of the constructor
             //to avoid issues when using a ros::AsyncSpinner)
-            if(subscriber_ == nullptr)
+            if(subscriber_ == nullptr || !subscriber_initialized_)
             {
+                fetchSubscriberValues(true);
                 subscriber_ = node_handle_.subscribe(topic_, queue_size_, &SubscriberNode::callback, this);
-                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                start_waiting_time_ = std::chrono::system_clock::now();
+                wait_duration_ = std::chrono::milliseconds{wait_ms_};
+                // std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                while(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_waiting_time_) < wait_duration_)
+                {
+                    setStatusRunningAndYield();
+                }
+
             }
 
             std::lock_guard<std::mutex> lock (message_mutex_);
@@ -66,6 +70,12 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
                 new_message_written = true;
             }
 
+            if(reinit_)// reinit?
+            {
+                subscriber_.shutdown();
+                subscriber_initialized_ = false; 
+            }
+
             // If messages are not expected to be consumed, return success only if at least one message has been received
             if(!consume_msgs_)
             { 
@@ -76,9 +86,33 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
             return new_message_written ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
         }
 
-        virtual void halt() override {};
+        virtual void halt() override {CoroActionNode::halt();};
 
     private:
+        void fetchSubscriberValues(const bool mandatory)
+        {
+            if(subscriber_initialized_) return;
+            
+            const auto& topic        = getInput<std::string>("topic"); // only required input with no default value
+
+            // tunable input with default values
+            const auto& queue_size   = getInput<uint32_t>("queue_size");
+            const auto& consume_msgs = getInput<bool>("consume_msgs");
+            const auto& reinit = getInput<bool>("reinit");
+            const auto& wait_ms   = getInput<uint32_t>("wait_ms_new_msg");
+
+            if(!topic && mandatory)        { throw BT::RuntimeError { name() + ": " + topic.error() };        }
+            else if(!topic) return; // not mandatory
+
+            consume_msgs_ = consume_msgs.value();
+            topic_        = topic.value();
+            queue_size_   = queue_size.value();
+            reinit_ = reinit.value();
+            wait_ms_ = wait_ms.value();
+
+            subscriber_initialized_ = true;
+        }
+
         //TODO: let users choose thread policies (aka do not assume that this is running in a different thread)
         void callback(const typename MessageType::Ptr& _message)
         {
@@ -92,9 +126,16 @@ class SubscriberNode final : public BT::ActionNodeBase, public SerializationPoli
         ros::NodeHandle node_handle_;
         ros::Subscriber subscriber_;
 
+        bool subscriber_initialized_;
+
+        std::chrono::system_clock::time_point start_waiting_time_;
+        std::chrono::milliseconds wait_duration_;
+
         std::string topic_;
         uint32_t    queue_size_;
         bool        consume_msgs_;
+        bool        reinit_;
+        uint32_t    wait_ms_;
 
         typename MessageType::Ptr message_ {};
         bool message_received_ {};
@@ -112,6 +153,9 @@ using SerializedSubscriber = SubscriberNode<MessageType, JsonSerialization>;
 
 template <class MessageType>
 using SmartSerializedSubscriber = SubscriberNode<MessageType, SmartJsonSerialization>;
+
+template <class MessageType>
+using SmartTimeEnabledSerializedSubscriber = SubscriberNode<MessageType, SmartTimeEnabledJsonSerialization>;
 }
 
 #endif

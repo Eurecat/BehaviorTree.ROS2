@@ -25,6 +25,7 @@
         </Action>
         <Action ID="BTCommandHandShakeAction">
             <input_port name="action" type="std::string">Actionlib action server name</input_port>
+            <input_port name="request.data" type="std::string">Auto-generated field from behavior_tree_ros::PerformHandShakeGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
             <input_port name="request.message" type="std::string">Auto-generated field from behavior_tree_ros::PerformHandShakeGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
             <input_port name="request.seq_id" type="short">Auto-generated field from behavior_tree_ros::PerformHandShakeGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
             <output_port name="serialized_feedback" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [behavior_tree_ros::PerformHandShakeFeedback_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
@@ -181,37 +182,49 @@
         <Action ID="MonitorStdBool">
             <input_port name="consume_msgs" type="bool" default="0">Should messages be consumed?</input_port>
             <input_port name="queue_size" type="unsigned int" default="1">Subscriber callback queue size</input_port>
+            <input_port name="reinit" type="bool" default="0">Instantiate the subscriber at every new tick</input_port>
             <input_port name="topic" type="std::string">Topic to subscribe</input_port>
+            <input_port name="wait_ms_new_msg" type="unsigned int" default="200">How many ms you want to wait after instantiation to receive a new msg</input_port>
             <output_port name="serialized_output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [std_msgs::Bool_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
         </Action>
         <Action ID="MonitorStdFloat64">
             <input_port name="consume_msgs" type="bool" default="0">Should messages be consumed?</input_port>
             <input_port name="queue_size" type="unsigned int" default="1">Subscriber callback queue size</input_port>
+            <input_port name="reinit" type="bool" default="0">Instantiate the subscriber at every new tick</input_port>
             <input_port name="topic" type="std::string">Topic to subscribe</input_port>
+            <input_port name="wait_ms_new_msg" type="unsigned int" default="200">How many ms you want to wait after instantiation to receive a new msg</input_port>
             <output_port name="serialized_output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [std_msgs::Float64_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
         </Action>
         <Action ID="MonitorStdInt32">
             <input_port name="consume_msgs" type="bool" default="0">Should messages be consumed?</input_port>
             <input_port name="queue_size" type="unsigned int" default="1">Subscriber callback queue size</input_port>
+            <input_port name="reinit" type="bool" default="0">Instantiate the subscriber at every new tick</input_port>
             <input_port name="topic" type="std::string">Topic to subscribe</input_port>
+            <input_port name="wait_ms_new_msg" type="unsigned int" default="200">How many ms you want to wait after instantiation to receive a new msg</input_port>
             <output_port name="serialized_output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [std_msgs::Int32_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
         </Action>
         <Action ID="MonitorStdString">
             <input_port name="consume_msgs" type="bool" default="0">Should messages be consumed?</input_port>
             <input_port name="queue_size" type="unsigned int" default="1">Subscriber callback queue size</input_port>
+            <input_port name="reinit" type="bool" default="0">Instantiate the subscriber at every new tick</input_port>
             <input_port name="topic" type="std::string">Topic to subscribe</input_port>
+            <input_port name="wait_ms_new_msg" type="unsigned int" default="200">How many ms you want to wait after instantiation to receive a new msg</input_port>
             <output_port name="serialized_output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [std_msgs::String_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
         </Action>
         <Action ID="MonitorStdUInt16">
             <input_port name="consume_msgs" type="bool" default="0">Should messages be consumed?</input_port>
             <input_port name="queue_size" type="unsigned int" default="1">Subscriber callback queue size</input_port>
+            <input_port name="reinit" type="bool" default="0">Instantiate the subscriber at every new tick</input_port>
             <input_port name="topic" type="std::string">Topic to subscribe</input_port>
+            <input_port name="wait_ms_new_msg" type="unsigned int" default="200">How many ms you want to wait after instantiation to receive a new msg</input_port>
             <output_port name="serialized_output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [std_msgs::UInt16_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
         </Action>
         <Action ID="MonitorStdUInt64">
             <input_port name="consume_msgs" type="bool" default="0">Should messages be consumed?</input_port>
             <input_port name="queue_size" type="unsigned int" default="1">Subscriber callback queue size</input_port>
+            <input_port name="reinit" type="bool" default="0">Instantiate the subscriber at every new tick</input_port>
             <input_port name="topic" type="std::string">Topic to subscribe</input_port>
+            <input_port name="wait_ms_new_msg" type="unsigned int" default="200">How many ms you want to wait after instantiation to receive a new msg</input_port>
             <output_port name="serialized_output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [std_msgs::UInt64_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
         </Action>
         <Action ID="PublishStdBool">
