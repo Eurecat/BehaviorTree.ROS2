@@ -58,7 +58,7 @@ namespace BT_ROS
     {
         action_cancelled_.store(false);
         my_seq_id_ = _goal_msg->request.seq_id;
-        data_to_send = _goal_msg->request.data;
+        data_to_send_ = _goal_msg->request.data;
         if (handshake_mode_ == "server"){
             ThreeWayHandshakeServer(_goal_msg);
         }else{
@@ -70,10 +70,10 @@ namespace BT_ROS
             ROS_INFO("Handshake succeeded!!"); 
 
             handshake_result_.result = true;
-	        handshake_result_.data = data_rx;
+	        handshake_result_.data = data_rx_;
             handshake_action_server_.setSucceeded(handshake_result_, "Synchronization succeeded!");
         }
-            }    
+    }    
 
     void RosHandShake::ThreeWayHandshakeServer(const PerformHandShakeGoalConstPtr& _goal_msg){
         
@@ -95,7 +95,7 @@ namespace BT_ROS
         //Send SYNC_ACK periodically
         msg_to_send_.message = SYNC_ACK_MSG;
         msg_to_send_.seq_id = my_seq_id_;
-        msg_to_send_.data = data_to_send;
+        msg_to_send_.data = data_to_send_;
         sync_publisher_.publish(msg_to_send_);
         ROS_INFO("SERVER: %s Message send %d", msg_to_send_.message.c_str(), msg_to_send_.seq_id);
         pub_timer_.start();
@@ -119,7 +119,7 @@ namespace BT_ROS
         //Send SYNC periodically
         msg_to_send_.message = SYNC_MSG;
         msg_to_send_.seq_id = my_seq_id_;
-        msg_to_send_.data = data_to_send;
+        msg_to_send_.data = data_to_send_;
         sync_publisher_.publish(msg_to_send_);
         ROS_INFO("CLIENT: %s Message send %d", msg_to_send_.message.c_str(), msg_to_send_.seq_id);
         pub_timer_.start();
@@ -138,7 +138,8 @@ namespace BT_ROS
         ROS_INFO("Handshake Action Goal canceled!");
 
         my_seq_id_ = -1;
-        data_to_send = "";
+        data_to_send_ = "";
+        data_rx_ = "";
         action_cancelled_.store(true);
         sync_received_.store(false);
         ack_received_.store(false);
@@ -155,7 +156,7 @@ namespace BT_ROS
             // NORMAL CASE
             if(_topic_msg.message == SYNC_ACK_MSG)
             {
-                data_rx = _topic_msg.data;
+                data_rx_ = _topic_msg.data;
                 ROS_INFO("CLIENT: Received SYNC_ACK message %d [%d-%s]", my_seq_id_, _topic_msg.seq_id, _topic_msg.message.c_str());
                 HandShake msg_to_send;
                 msg_to_send.message = FINAL_ACK_MSG;
@@ -172,7 +173,7 @@ namespace BT_ROS
             // CLIENT IS AT STAGE N+x, COMMUNICATE FINAL ACK FOR STAGE N, SO THAT SERVER CAN REACH US
             if(_topic_msg.message == SYNC_ACK_MSG)
             {
-		        data_rx = _topic_msg.data;
+		        // data_rx_ = _topic_msg.data; // should not update data_rx if out of sync
                 HandShake msg_to_send;
                 msg_to_send.message = FINAL_ACK_MSG;
                 msg_to_send.seq_id = _topic_msg.seq_id;
@@ -192,7 +193,7 @@ namespace BT_ROS
             if(_topic_msg.message == SYNC_MSG)
             {
                 ROS_INFO("SERVER: Received SYNC message %d [%d-%s]", my_seq_id_, _topic_msg.seq_id, _topic_msg.message.c_str());
-                data_rx = _topic_msg.data;
+                data_rx_ = _topic_msg.data;
                 sync_received_.store(true); // RECEIVED SYNC of stage we're both in
             }
             
@@ -207,12 +208,12 @@ namespace BT_ROS
             // SERVER IS AT STAGE N+x, COMMUNICATE SYNC ACK FOR STAGE N, SO THAT CLIENT CAN REACH US
             if(_topic_msg.message == SYNC_MSG)
             {
-                data_rx = _topic_msg.data;
+                // data_rx_ = _topic_msg.data; // should not update data_rx_ if out of sync
                 ROS_INFO("SERVER: Received PREV SYNC message %d [%d-%s] & Replying SYNC-ACK Message", my_seq_id_, _topic_msg.seq_id, _topic_msg.message.c_str());
                 HandShake msg_to_send;
                 msg_to_send.message = SYNC_ACK_MSG;
                 msg_to_send.seq_id = _topic_msg.seq_id;
-                msg_to_send.data = data_to_send;
+                msg_to_send.data = data_to_send_;
                 sync_publisher_.publish(msg_to_send);
             }
         }
@@ -221,12 +222,12 @@ namespace BT_ROS
             // SERVER IS AT STAGE N-x, COMMUNICATE SYNC ACK FOR STAGE N-x, SO THAT CLIENT CAN SEND FINAL ACK AND SERVER CAN MOVE FORWARD
             if(_topic_msg.message == SYNC_MSG)
             {
-                data_rx = _topic_msg.data;
+                // data_rx_ = _topic_msg.data; // should not update data_rx_ if out of sync
                 ROS_INFO("SERVER: Received NEXT SYNC message %d [%d-%s] & Replying SYNC-ACK Message from previous sync", my_seq_id_, _topic_msg.seq_id, _topic_msg.message.c_str());
                 HandShake msg_to_send;
                 msg_to_send.message = SYNC_ACK_MSG;
                 msg_to_send.seq_id = my_seq_id_;
-                msg_to_send.data = data_to_send;
+                msg_to_send.data = data_to_send_;
                 sync_publisher_.publish(msg_to_send);
                 sync_received_.store(true);
             }

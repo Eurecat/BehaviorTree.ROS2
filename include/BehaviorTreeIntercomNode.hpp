@@ -49,8 +49,8 @@ namespace BT_ROS
             std::atomic<bool> action_cancelled_ {false};
 
             int16_t my_seq_id_{0};
-            std::string data_to_send;
-            std::string data_rx;
+            std::string data_to_send_;
+            std::string data_rx_;
             std::string handshake_mode_;
 
             ros::Timer pub_timer_;
