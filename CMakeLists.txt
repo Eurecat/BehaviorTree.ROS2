@@ -52,6 +52,7 @@ add_action_files(
 
 add_message_files(
     FILES
+        BBEntry.msg
         HandShake.msg
         TreeExecutionStatus.msg
         Transition.msg

@@ -85,6 +85,34 @@ namespace BT_ROS
         {
             ROS_ERROR("ERROR: UID, SERVER_PORT and PUBLISHER_PORT CAN'T HAVE NEGATIVE VALUES");
         }
+
+        //Updates subscriber client side
+        sync_bb_sub_ = public_node_handle_.subscribe("/behavior_tree_server/broadcast_update", 10, &BehaviorTreeNode::SyncBlackboardUpdateCallback, this);    
+        
+        //Updates publisher for server trees (put latch to true atm)
+        sync_bb_pub_ = public_node_handle_.advertise<behavior_tree_ros::BBEntry>("/behavior_tree_server/local_update", 10, true);  
+    }
+
+
+    void BehaviorTreeNode::SyncBlackboardUpdateCallback(const behavior_tree_ros::BBEntry& _topic_msg)
+    {   
+        // Forward received update to srv tree and action tree
+        if(service_tree_.IsTreeLoaded()) service_tree_.SyncBlackboardUpdateCallback(_topic_msg, &bt_factory_);
+        if(action_tree_.IsTreeLoaded()) action_tree_.SyncBlackboardUpdateCallback(_topic_msg, &bt_factory_);
+    }
+
+    void BehaviorTreeNode::sendBlackboardUpdates(const BT::Blackboard::SerializedEntriesMap& entries_map)
+    {
+        std::cout << "send BB UPDATES for tree " << service_tree_.tree_name_ << " " << std::to_string(entries_map.size()) << " \n" << std::flush;
+        for(const auto ser_entry : entries_map)
+        {
+            behavior_tree_ros::BBEntry bb_entry_msg;
+            bb_entry_msg.key = ser_entry.first;
+            bb_entry_msg.type = ser_entry.second.first;
+            bb_entry_msg.value = ser_entry.second.second;
+
+            sync_bb_pub_.publish(bb_entry_msg);
+        }
     }
 
     void BehaviorTreeNode::Loop()
@@ -100,6 +128,7 @@ namespace BT_ROS
             try
             {
                 const auto tree_status = service_tree_.tickTree();
+                sendBlackboardUpdates(service_tree_.getKeysValueToSync());
                 
                 // Publish the updated status
                 if(tree_status == BT::NodeStatus::FAILURE)
@@ -142,6 +171,7 @@ namespace BT_ROS
             try
             {
                 const auto action_tree_status = action_tree_.tickTree();
+                sendBlackboardUpdates(action_tree_.getKeysValueToSync());
 
                 action_feedback_.status.data = "RUNNING";
                 bt_action_server_.publishFeedback(action_feedback_);

@@ -8,6 +8,9 @@
 #include <std_srvs/Empty.h>
 #include <actionlib/server/simple_action_server.h>
 
+#include <behaviortree_cpp_v3/bt_factory.h>
+#include <behaviortree_cpp_v3/xml_parsing.h>
+
 #include <behavior_tree_ros/GetLoadedPlugins.h>
 #include <behavior_tree_ros/LoadTree.h>
 #include <behavior_tree_ros/StopTree.h>
@@ -15,8 +18,7 @@
 #include <behavior_tree_ros/TreeExecutionStatus.h>
 #include <behavior_tree_ros/GetTreeStatus.h>
 #include <behavior_tree_ros/GetAllTreesStatus.h>
-#include <behaviortree_cpp_v3/bt_factory.h>
-#include <behaviortree_cpp_v3/xml_parsing.h>
+#include <behavior_tree_ros/BBEntry.h>
 
 #include "behavior_tree_ros/details/TreeWrapper.hpp"
 
@@ -35,6 +37,7 @@ namespace BT_ROS
             BehaviorTreeNode();
             ~BehaviorTreeNode() = default;
             void Loop();
+            void sendBlackboardUpdates(const BT::Blackboard::SerializedEntriesMap& entries_map);
 
         private:
             bool GetLoadedPluginsService(PluginsService::Request& _request, PluginsService::Response& _response);
@@ -45,6 +48,8 @@ namespace BT_ROS
             void LoadPluginsFromROS();
             void LoadPluginsFromFolder(const std::string& _plugins_folder);
             void LoadPlugin(const std::string& _plugin_path);
+
+            void SyncBlackboardUpdateCallback(const behavior_tree_ros::BBEntry& _topic_msg);
 
             void RemoveTree();
             std::string GetFullPath(const std::string& _file) const;
@@ -80,6 +85,10 @@ namespace BT_ROS
             bool enable_rostopic_log_;
             bool enable_file_log_;
             bool enable_zmq_log_;
+
+            //BB Sync Publishers/Subscribers
+            ros::Publisher sync_bb_pub_;
+            ros::Subscriber sync_bb_sub_;
 
             // Action feedback and status
             behavior_tree_ros::BehaviorTreeFeedback action_feedback_;

@@ -11,6 +11,8 @@
 #include <ros/ros.h>
 #include "behavior_tree_ros/Transition.h"
 #include "behavior_tree_ros/TreeExecutionStatus.h"
+#include <behavior_tree_ros/BBEntry.h>
+
 #include <behaviortree_cpp_v3/bt_factory.h>
 
 #include <behaviortree_cpp_v3/loggers/bt_cout_logger.h>
@@ -45,11 +47,8 @@ namespace BT_ROS
             bool AreLoggersInitialized() { return loggers_initialized_.load(); };
             size_t TreeNodesCount() { return tree_->nodes.size();}
             BT::NodeStatus tickTree() { return tree_->tickRoot(); };
-            void UpdateBlackBoardPortFromServer(std::string key, std::string val);
-            void TransmitNewBBDataChanged(std::unordered_map<std::string, std::string> sync_ports_changed);
-            void InitSyncBB();
-            void CheckSyncPortsChanged();
-            std::unordered_map<std::string, std::string> unflattenValueMap(const char* req_data_raw);
+            BT::Blackboard::SerializedEntriesMap getKeysValueToSync(){return tree_->rootBlackboard()->getKeysValueToSync(true);};
+            void SyncBlackboardUpdateCallback(const behavior_tree_ros::BBEntry& _topic_msg, const BT::BehaviorTreeFactory* = nullptr);
             std::string execution_tree_status_ {};
             std::string execution_tree_error_ {};
             std::string tree_filename_ {};

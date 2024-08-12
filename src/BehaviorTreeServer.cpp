@@ -11,89 +11,85 @@
 namespace BT_ROS
 {
     BehaviorTreeServer::BehaviorTreeServer () : 
-        loop_rate_(private_node_handle_.param("tick_frequency", 30.0)),
-        //context_(1),
-        server_sub_(context_, ZMQ_SUB),
-        server_pub_(context_, ZMQ_PUB)
+        loop_rate_(private_node_handle_.param("tick_frequency", 30.0))
     {
         load_tree_srv_              = public_node_handle_.advertiseService("behavior_tree_server/load_tree", &BehaviorTreeServer::LoadTree, this);
         stop_tree_srv_              = public_node_handle_.advertiseService("behavior_tree_server/stop_tree", &BehaviorTreeServer::StopTree, this);
         get_tree_status_srv_        = public_node_handle_.advertiseService("behavior_tree_server/get_tree_status", &BehaviorTreeServer::StatusTree, this);
         get_all_trees_status_srv_   = public_node_handle_.advertiseService("behavior_tree_server/get_all_trees_status", &BehaviorTreeServer::StatusAllTree, this);
-        ROS_INFO("BEHAVIOR TREE SERVER ON");
-
-        //SYNCBLACKBOARD//
+        
+        /* SYNC_BLACKBOARD */
         sync_blackboard_ptr_ = BT::Blackboard::create();
-        ROS_INFO("START");
-        //Create ZMQ Server socket (TO LISTEN)
-        int timeout_ms = 100;
-        //server_sub_.setsockopt(ZMQ_SUBSCRIBE, "", 0);
-        server_sub_.setsockopt(ZMQ_RCVTIMEO,&timeout_ms, sizeof(int) );
-        server_sub_.bind("tcp://*:2000");
-        server_pub_.setsockopt(ZMQ_RCVTIMEO,&timeout_ms, sizeof(int) );
-        server_pub_.bind("tcp://*:2001");
-        ROS_INFO("BIND OK");
-        //zmq_proxy (server_sub_, server_pub_, 0); //AUTOCONNECT SUB with PUB
-        ROS_INFO("CREATED");
 
-        thread_ = std::thread([this]()
-        {
-            zmq::message_t req;
-            bool active_server = true;
-            while (active_server)
-            {
-                try
-                {
-                   // std::cout << "[BTSERVER] LISTENING!" << server_sub_.connected() << std::endl;
-                    
-                    zmq::recv_result_t received = server_sub_.recv(req);
-                    if (received)
-                    {
-                        std::cout << "[BTSERVER] RX SOCKET DATA!" << std::endl;
-                        //RECEIVE BB_UPDATES
-                        size_t received_data_size = received.value();
-                        const char* req_data_raw = static_cast<const char*>(req.data());
-                        std::cout << "[BTSERVER] EXTRACTED SOCKET DATA!" << std::endl;
-                        //TRANSMIT BB_UPDATES
-                        zmq::message_t reply(received_data_size);
-                        memcpy(reply.data(), req_data_raw, received_data_size);
-                        server_pub_.send(reply, zmq::send_flags::none);
-                        std::cout << "[BTSERVER] RETRANSMITTED SOCKET DATA!" << std::endl;
-                        //TODO: DESERIALIZE DATA (get KEY VAL)
-                        // auto parts = BT::splitString(req_data_raw, ',', true);
-                        // if(parts.size() > 1)
-                        // {
-                        //     // PortDebugPayload specific fields
-                        //     BT::Optional<std::string> port_name_opt  = extractValue(parts, "port_name");
-                            
-                        //     BT::Optional<std::string> port_value_opt = extractValue(parts, "port_value");
-                        //     updateBlackboard(port_name_opt,port_value_opt);
-                        // }
-                        // std::unordered_map<std::string, std::string> PortsValueMap;
-                        // //updateBlackboard(key,val);
-                    }
-                }
-                catch (zmq::error_t& err)
-                {
-                    if (err.num() == ETERM)
-                    {
-                        std::cout << "[PublisherZMQ] Server quitting." << std::endl;
-                    }
-                    std::cout << "[PublisherZMQ] just died. Exception " << err.what() << std::endl;
-                    active_server = false;
-                }
-                req.rebuild();//clean req message after processing
-            }
-        });
+        //Updates subscriber server side
+        sync_bb_sub_ =  public_node_handle_.subscribe("/behavior_tree_server/local_update", 10, &BehaviorTreeServer::SyncBlackboardUpdateCallback, this);    
+        
+        //Updates republisher for all trees (put latch to true atm, because seems a good option that you receive last update from the server)
+        sync_bb_pub_ = public_node_handle_.advertise<behavior_tree_ros::BBEntry>("/behavior_tree_server/broadcast_update", 10, true);  
+        
     }
 
     BehaviorTreeServer::~BehaviorTreeServer () 
     {
         ROS_INFO("KILLING BEHAVIOR_TREE_SERVER");
-        if (server_sub_.connected()) server_sub_.disconnect("tcp://*:2000");
-        if (server_pub_.connected()) server_pub_.disconnect("tcp://*:2001");
     }
 
+    void BehaviorTreeServer::SyncBlackboardUpdateCallback(const behavior_tree_ros::BBEntry& _topic_msg)
+    {
+        std::cout << "BehaviorTreeServer::SyncBlackboardUpdateCallback " << 
+            "\tkey=" << _topic_msg.key << 
+            "\ttype=" << _topic_msg.type << 
+            "\tvalue=" << _topic_msg.value << "\n" << std::flush;
+        bool update_successful = false;
+        
+        //retrieve string converter functor
+        const BT::StringConverter* string_converter_ptr = bt_factory_.getStringConverter(_topic_msg.type);
+        if(string_converter_ptr == nullptr)
+        {
+            ROS_ERROR("[BTServer] Entry in Sync. BB for key [%s] has type [%s], but no string converter can be found for this type", _topic_msg.key.c_str(), _topic_msg.type.c_str());
+            return;
+        }
+
+        if(sync_blackboard_ptr_->getEntry(_topic_msg.key) == nullptr)
+        {
+            // Entry not present in the BB -> First insert
+            BT::Optional<BT::PortInfo> port_info_opt = bt_factory_.getPortInfo(_topic_msg.type);
+            if(!port_info_opt.has_value())
+            {
+                ROS_ERROR("[BTServer] Entry in Sync. BB for key [%s] has type [%s], but it is an unknown type and therefore cannot be treated", _topic_msg.key.c_str(), _topic_msg.type.c_str());
+                return; // type unknown
+            }
+            
+            // Set empty entry with type info
+            sync_blackboard_ptr_->setPortInfo(_topic_msg.key, port_info_opt.value());
+            ROS_INFO("[BTServer] Entry in Sync. BB for key [%s] created with type [%s]", _topic_msg.key.c_str(), BT::demangle(port_info_opt.value().type()).c_str());
+        }
+
+        //retrieve current entry in bt server bb
+        const BT::Blackboard::Entry* entry_ptr = sync_blackboard_ptr_->getEntry(_topic_msg.key);
+        if(entry_ptr)
+        {
+            //entry already present in the bb -> UPDATE
+            
+            if(_topic_msg.type != BT::demangle(entry_ptr->port_info.type()))
+            {
+                ROS_ERROR("[BTServer] Entry in Sync. BB for key [%s] has type [%s], but receiving requests for update with type [%s]", _topic_msg.key.c_str(), BT::demangle(entry_ptr->port_info.type()).c_str(), _topic_msg.type.c_str());
+                return; // type inconsistencies, don't update
+            }
+            
+            // convert from string new value
+            BT::Any new_any_value = (*string_converter_ptr)(_topic_msg.value);
+
+            // update it into the sync BB
+            sync_blackboard_ptr_->setAny(_topic_msg.key, std::move(new_any_value), true);
+            update_successful = true;
+        }
+
+
+        if(update_successful)
+            sync_bb_pub_.publish(_topic_msg);
+    }
+    
     bool BehaviorTreeServer::RosServiceStopCall (std::string tree_name)
     {
         std_srvs::Empty empty_message;
@@ -276,11 +272,6 @@ namespace BT_ROS
     {
         uids_to_tree_info.at(_topic_msg.uid).tree_status = _topic_msg;
         ROS_INFO("New Status topic RX: Tree_name:%s New status:%s", uids_to_tree_info.at(_topic_msg.uid).tree_name.c_str() , uids_to_tree_info.at(_topic_msg.uid).tree_status.status.c_str());
-    }
-
-    void BehaviorTreeServer::updateBlackboard(std::string bb_key, std::string bb_val)
-    {
-        sync_blackboard_ptr_->set(bb_key, bb_val);
     }
 
     /*

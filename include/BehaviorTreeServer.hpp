@@ -14,7 +14,7 @@
 #include <std_srvs/Empty.h>
 
 #include <behaviortree_cpp_v3/bt_factory.h>
-#include <zmq.hpp>
+
 #include <behavior_tree_ros/LoadTree.h>
 #include <behavior_tree_ros/StopTree.h>
 #include <behavior_tree_ros/BehaviorTreeAction.h>
@@ -22,6 +22,7 @@
 #include <behavior_tree_ros/GetTreeStatus.h>
 #include <behavior_tree_ros/GetTreeStatusByID.h>
 #include <behavior_tree_ros/GetAllTreesStatus.h>
+#include <behavior_tree_ros/BBEntry.h>
 
 #include "ros_launch_manager.hpp"
 
@@ -63,8 +64,7 @@ namespace BT_ROS
             bool RosServiceStopCall (std::string tree_name);
             behavior_tree_ros::TreeExecutionStatus RosServiceStatusCall (std::string tree_name);
             void StatusTopicCallbackServer(const behavior_tree_ros::TreeExecutionStatus& _topic_msg);
-            void updateBlackboard(std::string bb_key, std::string bb_val);
-           // BT::Optional<std::string> extractValue(const std::vector<BT::StringView>& req_parts, const std::string& key);
+            void SyncBlackboardUpdateCallback(const behavior_tree_ros::BBEntry& _topic_msg);
     
         private:
             ros::NodeHandle private_node_handle_ { "~" };
@@ -82,11 +82,12 @@ namespace BT_ROS
             std::map <unsigned int, TreeProcessInfo> uids_to_tree_info;
             //Manage Trees_UIDs
             unsigned int trees_UID = 0;
-            //ZMQ
-            zmq::context_t context_;
-            zmq::socket_t server_sub_;
-            zmq::socket_t server_pub_;
-            std::thread thread_;
+
+            BT::BehaviorTreeFactory bt_factory_;
+            
+            //BB Sync Publishers/Subscribers
+            ros::Publisher sync_bb_pub_;
+            ros::Subscriber sync_bb_sub_;
     };
 
 
