@@ -40,17 +40,19 @@ namespace BT_ROS
             "\tkey=" << _topic_msg.key << 
             "\ttype=" << _topic_msg.type << 
             "\tvalue=" << _topic_msg.value << "\n" << std::flush;
-        bool update_successful = false;
+        // bool update_successful = false;
         
+        const bool void_type = (_topic_msg.type == BT::demangle(typeid(void))); // source tree does not know the type of the value
         //retrieve string converter functor
-        const BT::StringConverter* string_converter_ptr = bt_factory_.getStringConverter(_topic_msg.type);
-        if(string_converter_ptr == nullptr)
+        const BT::StringConverter* string_converter_ptr = void_type? nullptr : bt_factory_.getStringConverter(_topic_msg.type);
+        if(!void_type && string_converter_ptr == nullptr)
         {
             ROS_ERROR("[BTServer] Entry in Sync. BB for key [%s] has type [%s], but no string converter can be found for this type", _topic_msg.key.c_str(), _topic_msg.type.c_str());
             return;
         }
 
-        if(sync_blackboard_ptr_->getEntry(_topic_msg.key) == nullptr)
+        const BT::Blackboard::Entry* entry_check_ptr = sync_blackboard_ptr_->getEntry(_topic_msg.key);
+        if(entry_check_ptr == nullptr || (entry_check_ptr->port_info.missingTypeInfo() && !void_type))
         {
             // Entry not present in the BB -> First insert
             BT::Optional<BT::PortInfo> port_info_opt = bt_factory_.getPortInfo(_topic_msg.type);
@@ -62,7 +64,7 @@ namespace BT_ROS
             
             // Set empty entry with type info
             sync_blackboard_ptr_->setPortInfo(_topic_msg.key, port_info_opt.value());
-            ROS_INFO("[BTServer] Entry in Sync. BB for key [%s] created with type [%s]", _topic_msg.key.c_str(), BT::demangle(port_info_opt.value().type()).c_str());
+            ROS_INFO("[BTServer] Entry in Sync. BB for key [%s] updated with type [%s]", _topic_msg.key.c_str(), BT::demangle(port_info_opt.value().type()).c_str());
         }
 
         //retrieve current entry in bt server bb
@@ -71,23 +73,40 @@ namespace BT_ROS
         {
             //entry already present in the bb -> UPDATE
             
-            if(_topic_msg.type != BT::demangle(entry_ptr->port_info.type()))
+            if(!void_type && _topic_msg.type != BT::demangle(entry_ptr->port_info.type()))
             {
                 ROS_ERROR("[BTServer] Entry in Sync. BB for key [%s] has type [%s], but receiving requests for update with type [%s]", _topic_msg.key.c_str(), BT::demangle(entry_ptr->port_info.type()).c_str(), _topic_msg.type.c_str());
                 return; // type inconsistencies, don't update
             }
             
-            // convert from string new value
-            BT::Any new_any_value = (*string_converter_ptr)(_topic_msg.value);
+            try
+            {
+                if(!void_type)
+                {
+                    // convert from string new value
+                    BT::Any new_any_value = (*string_converter_ptr)(_topic_msg.value);
 
-            // update it into the sync BB
-            sync_blackboard_ptr_->setAny(_topic_msg.key, std::move(new_any_value), true);
-            update_successful = true;
+                    // update it into the sync BB
+                    sync_blackboard_ptr_->setAny(_topic_msg.key, std::move(new_any_value), true);
+                }
+                else
+                    sync_blackboard_ptr_->set(_topic_msg.key, _topic_msg.value, true);
+            }
+            catch(const std::exception& e)
+            {
+                ROS_ERROR("[BTServer] Entry in Sync. Fail to update value in BB for key [%s]: %s", _topic_msg.key.c_str(), e.what());
+                return;
+            }
+
+            // if(update_successful)
+            {
+                behavior_tree_ros::BBEntry upd_msg;
+                upd_msg.key = _topic_msg.key;
+                upd_msg.type = BT::demangle(entry_ptr->port_info.type());
+                upd_msg.value = _topic_msg.value;
+                sync_bb_pub_.publish(upd_msg);
+            }
         }
-
-
-        if(update_successful)
-            sync_bb_pub_.publish(_topic_msg);
     }
     
     bool BehaviorTreeServer::RosServiceStopCall (std::string tree_name)

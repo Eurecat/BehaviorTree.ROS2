@@ -199,10 +199,11 @@ namespace BT_ROS
             "\tvalue=" << _topic_msg.value << "\n" << std::flush;
         // bool update_successful = false;
         
-        const BT::StringConverter* from_string_converter_ptr = bt_factory_ptr->getStringConverter(_topic_msg.type);
+        const bool void_type = (_topic_msg.type == BT::demangle(typeid(void))); // source tree does not know the type of the value
+        const BT::StringConverter* from_string_converter_ptr = void_type? nullptr : bt_factory_ptr->getStringConverter(_topic_msg.type);
         
         //check string converter functor
-        if(from_string_converter_ptr == nullptr)
+        if(!void_type && from_string_converter_ptr == nullptr)
         {
             ROS_ERROR("[BTWrapper %s] Entry in Sync. BB for key [%s] has type [%s], but no string converter can be found for this type", 
                 tree_name_.c_str(), _topic_msg.key.c_str(), _topic_msg.type.c_str());
@@ -214,7 +215,7 @@ namespace BT_ROS
 
         if(entry_ptr && entry_ptr->isSync())
         {
-            // if(entry_ptr->port_info.missingTypeInfo()) is it necessary???
+            // if(entry_ptr->port_info.missingTypeInfo()) is it necessary??? I would not update type info if received from another tree (i.e. from void to type T, with T != void)
             // {
             //     BT::Optional<BT::PortInfo> port_info_opt = bt_factory_ptr->getPortInfo(_topic_msg.type);
             //     if(!port_info_opt.has_value())
@@ -225,19 +226,33 @@ namespace BT_ROS
             //     tree_->rootBlackboard()->setPortInfo(_topic_msg.key, port_info_opt.value());
             // }            
 
-            if(!entry_ptr->port_info.missingTypeInfo() && _topic_msg.type != BT::demangle(entry_ptr->port_info.type())) //TODO evaluate strictness and checks to be made here
+            if(!entry_ptr->port_info.missingTypeInfo() && !void_type && _topic_msg.type != BT::demangle(entry_ptr->port_info.type())) //TODO evaluate strictness and checks to be made here
             {
                 ROS_ERROR("[BTWrapper %s]. Entry in Sync. BB for key [%s] has type [%s], but receiving requests for update with type [%s]",
                     tree_name_.c_str(), _topic_msg.key.c_str(), BT::demangle(entry_ptr->port_info.type()).c_str(), _topic_msg.type.c_str());
                 return; // type inconsistencies, don't update
             }
             
-            // convert from string new value
-            BT::Any new_any_value = (*from_string_converter_ptr)(_topic_msg.value);
+            try
+            {
+                if(!void_type)
+                {
+                    // convert from string new value
+                    BT::Any new_any_value = (*from_string_converter_ptr)(_topic_msg.value);
+                    
+                    std::cout << "[BTWrapper "<<tree_name_<<"]::SyncBlackboardUpdateCallback built new_any_value with type " << BT::demangle(new_any_value.type()) << " \n" << std::flush;
+                    // update it into the sync BB
+                    tree_->rootBlackboard()->setAny(_topic_msg.key, std::move(new_any_value), true);
+                }
+                else
+                    tree_->rootBlackboard()->set(_topic_msg.key, _topic_msg.value, true);
             
-            std::cout << "[BTWrapper "<<tree_name_<<"]::SyncBlackboardUpdateCallback built new_any_value with type " << BT::demangle(new_any_value.type()) << " \n" << std::flush;
-            // update it into the sync BB
-            tree_->rootBlackboard()->setAny(_topic_msg.key, std::move(new_any_value), true);
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << "[BTWrapper "<<tree_name_<<"]::SyncBlackboardUpdateCallback fail to update value in BB for key [" << _topic_msg.key << "]: " << e.what() << " \n" << std::flush;
+                return;
+            }
 
             std::cout << "[BTWrapper "<<tree_name_<<"]::SyncBlackboardUpdateCallback updated value in BB for key [" << _topic_msg.key << "] \n" << std::flush;
             // update_successful = true;
