@@ -36,10 +36,10 @@ namespace BT_ROS
 
     void BehaviorTreeServer::SyncBlackboardUpdateCallback(const behavior_tree_ros::BBEntry& _topic_msg)
     {
-        std::cout << "BehaviorTreeServer::SyncBlackboardUpdateCallback " << 
-            "\tkey=" << _topic_msg.key << 
-            "\ttype=" << _topic_msg.type << 
-            "\tvalue=" << _topic_msg.value << "\n" << std::flush;
+        // std::cout << "BehaviorTreeServer::SyncBlackboardUpdateCallback " << 
+        //     "\tkey=" << _topic_msg.key << 
+        //     "\ttype=" << _topic_msg.type << 
+        //     "\tvalue=" << _topic_msg.value << "\n" << std::flush;
         // bool update_successful = false;
         
         const bool void_type = (_topic_msg.type == BT::demangle(typeid(void))); // source tree does not know the type of the value

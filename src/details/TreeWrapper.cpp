@@ -193,10 +193,10 @@ namespace BT_ROS
     {
         if(!bt_factory_ptr) return;
 
-        std::cout << "[BTWrapper "<<tree_name_<<"]::SyncBlackboardUpdateCallback " << 
-            "\tkey=" << _topic_msg.key << 
-            "\ttype=" << _topic_msg.type << 
-            "\tvalue=" << _topic_msg.value << "\n" << std::flush;
+        // std::cout << "[BTWrapper "<<tree_name_<<"]::SyncBlackboardUpdateCallback " << 
+        //     "\tkey=" << _topic_msg.key << 
+        //     "\ttype=" << _topic_msg.type << 
+        //     "\tvalue=" << _topic_msg.value << "\n" << std::flush;
         // bool update_successful = false;
         
         const bool void_type = (_topic_msg.type == BT::demangle(typeid(void))); // source tree does not know the type of the value
@@ -240,7 +240,7 @@ namespace BT_ROS
                     // convert from string new value
                     BT::Any new_any_value = (*from_string_converter_ptr)(_topic_msg.value);
                     
-                    std::cout << "[BTWrapper "<<tree_name_<<"]::SyncBlackboardUpdateCallback built new_any_value with type " << BT::demangle(new_any_value.type()) << " \n" << std::flush;
+                    // std::cout << "[BTWrapper "<<tree_name_<<"]::SyncBlackboardUpdateCallback built new_any_value with type " << BT::demangle(new_any_value.type()) << " \n" << std::flush;
                     // update it into the sync BB
                     tree_->rootBlackboard()->setAny(_topic_msg.key, std::move(new_any_value), true);
                 }
@@ -254,7 +254,7 @@ namespace BT_ROS
                 return;
             }
 
-            std::cout << "[BTWrapper "<<tree_name_<<"]::SyncBlackboardUpdateCallback updated value in BB for key [" << _topic_msg.key << "] \n" << std::flush;
+            // std::cout << "[BTWrapper "<<tree_name_<<"]::SyncBlackboardUpdateCallback updated value in BB for key [" << _topic_msg.key << "] \n" << std::flush;
             // update_successful = true;
         }
     }

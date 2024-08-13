@@ -103,7 +103,7 @@ namespace BT_ROS
 
     void BehaviorTreeNode::sendBlackboardUpdates(const BT::Blackboard::SerializedEntriesMap& entries_map)
     {
-        std::cout << "send BB UPDATES for tree " << service_tree_.tree_name_ << " " << std::to_string(entries_map.size()) << " \n" << std::flush;
+        // std::cout << "send BB UPDATES for tree " << service_tree_.tree_name_ << " " << std::to_string(entries_map.size()) << " \n" << std::flush;
         for(const auto ser_entry : entries_map)
         {
             behavior_tree_ros::BBEntry bb_entry_msg;
