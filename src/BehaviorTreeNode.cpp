@@ -53,6 +53,7 @@ namespace BT_ROS
 
         get_loaded_plugins_srv_ = public_node_handle_.advertiseService("/"+service_tree_.tree_name_+"/get_loaded_plugins", &BehaviorTreeNode::GetLoadedPluginsService, this);
         stop_tree_srv_          = public_node_handle_.advertiseService("/"+service_tree_.tree_name_+"/stop_tree", &BehaviorTreeNode::StopTree, this);
+        restart_tree_srv_          = public_node_handle_.advertiseService("/"+service_tree_.tree_name_+"/restart_tree", &BehaviorTreeNode::RestartTree, this);
         get_tree_status_srv_    = public_node_handle_.advertiseService("/"+service_tree_.tree_name_+"/status_tree", &BehaviorTreeNode::StatusTree, this);
         
         if(enable_rostopic_log_)
@@ -124,7 +125,7 @@ namespace BT_ROS
             return;
         }
 
-        if(service_tree_.IsTreeLoaded() && service_tree_.AreLoggersInitialized()) { // Tick main tree (loaded with service)
+        if(service_tree_.IsTreeLoaded() && service_tree_.AreLoggersInitialized() && !service_tree_.HasExecutionTerminated()) { // Tick main tree (loaded with service)
             try
             {
                 const auto tree_status = service_tree_.tickTree();
@@ -138,7 +139,8 @@ namespace BT_ROS
                     service_tree_.status_ = tree_status;
                     service_tree_.PublishExecutionStatus();
                     ROS_ERROR("Tree finished with errors");
-                    RemoveTree();
+                    ResetTree();// RemoveTree();
+                    service_tree_.SetExecuted(true);
                 }
                 else if(tree_status == BT::NodeStatus::SUCCESS)
                 {
@@ -147,7 +149,8 @@ namespace BT_ROS
                     service_tree_.status_ = tree_status;
                     service_tree_.PublishExecutionStatus();
                     ROS_INFO("Tree finished with no errors");
-                    RemoveTree();
+                    ResetTree();// RemoveTree();
+                    service_tree_.SetExecuted(true);
                 }
                 //IDLE --> RUNNING --> PAUSED
                 else if (tree_status != service_tree_.status_)
@@ -246,14 +249,30 @@ namespace BT_ROS
         return true;
     }
 
+    void BehaviorTreeNode::ResetTree()
+    {
+        service_tree_.ResetTree();
+    }
+
+
+    bool BehaviorTreeNode::RestartTree(std_srvs::Empty::Request& _request, std_srvs::Empty::Response& _response)
+    {
+        if(service_tree_.IsTreeLoaded())
+        {
+            service_tree_.SetExecuted(false);
+            return true;
+        }
+        else
+            return false;
+    }
 
     bool BehaviorTreeNode::StopTree(std_srvs::Empty::Request& _request, std_srvs::Empty::Response& _response)
     {
         service_tree_.execution_tree_status_ = "FINISHED";
         service_tree_.execution_tree_error_ = "Canceled by StopTree Service";
-        service_tree_.status_ = BT::NodeStatus::FAILURE;
+        service_tree_.status_ = BT::NodeStatus::IDLE;
         service_tree_.PublishExecutionStatus();
-        RemoveTree();
+        ResetTree(); // RemoveTree();
         return true;
     }
 

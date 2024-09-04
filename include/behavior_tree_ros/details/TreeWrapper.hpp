@@ -39,6 +39,21 @@ namespace BT_ROS
                 const bool debug = false, const std::vector<std::string>& bb_init_abs_filepaths = {});
             void RemoveTree();
 
+            bool ResetTree()
+            {
+                if(IsTreeLoaded() && AreLoggersInitialized())
+                {
+                    tree_->haltTree();
+                    return true;
+                }
+                else
+                    return false;
+            }
+
+            bool HasExecutionTerminated(){return executed_;}
+            void SetExecuted(bool executed){executed_ = executed;};
+
+
             void InitializeLoggers(const bool& _enable_cout, const bool& _enable_minitrace, const bool& _enable_file,
                                    const bool& _enable_topic, const bool& _enable_zmq, const std::string& _log_folder);
             void ResetLoggers();
@@ -68,6 +83,8 @@ namespace BT_ROS
             std::thread thread_tx;
         private:
             std::unique_ptr<BT::Tree> tree_;
+            bool executed_{false};
+
             std::unique_ptr<BT::StdCoutLogger>   bt_logger_cout_;
             std::unique_ptr<BT::FileLogger>      bt_logger_file_;
             std::unique_ptr<BT::MinitraceLogger> bt_logger_trace_;

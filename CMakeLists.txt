@@ -62,7 +62,7 @@ add_service_files(
     FILES
         GetLoadedPlugins.srv
         LoadTree.srv
-        StopTree.srv
+        TreeRequest.srv
         GetTreeStatus.srv
         GetTreeStatusByID.srv
         GetAllTreesStatus.srv

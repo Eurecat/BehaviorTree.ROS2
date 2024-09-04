@@ -15,6 +15,7 @@ namespace BT_ROS
     {
         load_tree_srv_              = public_node_handle_.advertiseService("behavior_tree_server/load_tree", &BehaviorTreeServer::LoadTree, this);
         stop_tree_srv_              = public_node_handle_.advertiseService("behavior_tree_server/stop_tree", &BehaviorTreeServer::StopTree, this);
+        restart_tree_srv_              = public_node_handle_.advertiseService("behavior_tree_server/restart_tree", &BehaviorTreeServer::RestartTree, this);
         get_tree_status_srv_        = public_node_handle_.advertiseService("behavior_tree_server/get_tree_status", &BehaviorTreeServer::StatusTree, this);
         get_all_trees_status_srv_   = public_node_handle_.advertiseService("behavior_tree_server/get_all_trees_status", &BehaviorTreeServer::StatusAllTree, this);
         
@@ -113,6 +114,19 @@ namespace BT_ROS
     {
         std_srvs::Empty empty_message;
         ros::ServiceClient service_client = private_node_handle_.serviceClient<std_srvs::Empty>("/"+tree_name+ "/stop_tree");
+        if (service_client.call(empty_message))
+        {
+            return true;
+        }
+        ROS_INFO("REQUEST FAILED");
+        return false;
+
+    }
+
+    bool BehaviorTreeServer::RosServiceRestartCall (std::string tree_name)
+    {
+        std_srvs::Empty empty_message;
+        ros::ServiceClient service_client = private_node_handle_.serviceClient<std_srvs::Empty>("/"+tree_name+ "/restart_tree");
         if (service_client.call(empty_message))
         {
             return true;
@@ -260,8 +274,23 @@ namespace BT_ROS
 
     bool BehaviorTreeServer::StopTree(StopTreeService::Request& _request, StopTreeService::Response& _response)
     {
-        TreeProcessInfo tree_info = uids_to_tree_info.at(_request.tree_uid);
-        return RosServiceStopCall(tree_info.tree_name);
+        if(uids_to_tree_info.find(_request.tree_uid) != uids_to_tree_info.end())
+        {
+            TreeProcessInfo tree_info = uids_to_tree_info.at(_request.tree_uid);
+            return RosServiceStopCall(tree_info.tree_name);
+        }
+        return false;
+    }
+
+
+    bool BehaviorTreeServer::RestartTree(RestartTreeService::Request& _request, RestartTreeService::Response& _response)
+    {
+        if(uids_to_tree_info.find(_request.tree_uid) != uids_to_tree_info.end())
+        {
+            TreeProcessInfo tree_info = uids_to_tree_info.at(_request.tree_uid);
+            return RosServiceRestartCall(tree_info.tree_name);
+        }
+        return false;
     }
 
     bool BehaviorTreeServer::StatusTree(StatusServiceByID::Request& _request, StatusServiceByID::Response& _response)

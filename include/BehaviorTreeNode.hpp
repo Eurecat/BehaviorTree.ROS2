@@ -13,7 +13,6 @@
 
 #include <behavior_tree_ros/GetLoadedPlugins.h>
 #include <behavior_tree_ros/LoadTree.h>
-#include <behavior_tree_ros/StopTree.h>
 #include <behavior_tree_ros/BehaviorTreeAction.h>
 #include <behavior_tree_ros/TreeExecutionStatus.h>
 #include <behavior_tree_ros/GetTreeStatus.h>
@@ -31,7 +30,6 @@ namespace BT_ROS
             using LoadTreeService = behavior_tree_ros::LoadTree;
             using StatusService  = behavior_tree_ros::GetTreeStatus;
             using StatusAllService  = behavior_tree_ros::GetAllTreesStatus;
-            using StopTreeService  = behavior_tree_ros::StopTree;
 
         public:
             BehaviorTreeNode();
@@ -42,6 +40,7 @@ namespace BT_ROS
         private:
             bool GetLoadedPluginsService(PluginsService::Request& _request, PluginsService::Response& _response);
             bool LoadTree();
+            bool RestartTree(std_srvs::Empty::Request& _request, std_srvs::Empty::Response& _response);
             bool StopTree(std_srvs::Empty::Request& _request, std_srvs::Empty::Response& _response);
             bool StatusTree(StatusService::Request& _request, StatusService::Response& _response);
             void LoadAllPlugins();
@@ -51,6 +50,7 @@ namespace BT_ROS
 
             void SyncBlackboardUpdateCallback(const behavior_tree_ros::BBEntry& _topic_msg);
 
+            void ResetTree();
             void RemoveTree();
             std::string GetFullPath(const std::string& _file) const;
 
@@ -66,6 +66,7 @@ namespace BT_ROS
             ros::ServiceServer get_loaded_plugins_srv_;
             ros::ServiceServer get_tree_status_srv_;
             ros::ServiceServer stop_tree_srv_;
+            ros::ServiceServer restart_tree_srv_;
 
             void execute_tick(BT_ROS::TreeWrapper * tree);
             
