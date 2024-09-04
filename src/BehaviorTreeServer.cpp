@@ -266,6 +266,7 @@ namespace BT_ROS
         std::string topic_name = "/"+tree_name+"/execution_status";
         new_process_info.status_subscriber =  public_node_handle_.subscribe(topic_name, 10, &BehaviorTreeServer::StatusTopicCallbackServer, this);
         uids_to_tree_info.emplace(trees_UID,new_process_info);
+        _response.tree_uid = trees_UID;
         ////////////////////////////////////////////////////////
         
         ROS_INFO("LOADING %s OK", tree_name.c_str());
