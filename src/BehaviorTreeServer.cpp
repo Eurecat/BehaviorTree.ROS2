@@ -4,6 +4,7 @@
 
 #include "BehaviorTreeServer.hpp"
 #include "behavior_tree_ros/3rdparty/tinyxml2/tinyxml2.h"
+#include "behavior_tree_ros/details/commons.hpp"
 
 #include <cstdlib>
 #include <signal.h>
@@ -20,7 +21,11 @@ namespace BT_ROS
         get_all_trees_status_srv_   = public_node_handle_.advertiseService("behavior_tree_server/get_all_trees_status", &BehaviorTreeServer::StatusAllTree, this);
         
         /* SYNC_BLACKBOARD */
+        std::string sync_bb_init_file;
         sync_blackboard_ptr_ = BT::Blackboard::create();
+        if(private_node_handle_.param<std::string>("sync_bb_init", sync_bb_init_file, "") && sync_bb_init_file.length() > 0)
+            InitializeBlackboard(sync_bb_init_file, sync_blackboard_ptr_, true);
+        
 
         //Updates subscriber server side
         sync_bb_sub_ =  public_node_handle_.subscribe("/behavior_tree_server/local_update", 10, &BehaviorTreeServer::SyncBlackboardUpdateCallback, this);    

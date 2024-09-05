@@ -1,6 +1,10 @@
 <launch>
+    <arg name="sync_bb_init"            default="" />
+    
     # Load Behavior Tree Server Node
-    <node pkg="behavior_tree_ros" name="behavior_tree_ros_server" type="behavior_tree_ros_server" output="screen"/>
+    <node pkg="behavior_tree_ros" name="behavior_tree_ros_server" type="behavior_tree_ros_server" output="screen">
+        <param name="sync_bb_init" 	 	 type="string" value="$(arg sync_bb_init)"/>
+    </node>
 
     
 </launch>

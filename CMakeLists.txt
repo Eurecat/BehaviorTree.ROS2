@@ -102,7 +102,7 @@ add_dependencies(${PROJECT_NAME}_plugin ${${PROJECT_NAME}_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_plugin)
 
 add_executable(${PROJECT_NAME}_node src/behavior_tree_node.cpp src/BehaviorTreeNode.cpp src/bt_rostopic_logger.cpp
-                                    src/3rdparty/tinyxml2/tinyxml2.cpp src/details/TreeWrapper.cpp)
+                                    src/3rdparty/tinyxml2/tinyxml2.cpp src/details/TreeWrapper.cpp src/details/commons.cpp)
 target_include_directories(${PROJECT_NAME}_node PRIVATE include ${catkin_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME}_node PRIVATE ${catkin_LIBRARIES} yaml-cpp ${Boost_LIBRARIES})
 target_compile_options(${PROJECT_NAME}_node PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
@@ -117,9 +117,9 @@ add_dependencies(${PROJECT_NAME}_intercom_node ${${PROJECT_NAME}_EXPORTED_TARGET
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_intercom_node)
 
 
-add_executable(${PROJECT_NAME}_server src/behavior_tree_server.cpp src/BehaviorTreeServer.cpp )
+add_executable(${PROJECT_NAME}_server src/behavior_tree_server.cpp src/BehaviorTreeServer.cpp  src/details/commons.cpp)
 target_include_directories(${PROJECT_NAME}_server PRIVATE include ${catkin_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}_server PRIVATE ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_server PRIVATE ${catkin_LIBRARIES} yaml-cpp)
 target_compile_options(${PROJECT_NAME}_server PRIVATE -Wall -Werror -Wfatal-errors -Wl,--no-undefined)
 add_dependencies(${PROJECT_NAME}_server ${${PROJECT_NAME}_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_targets ${PROJECT_NAME}_server)
