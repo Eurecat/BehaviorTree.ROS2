@@ -42,6 +42,7 @@ namespace BT_ROS
         std::string s;
         while (getline(bb_init_stream, s, ',')) {
             // store token string in the vector
+            s.erase(std::remove(s.begin(), s.end(), '\''), s.end());
             service_tree_.tree_bb_init_.push_back(s);
         }   
 
