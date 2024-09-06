@@ -14,7 +14,8 @@
     <arg name="tree_name"         	    default="BehaviorTreeName" />
     <arg name="tree_file"         	    default="" />
     <arg name="tree_uid"         	    default="0" />
-    <arg name="tree_debug"         	    default="true" />
+    <arg name="tree_debug"         	    default="false" />
+    <arg name="tree_auto_restart"       default="false" />
     <arg name="tree_bb_init"            default="" />
     <arg name="server_port"             default="0" />
     <arg name="publisher_port"         	default="0" />
@@ -36,6 +37,7 @@
         <param name="tree_file" 		 type="string" value="$(arg tree_file)"/>
         <param name="tree_uid" 		     type="int" value="$(arg tree_uid)"/>
         <param name="tree_debug" 		 type="bool" value="$(arg tree_debug)"/>
+        <param name="tree_auto_restart"  type="bool" value="$(arg tree_auto_restart)"/>
         <param name="tree_bb_init" 	 	 type="string" value="$(arg tree_bb_init)"/>
         <param name="server_port" 	 	 type="int" value="$(arg server_port)"/>
         <param name="publisher_port" 	 type="int" value="$(arg publisher_port)"/>

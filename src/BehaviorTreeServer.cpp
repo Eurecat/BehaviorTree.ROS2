@@ -208,6 +208,7 @@ namespace BT_ROS
         std::string param_name = "tree_name:="+tree_name;
         std::string param_file = "tree_file:="+_request.tree_file;
         std::string param_uid = "tree_uid:="+std::to_string(trees_UID);
+        std::string param_auto_restart = "tree_auto_restart:="+std::to_string(_request.auto_restart);
         std::string param_debug ="tree_debug:="+std::to_string(_request.debug);
 
         std::string param_bb_init = "tree_bb_init:='";
@@ -258,6 +259,7 @@ namespace BT_ROS
                  param_file.c_str(),
                  param_uid.c_str(),
                  param_debug.c_str(),
+                 param_auto_restart.c_str(),
                  param_bb_init.c_str(),
                  param_server_port.c_str(),
                  param_pub_port.c_str()

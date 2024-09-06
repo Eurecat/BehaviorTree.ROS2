@@ -32,6 +32,7 @@ namespace BT_ROS
         private_node_handle_.param<std::string>("tree_bb_init",bb_init, "");
         private_node_handle_.param<int>("tree_uid",uid, 1);
         service_tree_.tree_debug_ = private_node_handle_.param("tree_debug", false);
+        service_tree_.tree_auto_restart_ = private_node_handle_.param("tree_auto_restart", false);
         private_node_handle_.param<int>("server_port", server_port, 1667);
         private_node_handle_.param<int>("publisher_port", publisher_port,1666);
 
@@ -141,7 +142,7 @@ namespace BT_ROS
                     service_tree_.PublishExecutionStatus();
                     ROS_ERROR("Tree finished with errors");
                     ResetTree();// RemoveTree();
-                    service_tree_.SetExecuted(true);
+                    service_tree_.SetExecuted(!service_tree_.tree_auto_restart_); // if auto restart is false, set executed to true to stop the tick, otherwise will restart the tick from the beginning
                 }
                 else if(tree_status == BT::NodeStatus::SUCCESS)
                 {
@@ -151,7 +152,7 @@ namespace BT_ROS
                     service_tree_.PublishExecutionStatus();
                     ROS_INFO("Tree finished with no errors");
                     ResetTree();// RemoveTree();
-                    service_tree_.SetExecuted(true);
+                    service_tree_.SetExecuted(!service_tree_.tree_auto_restart_); // if auto restart is false, set executed to true to stop the tick, otherwise will restart the tick from the beginning
                 }
                 //IDLE --> RUNNING --> PAUSED
                 else if (tree_status != service_tree_.status_)

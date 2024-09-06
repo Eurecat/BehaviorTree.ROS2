@@ -70,6 +70,7 @@ namespace BT_ROS
             std::string tree_name_ {};
             std::vector<std::string> tree_bb_init_ {};
             bool tree_debug_ {false};
+            bool tree_auto_restart_ {false};
             ros::Time execution_time_;
             unsigned int tree_uid_;
             unsigned server_port_;
