@@ -63,7 +63,9 @@ namespace BT_ROS
             size_t TreeNodesCount() { return tree_->nodes.size();}
             BT::NodeStatus tickTree() { return tree_->tickRoot(); };
             BT::Blackboard::SerializedEntriesMap getKeysValueToSync(){return tree_->rootBlackboard()->getKeysValueToSync(true);};
-            void SyncBlackboardUpdateCallback(const behavior_tree_ros::BBEntry& _topic_msg, const BT::BehaviorTreeFactory* = nullptr);
+            std::unordered_set<std::string> getSyncKeys(const bool just_empty_values){return tree_->rootBlackboard()->getSyncKeys(just_empty_values);};
+            void SyncBlackboardUpdateCallback(const behavior_tree_ros::BBEntry& _single_upd, const BT::BehaviorTreeFactory* = nullptr);
+            void SyncBlackboardUpdateCallback(const std::vector<behavior_tree_ros::BBEntry>& _bulk_upd, const BT::BehaviorTreeFactory* = nullptr);
             std::string execution_tree_status_ {};
             std::string execution_tree_error_ {};
             std::string tree_filename_ {};

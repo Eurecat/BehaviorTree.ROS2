@@ -3,6 +3,7 @@
 
 #include "BehaviorTreeNode.hpp"
 #include "behavior_tree_ros/TreeExecutionStatus.h"
+#include "behavior_tree_ros/GetBBValues.h"
 #include "behavior_tree_ros/3rdparty/tinyxml2/tinyxml2.h"
 #include <thread>
 
@@ -118,6 +119,19 @@ namespace BT_ROS
         }
     }
 
+    void BehaviorTreeNode::getBlackboardUpdates(const bool just_empty_values)
+    {
+        ros::ServiceClient client = public_node_handle_.serviceClient<behavior_tree_ros::GetBBValues>("/behavior_tree_server/get_sync_bb_values");
+        behavior_tree_ros::GetBBValues::Request request;
+        behavior_tree_ros::GetBBValues::Response response;
+        const std::unordered_set<std::string> keys = service_tree_.getSyncKeys(just_empty_values);
+        request.keys = std::vector<std::string>(keys.begin(), keys.end());
+        if(client.call(request, response))
+        {
+            service_tree_.SyncBlackboardUpdateCallback(response.entries, &bt_factory_);
+        }
+    }
+
     void BehaviorTreeNode::Loop()
     {
         // Sleep if no tree running (main and remote)
@@ -228,7 +242,10 @@ namespace BT_ROS
             // the full path to be consistent with the original request.
             std::cout << "BUILDING TREE ... " << std::endl;
             service_tree_.BuildTree(full_path, bt_factory_, service_tree_.tree_debug_, service_tree_.tree_bb_init_);
-             std::cout << "BUILD TREE OK " << std::endl;
+            std::cout << "BUILD TREE OK " << std::endl;
+            sendBlackboardUpdates(service_tree_.getKeysValueToSync()); // send updates
+            getBlackboardUpdates(); // blocking call to update bb with missing values that need to be retrieved from server
+            std::cout << "SYNC BB UPDATES OK " << std::endl;
             service_tree_.InitializeLoggers(enable_cout_log_, enable_minitrace_log_, enable_file_log_, enable_rostopic_log_, enable_zmq_log_, log_folder_);
             std::cout << "INIT LOGGERS OK " << std::endl;
             ROS_INFO("Loaded srv tree %s counting of %ld nodes", full_path.c_str(), service_tree_.TreeNodesCount());

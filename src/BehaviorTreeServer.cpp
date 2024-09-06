@@ -19,6 +19,7 @@ namespace BT_ROS
         restart_tree_srv_              = public_node_handle_.advertiseService("behavior_tree_server/restart_tree", &BehaviorTreeServer::RestartTree, this);
         get_tree_status_srv_        = public_node_handle_.advertiseService("behavior_tree_server/get_tree_status", &BehaviorTreeServer::StatusTree, this);
         get_all_trees_status_srv_   = public_node_handle_.advertiseService("behavior_tree_server/get_all_trees_status", &BehaviorTreeServer::StatusAllTree, this);
+        get_sync_bb_values_srv_     = public_node_handle_.advertiseService("behavior_tree_server/get_sync_bb_values", &BehaviorTreeServer::GetSyncBBValues, this);
         
         /* SYNC_BLACKBOARD */
         std::string sync_bb_init_file;
@@ -299,6 +300,22 @@ namespace BT_ROS
             return RosServiceRestartCall(tree_info.tree_name);
         }
         return false;
+    }
+
+    bool BehaviorTreeServer::GetSyncBBValues(GetBBValuesService::Request& _request, GetBBValuesService::Response& _response)
+    {
+        for (const auto& key : _request.keys)
+        {
+            if(const BT::Blackboard::Entry* entry_ptr = sync_blackboard_ptr_->getEntry(key))
+            {
+                behavior_tree_ros::BBEntry bb_entry;
+                bb_entry.key = key;
+                bb_entry.type = BT::demangle(entry_ptr->port_info.type());
+                bb_entry.value = entry_ptr->port_info.toString(entry_ptr->value); 
+                _response.entries.push_back(bb_entry);
+            }
+        }
+        return true;
     }
 
     bool BehaviorTreeServer::StatusTree(StatusServiceByID::Request& _request, StatusServiceByID::Response& _response)

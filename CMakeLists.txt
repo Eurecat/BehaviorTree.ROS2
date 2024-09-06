@@ -60,6 +60,7 @@ add_message_files(
 
 add_service_files(
     FILES
+        GetBBValues.srv
         GetLoadedPlugins.srv
         LoadTree.srv
         TreeRequest.srv

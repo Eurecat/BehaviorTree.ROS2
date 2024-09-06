@@ -159,47 +159,54 @@ namespace BT_ROS
         bt_execution_status_publisher_.publish(status_msg);
     }
 
-    void TreeWrapper::SyncBlackboardUpdateCallback(const behavior_tree_ros::BBEntry& _topic_msg, const BT::BehaviorTreeFactory* bt_factory_ptr)
+
+    void TreeWrapper::SyncBlackboardUpdateCallback(const std::vector<behavior_tree_ros::BBEntry>& _bulk_upd, const BT::BehaviorTreeFactory* bt_factory_ptr)
+    {
+        for(const auto& upd : _bulk_upd)
+            SyncBlackboardUpdateCallback(upd, bt_factory_ptr);
+    }
+
+    void TreeWrapper::SyncBlackboardUpdateCallback(const behavior_tree_ros::BBEntry& _single_upd, const BT::BehaviorTreeFactory* bt_factory_ptr)
     {
         if(!bt_factory_ptr) return;
 
         // std::cout << "[BTWrapper "<<tree_name_<<"]::SyncBlackboardUpdateCallback " << 
-        //     "\tkey=" << _topic_msg.key << 
-        //     "\ttype=" << _topic_msg.type << 
-        //     "\tvalue=" << _topic_msg.value << "\n" << std::flush;
+        //     "\tkey=" << _single_upd.key << 
+        //     "\ttype=" << _single_upd.type << 
+        //     "\tvalue=" << _single_upd.value << "\n" << std::flush;
         // bool update_successful = false;
         
-        const bool void_type = (_topic_msg.type == BT::demangle(typeid(void))); // source tree does not know the type of the value
-        const BT::StringConverter* from_string_converter_ptr = void_type? nullptr : bt_factory_ptr->getStringConverter(_topic_msg.type);
+        const bool void_type = (_single_upd.type == BT::demangle(typeid(void))); // source tree does not know the type of the value
+        const BT::StringConverter* from_string_converter_ptr = void_type? nullptr : bt_factory_ptr->getStringConverter(_single_upd.type);
         
         //check string converter functor
         if(!void_type && from_string_converter_ptr == nullptr)
         {
             ROS_ERROR("[BTWrapper %s] Entry in Sync. BB for key [%s] has type [%s], but no string converter can be found for this type", 
-                tree_name_.c_str(), _topic_msg.key.c_str(), _topic_msg.type.c_str());
+                tree_name_.c_str(), _single_upd.key.c_str(), _single_upd.type.c_str());
             return;
         }
 
         //retrieve current entry in bt server bb
-        const BT::Blackboard::Entry* entry_ptr = tree_->rootBlackboard()->getEntry(_topic_msg.key);
+        const BT::Blackboard::Entry* entry_ptr = tree_->rootBlackboard()->getEntry(_single_upd.key);
 
         if(entry_ptr && entry_ptr->isSync())
         {
             // if(entry_ptr->port_info.missingTypeInfo()) is it necessary??? I would not update type info if received from another tree (i.e. from void to type T, with T != void)
             // {
-            //     BT::Optional<BT::PortInfo> port_info_opt = bt_factory_ptr->getPortInfo(_topic_msg.type);
+            //     BT::Optional<BT::PortInfo> port_info_opt = bt_factory_ptr->getPortInfo(_single_upd.type);
             //     if(!port_info_opt.has_value())
             //     {
-            //         ROS_ERROR("[BTWrapper %s] Entry in Sync. BB for key [%s] has type [%s], but it is an unknown type and therefore cannot be treated", tree_name_.c_str(), _topic_msg.key.c_str(), _topic_msg.type.c_str());
+            //         ROS_ERROR("[BTWrapper %s] Entry in Sync. BB for key [%s] has type [%s], but it is an unknown type and therefore cannot be treated", tree_name_.c_str(), _single_upd.key.c_str(), _single_upd.type.c_str());
             //         return; // type unknown
             //     }
-            //     tree_->rootBlackboard()->setPortInfo(_topic_msg.key, port_info_opt.value());
+            //     tree_->rootBlackboard()->setPortInfo(_single_upd.key, port_info_opt.value());
             // }            
 
-            if(!entry_ptr->port_info.missingTypeInfo() && !void_type && _topic_msg.type != BT::demangle(entry_ptr->port_info.type())) //TODO evaluate strictness and checks to be made here
+            if(!entry_ptr->port_info.missingTypeInfo() && !void_type && _single_upd.type != BT::demangle(entry_ptr->port_info.type())) //TODO evaluate strictness and checks to be made here
             {
                 ROS_ERROR("[BTWrapper %s]. Entry in Sync. BB for key [%s] has type [%s], but receiving requests for update with type [%s]",
-                    tree_name_.c_str(), _topic_msg.key.c_str(), BT::demangle(entry_ptr->port_info.type()).c_str(), _topic_msg.type.c_str());
+                    tree_name_.c_str(), _single_upd.key.c_str(), BT::demangle(entry_ptr->port_info.type()).c_str(), _single_upd.type.c_str());
                 return; // type inconsistencies, don't update
             }
             
@@ -208,23 +215,23 @@ namespace BT_ROS
                 if(!void_type)
                 {
                     // convert from string new value
-                    BT::Any new_any_value = (*from_string_converter_ptr)(_topic_msg.value);
+                    BT::Any new_any_value = (*from_string_converter_ptr)(_single_upd.value);
                     
                     // std::cout << "[BTWrapper "<<tree_name_<<"]::SyncBlackboardUpdateCallback built new_any_value with type " << BT::demangle(new_any_value.type()) << " \n" << std::flush;
                     // update it into the sync BB
-                    tree_->rootBlackboard()->setAny(_topic_msg.key, std::move(new_any_value), true);
+                    tree_->rootBlackboard()->setAny(_single_upd.key, std::move(new_any_value), true);
                 }
                 else
-                    tree_->rootBlackboard()->set(_topic_msg.key, _topic_msg.value, true);
+                    tree_->rootBlackboard()->set(_single_upd.key, _single_upd.value, true);
             
             }
             catch(const std::exception& e)
             {
-                std::cerr << "[BTWrapper "<<tree_name_<<"]::SyncBlackboardUpdateCallback fail to update value in BB for key [" << _topic_msg.key << "]: " << e.what() << " \n" << std::flush;
+                std::cerr << "[BTWrapper "<<tree_name_<<"]::SyncBlackboardUpdateCallback fail to update value in BB for key [" << _single_upd.key << "]: " << e.what() << " \n" << std::flush;
                 return;
             }
 
-            // std::cout << "[BTWrapper "<<tree_name_<<"]::SyncBlackboardUpdateCallback updated value in BB for key [" << _topic_msg.key << "] \n" << std::flush;
+            // std::cout << "[BTWrapper "<<tree_name_<<"]::SyncBlackboardUpdateCallback updated value in BB for key [" << _single_upd.key << "] \n" << std::flush;
             // update_successful = true;
         }
     }

@@ -36,6 +36,7 @@ namespace BT_ROS
             ~BehaviorTreeNode() = default;
             void Loop();
             void sendBlackboardUpdates(const BT::Blackboard::SerializedEntriesMap& entries_map);
+            void getBlackboardUpdates(const bool just_empty_values = false);
 
         private:
             bool GetLoadedPluginsService(PluginsService::Request& _request, PluginsService::Response& _response);
