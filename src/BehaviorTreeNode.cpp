@@ -154,7 +154,7 @@ namespace BT_ROS
                     service_tree_.execution_tree_error_ = "FAILURE";
                     service_tree_.status_ = tree_status;
                     service_tree_.PublishExecutionStatus();
-                    ROS_ERROR("Tree finished with errors");
+                    // ROS_ERROR("Tree finished with errors");
                     ResetTree();// RemoveTree();
                     service_tree_.SetExecuted(!service_tree_.tree_auto_restart_); // if auto restart is false, set executed to true to stop the tick, otherwise will restart the tick from the beginning
                 }
@@ -164,7 +164,7 @@ namespace BT_ROS
                     service_tree_.execution_tree_error_ = "SUCCESS";
                     service_tree_.status_ = tree_status;
                     service_tree_.PublishExecutionStatus();
-                    ROS_INFO("Tree finished with no errors");
+                    // ROS_INFO("Tree finished with no errors");
                     ResetTree();// RemoveTree();
                     service_tree_.SetExecuted(!service_tree_.tree_auto_restart_); // if auto restart is false, set executed to true to stop the tick, otherwise will restart the tick from the beginning
                 }

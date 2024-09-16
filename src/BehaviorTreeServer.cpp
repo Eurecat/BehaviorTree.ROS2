@@ -344,7 +344,7 @@ namespace BT_ROS
     void BehaviorTreeServer::StatusTopicCallbackServer(const behavior_tree_ros::TreeExecutionStatus& _topic_msg)
     {
         uids_to_tree_info.at(_topic_msg.uid).tree_status = _topic_msg;
-        ROS_INFO("New Status topic RX: Tree_name:%s New status:%s", uids_to_tree_info.at(_topic_msg.uid).tree_name.c_str() , uids_to_tree_info.at(_topic_msg.uid).tree_status.status.c_str());
+        // ROS_INFO("New Status topic RX: Tree_name:%s New status:%s", uids_to_tree_info.at(_topic_msg.uid).tree_name.c_str() , uids_to_tree_info.at(_topic_msg.uid).tree_status.status.c_str());
     }
 
     /*
