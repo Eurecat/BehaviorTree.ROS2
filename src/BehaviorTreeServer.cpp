@@ -16,7 +16,9 @@ namespace BT_ROS
     {
         load_tree_srv_              = public_node_handle_.advertiseService("behavior_tree_server/load_tree", &BehaviorTreeServer::LoadTree, this);
         stop_tree_srv_              = public_node_handle_.advertiseService("behavior_tree_server/stop_tree", &BehaviorTreeServer::StopTree, this);
-        restart_tree_srv_              = public_node_handle_.advertiseService("behavior_tree_server/restart_tree", &BehaviorTreeServer::RestartTree, this);
+        kill_tree_srv_              = public_node_handle_.advertiseService("behavior_tree_server/kill_tree", &BehaviorTreeServer::KillTree, this);
+        kill_all_trees_srv_         = public_node_handle_.advertiseService("behavior_tree_server/kill_all_trees", &BehaviorTreeServer::KillAllTrees, this);
+        restart_tree_srv_           = public_node_handle_.advertiseService("behavior_tree_server/restart_tree", &BehaviorTreeServer::RestartTree, this);
         get_tree_status_srv_        = public_node_handle_.advertiseService("behavior_tree_server/get_tree_status", &BehaviorTreeServer::StatusTree, this);
         get_all_trees_status_srv_   = public_node_handle_.advertiseService("behavior_tree_server/get_all_trees_status", &BehaviorTreeServer::StatusAllTree, this);
         get_sync_bb_values_srv_     = public_node_handle_.advertiseService("behavior_tree_server/get_sync_bb_values", &BehaviorTreeServer::GetSyncBBValues, this);
@@ -291,6 +293,36 @@ namespace BT_ROS
         return false;
     }
 
+    bool BehaviorTreeServer::KillTree(StopTreeService::Request& _request, StopTreeService::Response& _response)
+    {
+        if (StopTree(_request,_response))
+        {
+            if(uids_to_tree_info.find(_request.tree_uid) != uids_to_tree_info.end())
+            {
+                TreeProcessInfo tree_info = uids_to_tree_info.at(_request.tree_uid);
+                std::string command = "rosnode kill /"+tree_info.tree_name+"/behavior_tree_ros_node"+"; kill -9 "+std::to_string(tree_info.pid);
+                int result = system(command.c_str());
+                if (result != -1)
+                {
+                    return true;
+                }
+                ROS_ERROR("Failed to kill node");
+                return false;
+            }
+        }
+        return false;
+    }
+    bool BehaviorTreeServer::KillAllTrees(std_srvs::Empty::Request& _request, std_srvs::Empty::Response& _response)
+    {
+        for (auto tree_info : uids_to_tree_info)
+        {
+            behavior_tree_ros::TreeRequest::Request req;
+            behavior_tree_ros::TreeRequest::Response resp;
+            req.tree_uid  = tree_info.first;
+            KillTree(req,resp);
+        }
+        return true;
+    }
 
     bool BehaviorTreeServer::RestartTree(RestartTreeService::Request& _request, RestartTreeService::Response& _response)
     {
