@@ -49,6 +49,7 @@ namespace BT_ROS
 
             using LoadTreeService = behavior_tree_ros::LoadTree;
             using StopTreeService  = behavior_tree_ros::TreeRequest;
+            using KillTreeService  = behavior_tree_ros::TreeRequest;
             using RestartTreeService  = behavior_tree_ros::TreeRequest;
             using GetBBValuesService = behavior_tree_ros::GetBBValues;
             using StatusServiceByID  = behavior_tree_ros::GetTreeStatusByID;
@@ -62,6 +63,8 @@ namespace BT_ROS
         private:
             bool LoadTree(LoadTreeService::Request& _request, LoadTreeService::Response& _response);
             bool StopTree(StopTreeService::Request& _request, StopTreeService::Response& _response);
+            bool KillTree(StopTreeService::Request& _request, StopTreeService::Response& _response);
+            bool KillAllTrees(std_srvs::Empty::Request& _request, std_srvs::Empty::Response& _response);
             bool RestartTree(RestartTreeService::Request& _request, RestartTreeService::Response& _response);
             bool GetSyncBBValues(GetBBValuesService::Request& _request, GetBBValuesService::Response& _response);
             bool StatusTree(StatusServiceByID::Request& _request, StatusServiceByID::Response& _response);
@@ -82,6 +85,8 @@ namespace BT_ROS
             ros::ServiceServer get_sync_bb_values_srv_;
             ros::ServiceServer load_tree_srv_;
             ros::ServiceServer stop_tree_srv_;
+            ros::ServiceServer kill_tree_srv_;
+            ros::ServiceServer kill_all_trees_srv_;
             ros::ServiceServer restart_tree_srv_;
             BT::Blackboard::Ptr sync_blackboard_ptr_ ;
             //Manage spawn Process using ROS LAUNCH command
