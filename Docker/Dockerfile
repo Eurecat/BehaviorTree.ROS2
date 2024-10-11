@@ -23,7 +23,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install \
 ros-${ROS_DISTRO}-desktop ros-dev-tools python3-colcon-common-extensions -y 
 
 # BT.ROS2 related deps
-RUN RUN DEBIAN_FRONTEND=noninteractive ros-humble-generate-parameter-library -y
+RUN DEBIAN_FRONTEND=noninteractive apt-get install ros-humble-generate-parameter-library -y
 
 # Additionally ROS-pkgs
 # RUN DEBIAN_FRONTEND=noninteractive apt-get install ros-${ROS_DISTRO}-gazebo* -y

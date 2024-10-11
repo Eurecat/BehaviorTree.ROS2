@@ -10,12 +10,15 @@ find_package(behaviortree_ros2 REQUIRED)
 find_package(btcpp_ros2_interfaces REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(rosx_introspection REQUIRED)
 
 set(THIS_PACKAGE_DEPS
     behaviortree_ros2
     std_msgs
     std_srvs
-    btcpp_ros2_interfaces )
+    btcpp_ros2_interfaces 
+    rosx_introspection
+    )
 
 ######################################################
 # Simple example showing how to use and customize the BtExecutionServer
@@ -53,6 +56,11 @@ add_executable(subscriber_test src/subscriber_test.cpp)
 ament_target_dependencies(subscriber_test ${THIS_PACKAGE_DEPS})
 
 ######################################################
+# Build subscriber_test
+add_executable(subscriber_rosx_deserialization src/subscriber_rosx_deserialization.cpp)
+ament_target_dependencies(subscriber_rosx_deserialization ${THIS_PACKAGE_DEPS})
+
+######################################################
 # the SetBool test
 add_executable(bool_client src/bool_client.cpp src/set_bool_node.cpp)
 ament_target_dependencies(bool_client ${THIS_PACKAGE_DEPS})
@@ -69,6 +77,7 @@ install(TARGETS
   sleep_server
   sleep_plugin
   subscriber_test
+  subscriber_rosx_deserialization
   sample_bt_executor
   bool_client
   bool_server

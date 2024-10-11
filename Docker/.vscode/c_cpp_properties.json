@@ -3,7 +3,6 @@
         {
             "name": "Linux",
             "includePath": [
-                "/usr/include/**",
                 "${workspaceFolder}/**",
                 "/opt/ros/humble/include/**",
                 "/eut_bt_ros2_ws/install/**"
