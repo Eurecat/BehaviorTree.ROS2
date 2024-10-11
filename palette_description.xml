@@ -1,6 +1,0 @@
-<description>
-    <palette name="behavior_tree_ros_palette"
-	         path="palettes/behavior_tree_ros_palette.xml"
-			 pathmodels="palettes/behavior_tree_ros_nodemodels.xml"
-	         description="Behavior Tree Palettes to interface with Behavior_tree_ros" />
-</description>

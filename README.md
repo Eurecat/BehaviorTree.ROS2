@@ -1,47 +1,38 @@
-# behavior_tree_ros
-[![Build and Release for ROS Noetic](https://github.com/haru-project/behavior_tree_ros/actions/workflows/main.yml/badge.svg)](https://github.com/haru-project/behavior_tree_ros/actions/workflows/main.yml)
+# BehaviorTree.ROS2
+[![Test](https://github.com/BehaviorTree/BehaviorTree.ROS2/actions/workflows/test.yml/badge.svg)](https://github.com/BehaviorTree/BehaviorTree.ROS2/actions/workflows/test.yml)
 
-Provides a ROS wrapper for the Behavior Tree engine (BehaviorTree.CPP library), as well as ROS-based pluggins to deal with ROS topics, services and actions within a BT.
+This repository contains useful wrappers to use ROS2 and BehaviorTree.CPP together.
 
+In particular, it provides a standard way to implement:
 
-## ROS nodes
+- Behavior Tree Executor with ROS Action interface.
+- Action clients.
+- Service Clients.
+- Topic Subscribers.
+- Topic Publishers.
 
-The repository provides a ROS node that allow to execute a given tree using the BT engine. Two different interfaces to the node are provided:
+Our main goals are:
 
-- A **service** interface: the node can be requested to execute a tree
-- An [actionlib](http://wiki.ros.org/actionlib) interface: it implements a **SimpleActionServer** that permits to cancel trees, returns feedback, etc 
+- to minimize the amount of boilerplate.
+- to make asynchronous Actions non-blocking.
 
-Furthermore, the node offers a new BT status logger option to monitor the status of the execution through a ROS topic
+# Documentation
 
+- [ROS Behavior Wrappers](behaviortree_ros2/ros_behavior_wrappers.md)
+- [TreeExecutionServer](behaviortree_ros2/tree_execution_server.md)
+- [Sample Behaviors](btcpp_ros2_samples/README.md)
 
-- [] Currently, two different nodes implement the service and the actionlib interfaces. Merge both into one
+Note that this library is compatible **only** with:
 
+- **BT.CPP** 4.6 or newer.
+- **ROS2** Humble or newer.
 
-
-## ROS plugins for BehaviorTree.CPP
-
-The repository also adds a plugin of new BT nodes (not to be confused with the ROS nodes) for BehaviorTree.CPP related to ROS functionalities. In particular, it adds actions nodes related to:
-
-- **Subscriber** leaf nodes can serialize ROS messages they receive into a more general structure, allowing for more general-purpose smaller blocks capable of inspecting and performing operations on these messages. 
-- **Pubisher** leaf nodes.
-- **Services** leaf nodes to call ROS services
-- **Actionlib** support for asynchronous actions using the **SimpleActionClient** model (see actionlib). This, together with the actionlib interface of the tree engine itself allows to encapsulate subtrees in separated ROS nodes as well.
-
-These action nodes use ros-type-instrospection for automatic serialization of ROS messages, so that general BT nodes can be used to deal with different types of ROS messages.
-
-It also adds some additional decorator nodes.
-
-Please, see the documentation.
+Additionally, check **plugins.hpp** to see how to learn how to
+wrap your Nodes into plugins that can be loaded at run-time.
 
 
-## Dependencies
+## Acknowledgements
 
-* **ros-type-introspection**
-```bash
-sudo apt-get install ros-$ROS_DISTRO-ros-type-introspection
-```
+A lot of code is either inspired or copied from [Nav2](https://docs.nav2.org/).
 
-* **yaml-cpp**
-```bash
-sudo apt-get install libyaml-cpp-dev
-```
+For this reason, we retain the same license and copyright.
