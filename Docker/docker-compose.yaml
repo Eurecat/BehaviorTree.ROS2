@@ -1,0 +1,30 @@
+version: "2.2"
+
+services:
+  eut_bt_ros2:
+    container_name: "eut_bt_ros2"
+    network_mode: host 
+    #runtime: nvidia
+    image: eut_bt_ros2:humble
+    privileged: true
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ~/.xauth_docker/share/:/tmp/xauth/
+      - ./.vscode:/eut_bt_ros2_ws/.vscode
+      - ../behaviortree_ros2:/eut_bt_ros2_ws/src/behaviortree_ros2
+      - ../btcpp_ros2_interfaces:/eut_bt_ros2_ws/src/btcpp_ros2_interfaces
+      - ../btcpp_ros2_samples:/eut_bt_ros2_ws/src/btcpp_ros2_samples
+      
+    tty: true
+    stdin_open: true
+    environment:
+     # - NVIDIA_VISIBLE_DEVICES=all 
+      - DISPLAY=$DISPLAY
+      - QT_X11_NO_MITSHM=1
+      - XAUTHORITY=/tmp/xauth/.docker.xauth     
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/snd:/dev/snd
+    # command: >
+    #   bash -c "echo ciao &&
+    #    echo ciao ciao"
