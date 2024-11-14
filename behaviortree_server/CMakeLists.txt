@@ -17,6 +17,10 @@ set(THIS_PACKAGE_DEPS
     )
 
 find_package(ament_cmake REQUIRED)
+find_package(Boost COMPONENTS filesystem REQUIRED)
+find_package(yaml-cpp REQUIRED)
+
+include_directories(include)
 
 foreach(PACKAGE ${THIS_PACKAGE_DEPS})
     find_package(${PACKAGE} REQUIRED )
@@ -37,17 +41,25 @@ target_link_libraries(behaviortree_server  behaviortree_server_parameters)
 list(APPEND ${PROJECT_NAME}_targets behaviortree_server)
 
 add_executable(behaviortree_node
-    src/behaviortree_node.cpp )
+    src/behaviortree_node.cpp 
+    src/tree_wrapper.cpp
+    src/3rdparty/tinyxml2/tinyxml2.cpp )
+
 ament_target_dependencies(behaviortree_node ${THIS_PACKAGE_DEPS})
 target_include_directories(behaviortree_node PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
-target_link_libraries(behaviortree_node behaviortree_server_parameters)
+target_link_libraries(behaviortree_node behaviortree_server_parameters yaml-cpp Boost::filesystem)
 
 ######################################################
 # INSTALL
 
 install(DIRECTORY include/  DESTINATION include/)
+
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}
+)
 
 ament_export_targets(${PROJECT_NAME}Targets  HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_DEPS})

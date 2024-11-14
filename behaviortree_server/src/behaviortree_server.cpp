@@ -15,6 +15,8 @@
 #include "yaml-cpp/yaml.h"
 #include <behaviortree_cpp/bt_factory.h>
 
+#include "ros2_launch_manager.hpp"
+
 #include <chrono>
 using namespace std::chrono_literals;
 
@@ -30,6 +32,11 @@ using GetTreeStatusSrv = behaviortree_server_interfaces::srv::GetTreeStatusByID;
 using GetAllTreeStatusSrv = behaviortree_server_interfaces::srv::GetAllTreesStatus;
 using EmptySrv = std_srvs::srv::Empty;
 
+inline std::string const BoolToString(bool b)
+{
+  return b ? "true" : "false";
+}
+
 class TreeProcessInfo
 {
   public:
@@ -44,55 +51,55 @@ class TreeProcessInfo
     rclcpp::Subscription<TreeStatus>::SharedPtr status_subscriber;
 };
 
-class BehaviorTreeServer : public rclcpp::Node
+class BehaviorTreeServer
 {
   public:
-    BehaviorTreeServer() : Node("BehaviorTreeServer")
+    BehaviorTreeServer(const rclcpp::Node::SharedPtr& node) : node_(node) 
     {
         //Create Sync_BB and Init
         sync_blackboard_ptr_ = BT::Blackboard::create();
         std::string sync_bb_init_file;
-        if (!this->get_parameter("sync_bb_init",sync_bb_init_file)){ sync_bb_init_file = ""; }
+        if (!node_->get_parameter("sync_bb_init",sync_bb_init_file)){ sync_bb_init_file = ""; }
         if(sync_bb_init_file.length() > 0) { InitializeBlackboard(sync_bb_init_file, sync_blackboard_ptr_, true); }
 
         //Create Services:
-        load_tree_srv_ = this->create_service<LoadTreeSrv>("behavior_tree_server/load_tree",std::bind(&BehaviorTreeServer::LoadTree,this,_1,_2));
-        stop_tree_srv_ = this->create_service<TreeRequestSrv>("behavior_tree_server/stop_tree",std::bind(&BehaviorTreeServer::StopTree,this,_1,_2));
-        kill_tree_srv_ = this->create_service<TreeRequestSrv>("behavior_tree_server/kill_tree",std::bind(&BehaviorTreeServer::KillTree,this,_1,_2));
-        kill_all_trees_srv_ = this->create_service<EmptySrv>("behavior_tree_server/kill_all_trees",std::bind(&BehaviorTreeServer::KillAllTrees,this,_1,_2));
-        restart_tree_srv_  = this->create_service<TreeRequestSrv>("behavior_tree_server/restart_tree",std::bind(&BehaviorTreeServer::RestartTree,this,_1,_2));
-        get_sync_bb_values_srv_ = this->create_service<GetBBValuesSrv>("behavior_tree_server/get_sync_bb_values",std::bind(&BehaviorTreeServer::GetSyncBBValues,this,_1,_2));
-        get_tree_status_srv_ = this->create_service<GetTreeStatusSrv>("behavior_tree_server/get_tree_status",std::bind(&BehaviorTreeServer::GetTreeStatus,this,_1,_2));
-        get_all_trees_status_srv_ = this->create_service<GetAllTreeStatusSrv>("behavior_tree_server/get_all_trees_status",std::bind(&BehaviorTreeServer::GetAllTreeStatus,this,_1,_2));
+        load_tree_srv_ = node_->create_service<LoadTreeSrv>("behavior_tree_server/load_tree",std::bind(&BehaviorTreeServer::LoadTree,this,_1,_2));
+        stop_tree_srv_ = node_->create_service<TreeRequestSrv>("behavior_tree_server/stop_tree",std::bind(&BehaviorTreeServer::StopTree,this,_1,_2));
+        kill_tree_srv_ = node_->create_service<TreeRequestSrv>("behavior_tree_server/kill_tree",std::bind(&BehaviorTreeServer::KillTree,this,_1,_2));
+        kill_all_trees_srv_ = node_->create_service<EmptySrv>("behavior_tree_server/kill_all_trees",std::bind(&BehaviorTreeServer::KillAllTrees,this,_1,_2));
+        restart_tree_srv_  = node_->create_service<TreeRequestSrv>("behavior_tree_server/restart_tree",std::bind(&BehaviorTreeServer::RestartTree,this,_1,_2));
+        get_sync_bb_values_srv_ = node_->create_service<GetBBValuesSrv>("behavior_tree_server/get_sync_bb_values",std::bind(&BehaviorTreeServer::GetSyncBBValues,this,_1,_2));
+        get_tree_status_srv_ = node_->create_service<GetTreeStatusSrv>("behavior_tree_server/get_tree_status",std::bind(&BehaviorTreeServer::GetTreeStatus,this,_1,_2));
+        get_all_trees_status_srv_ = node_->create_service<GetAllTreeStatusSrv>("behavior_tree_server/get_all_trees_status",std::bind(&BehaviorTreeServer::GetAllTreeStatus,this,_1,_2));
         
         //Updates subscriber server side
-        sync_bb_sub_ = this->create_subscription<BBEntry>("behavior_tree_server/local_update", 10, std::bind(&BehaviorTreeServer::sync_bb_callback, this, _1)) ;
+        sync_bb_sub_ = node_->create_subscription<BBEntry>("behavior_tree_server/local_update", 10, std::bind(&BehaviorTreeServer::sync_bb_callback, this, _1)) ;
         
         //Updates republisher for all trees (put latch to true atm, because seems a good option that you receive last update from the server)
-        sync_bb_pub_ = this->create_publisher<BBEntry>("behavior_tree_server/broadcast_update", 10);
+        sync_bb_pub_ = node_->create_publisher<BBEntry>("behavior_tree_server/broadcast_update", 10);
     }
 
   private:
 
     void sync_bb_callback(const BBEntry::SharedPtr msg) const
     {
-      RCLCPP_INFO(this->get_logger(), "KEY: '%s' VALUE: '%s'", msg->key.c_str(), msg->value.c_str());
+    /*  RCLCPP_INFO(this->get_logger(), "KEY: '%s' VALUE: '%s'", msg->key.c_str(), msg->value.c_str());
 
       //TODO 1: SYNC_BB CALLBACK
-      /*
+      
       const bool void_type = (msg->type == BT::demangle(typeid(void))); // source tree does not know the type of the value
       //retrieve string converter functor
-      const BT::StringConverter* string_converter_ptr = void_type? nullptr : bt_factory_.getStringConverter(msg->type);
+      const BT::StringConverter* string_converter_ptr = void_type? nullptr : sync_blackboard_ptr_->getEntry(msg->key).get()->string_converter;
       if(!void_type && string_converter_ptr == nullptr)
       {
           RCLCPP_ERROR(this->get_logger(),"[BTServer] Entry in Sync. BB for key [%s] has type [%s], but no string converter can be found for this type",  msg->key.c_str(),  msg->type.c_str());
           return;
       }
       const BT::Blackboard::Entry* entry_check_ptr = sync_blackboard_ptr_->getEntry(msg->key).get();
-        if(entry_check_ptr == nullptr || (entry_check_ptr->port_info.missingTypeInfo() && !void_type))
+        if(entry_check_ptr == nullptr || ( sync_blackboard_ptr_->entryInfo(msg->key)==nullptr && !void_type))
         {
             // Entry not present in the BB -> First insert
-            BT::Optional<BT::PortInfo> port_info_opt = bt_factory_.getPortInfo(msg->type);
+            BT::Optional<BT::PortInfo> port_info_opt = sync_blackboard_ptr_->entryInfo(msg->key);
             if(!port_info_opt.has_value())
             {
                 RCLCPP_ERROR(this->get_logger(),"[BTServer] Entry in Sync. BB for key [%s] has type [%s], but it is an unknown type and therefore cannot be treated", msg->key.c_str(),  msg->type.c_str());
@@ -100,19 +107,19 @@ class BehaviorTreeServer : public rclcpp::Node
             }
             
             // Set empty entry with type info
-            sync_blackboard_ptr_->setPortInfo(msg->key, port_info_opt.value());
+            sync_blackboard_ptr_->createEntry(msg->key, port_info_opt.value());
             RCLCPP_INFO(this->get_logger(),"[BTServer] Entry in Sync. BB for key [%s] updated with type [%s]", msg->key.c_str(), BT::demangle(port_info_opt.value().type()).c_str());
         }
 
         //retrieve current entry in bt server bb
-        const BT::Blackboard::Entry* entry_ptr = sync_blackboard_ptr_->getEntry(msg->key);
+        auto entry_ptr = sync_blackboard_ptr_->getEntry(msg->key);
         if(entry_ptr)
         {
             //entry already present in the bb -> UPDATE
             
-            if(!void_type && _topic_msg.type != BT::demangle(entry_ptr->port_info.type()))
+            if(!void_type && msg->type != sync_blackboard_ptr_->entryInfo(msg->key)->type().name())
             {
-                RCLCPP_ERROR(this->get_logger(),"[BTServer] Entry in Sync. BB for key [%s] has type [%s], but receiving requests for update with type [%s]", msg->key.c_str(), BT::demangle(entry_ptr->port_info.type()).c_str(), _topic_msg.type.c_str());
+                RCLCPP_ERROR(this->get_logger(),"[BTServer] Entry in Sync. BB for key [%s] has type [%s], but receiving requests for update with type [%s]", msg->key.c_str(), sync_blackboard_ptr_->entryInfo(msg->key).type().name(), msg->type.c_str());
                 return; // type inconsistencies, don't update
             }
             
@@ -124,7 +131,7 @@ class BehaviorTreeServer : public rclcpp::Node
                     BT::Any new_any_value = (*string_converter_ptr)(msg->value);
 
                     // update it into the sync BB
-                    sync_blackboard_ptr_->setAny(msg->key, std::move(new_any_value), true);
+                    sync_blackboard_ptr_->set(msg->key, std::move(new_any_value), true);
                 }
                 else
                     sync_blackboard_ptr_->set(msg->key, msg->value, true);
@@ -139,7 +146,7 @@ class BehaviorTreeServer : public rclcpp::Node
             {
                 BBEntry upd_msg;
                 upd_msg.key = msg->key;
-                upd_msg.type = BT::demangle(entry_ptr->port_info.type());
+                upd_msg.type = sync_blackboard_ptr_->getEntry(msg->key)->info.type().name() ;
                 upd_msg.value = msg->value;
                 this->sync_bb_pub_->publish(upd_msg);
             }
@@ -149,7 +156,7 @@ class BehaviorTreeServer : public rclcpp::Node
 
    bool LoadTree(const std::shared_ptr<LoadTreeSrv::Request> req, std::shared_ptr<LoadTreeSrv::Response> res)
     {
-      RCLCPP_INFO(this->get_logger(), "TREE FILE: '%s' ", req->tree_file.c_str());
+      RCLCPP_INFO(node_->get_logger(), "TREE FILE: '%s' ", req->tree_file.c_str());
  
       //1. Extract Tree Name
       std::string tree_name;
@@ -166,7 +173,7 @@ class BehaviorTreeServer : public rclcpp::Node
       }
       else
       {
-        RCLCPP_ERROR(this->get_logger(),"TREE FILE NOT VALID %s",tree_filename_tmp.c_str());
+        RCLCPP_ERROR(node_->get_logger(),"TREE FILE NOT VALID %s",tree_filename_tmp.c_str());
         return false;
       }
 
@@ -197,16 +204,16 @@ class BehaviorTreeServer : public rclcpp::Node
       }
       tree_name = tree_name_tmp;
 
-      RCLCPP_INFO(this->get_logger(), "LOADING TREE: %s",tree_name.c_str());
+      RCLCPP_INFO(node_->get_logger(), "LOADING TREE: %s",tree_name.c_str());
 
       trees_UID++;
       std::string param_name = "tree_name:="+tree_name;
       std::string param_file = "tree_file:="+req->tree_file;
       std::string param_uid = "tree_uid:="+std::to_string(trees_UID);
-      std::string param_auto_restart = "tree_auto_restart:="+std::to_string(req->auto_restart);
-      std::string param_debug ="tree_debug:="+std::to_string(req->debug);
+      std::string param_auto_restart = "tree_auto_restart:="+BoolToString(req->auto_restart);
+      std::string param_debug ="tree_debug:="+BoolToString(req->debug);
 
-      std::string param_bb_init = "tree_bb_init:='";
+      std::string param_bb_init = "tree_bb_init:=\\'";
       if (req->bb_init_files.size()> 0)
       {
           param_bb_init += "[";
@@ -216,10 +223,10 @@ class BehaviorTreeServer : public rclcpp::Node
               if (i != (req->bb_init_files.size()-1))
                     param_bb_init += ",";
           }
-          param_bb_init += "]'";
+          param_bb_init += "]\\'";
       }
       else
-          param_bb_init += "";
+          param_bb_init += "[]\\'";
 
       //Set default port IDs
       int server_port = 1667;
@@ -236,40 +243,42 @@ class BehaviorTreeServer : public rclcpp::Node
         
       pid_t pid;
 
-      //TODO 2: CREATE ROS2 LAUNCH MANAGER
-      /*
+      //CREATE ROS2 RUN MANAGER
+      const char* package_name = "behaviortree_server"; 
+      const char* executable_name = "behaviortree_node";
       try {
-        pid = ros_launch_manager.start(
-              "behavior_tree_ros",
-              "behavior_tree_spawner.launch",
-              param_name.c_str(),
-              param_file.c_str(),
-              param_uid.c_str(),
-              param_debug.c_str(),
-              param_auto_restart.c_str(),
-              param_bb_init.c_str(),
-              param_server_port.c_str(),
-              param_pub_port.c_str()
+        pid = ros2_launch_manager.start(node_,
+              package_name,
+              executable_name,
+              "--ros-args",
+              "-p", param_name.c_str(),
+              "-p", param_file.c_str(),
+              "-p", param_uid.c_str(),
+              "-p", param_debug.c_str(),
+              "-p", param_auto_restart.c_str(),
+              "-p", param_bb_init.c_str(),
+              "-p", param_server_port.c_str(),
+              "-p", param_pub_port.c_str()
               );
       }
       catch (std::exception const &exception) {
-        RCLCPP_WARN(this->get_logger(),"%s", exception.what());
+        RCLCPP_WARN(node_->get_logger(),"%s", exception.what());
         return false;
       }
-*/
+
       TreeProcessInfo new_process_info {tree_name,pid};
       std::string topic_name = "/"+tree_name+"/execution_status";
-      new_process_info.status_subscriber =  this->create_subscription<TreeStatus>(topic_name, 10, std::bind(&BehaviorTreeServer::TreeStatusTopicCB, this, _1));
+      new_process_info.status_subscriber =  node_->create_subscription<TreeStatus>(topic_name, 10, std::bind(&BehaviorTreeServer::TreeStatusTopicCB, this, _1));
       uids_to_tree_info.emplace(trees_UID,new_process_info);
       res->tree_uid = trees_UID;
      
-      RCLCPP_INFO(this->get_logger(),"LOADING %s OK", tree_name.c_str());
+      RCLCPP_INFO(node_->get_logger(),"LOADING %s OK", tree_name.c_str());
 
       return true;
     }
     bool StopTree(const std::shared_ptr<TreeRequestSrv::Request> req, std::shared_ptr<TreeRequestSrv::Response> res)
     {
-      RCLCPP_INFO(this->get_logger(), "TREE UID: '%u' ", req->tree_uid);
+      RCLCPP_INFO(node_->get_logger(), "TREE UID: '%u' ", req->tree_uid);
       if(uids_to_tree_info.find(req->tree_uid) != uids_to_tree_info.end())
       {
           TreeProcessInfo tree_info = uids_to_tree_info.at(req->tree_uid);
@@ -279,7 +288,7 @@ class BehaviorTreeServer : public rclcpp::Node
     }
     bool KillTree(const std::shared_ptr<TreeRequestSrv::Request> req, std::shared_ptr<TreeRequestSrv::Response> res)
     {
-      RCLCPP_INFO(this->get_logger(), "TREE UID: '%u' ", req->tree_uid);
+      RCLCPP_INFO(node_->get_logger(), "TREE UID: '%u' ", req->tree_uid);
       if (StopTree(req,res))
         {
             if(uids_to_tree_info.find(req->tree_uid) != uids_to_tree_info.end())
@@ -291,7 +300,7 @@ class BehaviorTreeServer : public rclcpp::Node
                 {
                     return true;
                 }
-                RCLCPP_ERROR(this->get_logger(), "Failed to kill node");
+                RCLCPP_ERROR(node_->get_logger(), "Failed to kill node");
                 return false;
             }
         }
@@ -299,7 +308,7 @@ class BehaviorTreeServer : public rclcpp::Node
     }
     bool KillAllTrees(const std::shared_ptr<EmptySrv::Request> req, std::shared_ptr<EmptySrv::Response> res)
     {
-      RCLCPP_INFO(this->get_logger(), "KILL ALL TREES");
+      RCLCPP_INFO(node_->get_logger(), "KILL ALL TREES");
       for (auto tree_info : uids_to_tree_info)
       {
           std::shared_ptr<TreeRequestSrv::Request> request;
@@ -311,7 +320,7 @@ class BehaviorTreeServer : public rclcpp::Node
     }
     bool RestartTree(const std::shared_ptr<TreeRequestSrv::Request> req, std::shared_ptr<TreeRequestSrv::Response> res)
     {
-      RCLCPP_INFO(this->get_logger(), "TREE UID: '%u' ", req->tree_uid);
+      RCLCPP_INFO(node_->get_logger(), "TREE UID: '%u' ", req->tree_uid);
       if(uids_to_tree_info.find(req->tree_uid) != uids_to_tree_info.end())
       {
           TreeProcessInfo tree_info = uids_to_tree_info.at(req->tree_uid);
@@ -324,16 +333,16 @@ class BehaviorTreeServer : public rclcpp::Node
       int i = 0;
       for (auto key : req->keys)
       {
-        RCLCPP_INFO(this->get_logger(), "TREE KEY %d: '%s' ", i, key.c_str());
+        RCLCPP_INFO(node_->get_logger(), "TREE KEY %d: '%s' ", i, key.c_str());
         i++;
 
         //TODO 3: Get Sync BB Values
-        /*if(const BT::Blackboard::Entry* entry_ptr = sync_blackboard_ptr_->getEntry(key))
+        /*if(const std::shared_ptr<BT::Blackboard::Entry> entry_ptr = sync_blackboard_ptr_->getEntry(key))
         {
             BBEntry bb_entry;
             bb_entry.key = key;
-            bb_entry.type = BT::demangle(entry_ptr->port_info.type());
-            bb_entry.value = entry_ptr->port_info.toString(entry_ptr->value); 
+            bb_entry.type = sync_blackboard_ptr_->getEntry(key)->info.typeName();
+            bb_entry.value = entry_ptr->value; 
             res->entries.push_back(bb_entry);
         }*/
       }
@@ -341,12 +350,12 @@ class BehaviorTreeServer : public rclcpp::Node
     }
     bool GetTreeStatus(const std::shared_ptr<GetTreeStatusSrv::Request> req, std::shared_ptr<GetTreeStatusSrv::Response> res)
     {
-      RCLCPP_INFO(this->get_logger(), "TREE UID: '%u' ", req->tree_uid);
+      RCLCPP_INFO(node_->get_logger(), "TREE UID: '%u' ", req->tree_uid);
       return true;
     }
     bool GetAllTreeStatus(const std::shared_ptr<GetAllTreeStatusSrv::Request> req, std::shared_ptr<GetAllTreeStatusSrv::Response> res)
     {
-      RCLCPP_INFO(this->get_logger(), "GET ALL TREES STATUS");
+      RCLCPP_INFO(node_->get_logger(), "GET ALL TREES STATUS");
       for (auto tree_info : uids_to_tree_info)
       {
         res->status.push_back(tree_info.second.tree_status);
@@ -391,41 +400,41 @@ class BehaviorTreeServer : public rclcpp::Node
         catch(const YAML::Exception& ex) 
         { 
             RCLCPP_ERROR(this->get_logger(), "Initializing. BB key from file '%s' did not succeed: %s", abs_file_path.c_str(), ex.what());
-        }*/
- 
+        }
+      */
     }
 
     void TreeStatusTopicCB(const TreeStatus::SharedPtr msg)   
     {
         uids_to_tree_info.at(msg->uid).tree_status = *msg;
-        RCLCPP_INFO(this->get_logger(),"New Status topic RX: Tree_name:%s New status:%s", uids_to_tree_info.at(msg->uid).tree_name.c_str() , uids_to_tree_info.at(msg->uid).tree_status.status.c_str());
+        RCLCPP_INFO(node_->get_logger(),"New Status topic RX: Tree_name:%s New status:%s", uids_to_tree_info.at(msg->uid).tree_name.c_str() , uids_to_tree_info.at(msg->uid).tree_status.status.c_str());
     }
 
     bool RosServiceStopCall (std::string tree_name)
     {
         auto empty_message = std::make_shared <EmptySrv::Request>();
 
-        rclcpp::Client<EmptySrv>::SharedPtr service_client = this->create_client<EmptySrv>("/"+tree_name+ "/stop_tree"); 
+        rclcpp::Client<EmptySrv>::SharedPtr service_client = node_->create_client<EmptySrv>("/"+tree_name+ "/stop_tree"); 
         auto result = service_client->async_send_request(empty_message);
-        if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), result) == rclcpp::FutureReturnCode::SUCCESS)
+        if (rclcpp::spin_until_future_complete(node_->get_node_base_interface(), result) == rclcpp::FutureReturnCode::SUCCESS)
         {
-          RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Stop Tree Service OK on %s BT", tree_name.c_str());
+          RCLCPP_INFO(node_->get_logger(), "Stop Tree Service OK on %s BT", tree_name.c_str());
           return true;
         }
-        RCLCPP_ERROR(this->get_logger(),"Stop Tree Service FAILED on %s BT", tree_name.c_str());
+        RCLCPP_ERROR(node_->get_logger(),"Stop Tree Service FAILED on %s BT", tree_name.c_str());
         return false;
     }
     bool RosServiceRestartCall (std::string tree_name)
     {
         auto empty_message = std::make_shared <EmptySrv::Request>();
-        rclcpp::Client<EmptySrv>::SharedPtr service_client = this->create_client<EmptySrv>("/"+tree_name+ "/restart_tree"); 
+        rclcpp::Client<EmptySrv>::SharedPtr service_client = node_->create_client<EmptySrv>("/"+tree_name+ "/restart_tree"); 
         auto result = service_client->async_send_request(empty_message);
-        if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), result) == rclcpp::FutureReturnCode::SUCCESS)
+        if (rclcpp::spin_until_future_complete(node_->get_node_base_interface(), result) == rclcpp::FutureReturnCode::SUCCESS)
         {
-          RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Restart Tree Service OK on %s BT", tree_name.c_str());
+          RCLCPP_INFO(node_->get_logger(), "Restart Tree Service OK on %s BT", tree_name.c_str());
           return true;
         }
-        RCLCPP_ERROR(this->get_logger(),"Restart Tree Service FAILED on %s BT", tree_name.c_str());
+        RCLCPP_ERROR(node_->get_logger(),"Restart Tree Service FAILED on %s BT", tree_name.c_str());
         return false;
     }
 
@@ -454,21 +463,24 @@ class BehaviorTreeServer : public rclcpp::Node
     //Save Spawned Trees information
     std::map <unsigned int, TreeProcessInfo> uids_to_tree_info;
 
+    //Manage spawn Process using ROS LAUNCH command
+    ROS2LaunchManager ros2_launch_manager;
+
     //Manage Trees_UIDs
     unsigned int trees_UID = 0;
+
+    rclcpp::Node::SharedPtr node_ ;
 };
 
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
   auto nh = std::make_shared<rclcpp::Node>("behavior_tree_server");
-  rclcpp::NodeOptions options;
 
-  auto bt_server = std::make_shared<BehaviorTreeServer>();
+  auto bt_server = std::make_shared<BehaviorTreeServer>(nh);
 
-  while(rclcpp::ok())
-  {
+  rclcpp::spin(nh);
+  rclcpp::shutdown();
 
-  }
   return 0;
 }
