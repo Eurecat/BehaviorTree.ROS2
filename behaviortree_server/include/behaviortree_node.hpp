@@ -15,9 +15,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/range/iterator_range.hpp>
 
-#include "3rdparty/tinyxml2/tinyxml2.h"
-
-
 using std::placeholders::_1;
 using std::placeholders::_2;
 
@@ -44,9 +41,8 @@ class BehaviorTreeNode
     bool StatusTree(const std::shared_ptr<GetTreeStatusSrv::Request> _request, std::shared_ptr<GetTreeStatusSrv::Response> _response);
     void SyncBlackboardUpdateCallback(const BBEntry::SharedPtr _topic_msg);
     void LoadAllPlugins();
-    void LoadPluginsFromROS();
-    void LoadPluginsFromFolder(const std::string& _folder);
-    void LoadPlugin(const std::string& _plugin_path);
+    void LoadPluginsFromROS(std::vector<std::string> ros_plugins_folders);
+    void LoadPluginsFromFolder();
     void InitializeBlackboard(const std::string& abs_file_path, BT::Blackboard::Ptr blackboard_ptr, const bool sync_bb);
     void InitializeStatusPublisher(std::string tree_name);
     bool AreLoggersInitialized();
@@ -74,7 +70,8 @@ class BehaviorTreeNode
     bool enable_file_log_;
     bool enable_zmq_log_;
     bool loggers_init_ = false;
-
+    std::vector<std::string> ros_plugin_directories_;
+    
     rclcpp::Time start_execution_time_;
     std::set<std::string> loaded_plugins_;
 

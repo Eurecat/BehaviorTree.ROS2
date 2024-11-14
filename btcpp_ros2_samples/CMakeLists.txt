@@ -57,6 +57,10 @@ ament_target_dependencies(subscriber_test ${THIS_PACKAGE_DEPS})
 
 ######################################################
 # Build subscriber_test
+add_library(subscriber_rosx_deserialization_plugin SHARED src/subscriber_rosx_deserialization_def.cpp)
+target_compile_definitions(subscriber_rosx_deserialization_plugin PRIVATE  BT_PLUGIN_EXPORT )
+ament_target_dependencies(subscriber_rosx_deserialization_plugin ${THIS_PACKAGE_DEPS})
+
 add_executable(subscriber_rosx_deserialization src/subscriber_rosx_deserialization.cpp)
 ament_target_dependencies(subscriber_rosx_deserialization ${THIS_PACKAGE_DEPS})
 
@@ -77,6 +81,7 @@ install(TARGETS
   sleep_server
   sleep_plugin
   subscriber_test
+  subscriber_rosx_deserialization_plugin
   subscriber_rosx_deserialization
   sample_bt_executor
   bool_client
@@ -89,6 +94,13 @@ install(TARGETS
 
 install(TARGETS
   sleep_plugin
+  LIBRARY DESTINATION share/${PROJECT_NAME}/bt_plugins
+  ARCHIVE DESTINATION share/${PROJECT_NAME}/bt_plugins
+  RUNTIME DESTINATION share/${PROJECT_NAME}/bt_plugins
+  )
+
+install(TARGETS
+  subscriber_rosx_deserialization_plugin
   LIBRARY DESTINATION share/${PROJECT_NAME}/bt_plugins
   ARCHIVE DESTINATION share/${PROJECT_NAME}/bt_plugins
   RUNTIME DESTINATION share/${PROJECT_NAME}/bt_plugins

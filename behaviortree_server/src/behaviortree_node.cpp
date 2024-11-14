@@ -1,7 +1,8 @@
 
 #include "behaviortree_node.hpp"
+#include "behaviortree_ros2/bt_utils.hpp"
 #include "yaml-cpp/yaml.h"
-
+#include "behaviortree_ros2/plugins.hpp"
 
     BehaviorTreeNode::BehaviorTreeNode(const rclcpp::Node::SharedPtr& node) : tree_wrapper_(node), node_(node) 
     {
@@ -43,8 +44,9 @@
         const auto& full_path = GetFullPath(tree_filename_);
 
         RCLCPP_INFO(node_->get_logger(),"CREATING TREE FROM FILE %s", full_path.c_str());
-        return;
+
         tree_wrapper_.tree_ = tree_wrapper_.factory_.createTreeFromFile(full_path,tree_wrapper_.global_blackboard_);
+        
         RCLCPP_INFO(node_->get_logger(),"CREATED TREE FROM FILE OK");
 
         //if (tree_debug_) tree_wrapper_.tree_.setDebug();
@@ -52,7 +54,6 @@
         /*sendBlackboardUpdates(tree_wrapper_.tree_.getKeysValueToSync()); // send updates
         getBlackboardUpdates(); // blocking call to update bb with missing values that need to be retrieved from server
         */
-
 
         start_execution_time_ = node_->get_clock()->now();
         tree_wrapper_.is_tree_loaded_ = true;
@@ -77,6 +78,20 @@
     void BehaviorTreeNode::InitializeLoggers()
     {
       //Create Loggers
+      if (enable_file_log_)
+      {
+        const char* home = getenv("HOME");
+        log_folder_ = log_folder_.front() == '~' ? std::string(home) + log_folder_.substr(1, log_folder_.size() - 1) : log_folder_;
+        //TODO: ENABLE LOG FOLDER
+      }
+      if (enable_minitrace_log_)
+      {
+        //TODO:
+      }
+      if (enable_cout_log_)
+      {
+        //TODO:
+      }
       if(enable_rostopic_log_)
       {
         RCLCPP_INFO(node_->get_logger(),"INIT ROSTOPIC LOGS");
@@ -86,11 +101,12 @@
 
       if (enable_zmq_log_) 
       {
+        //TODO:
         #ifdef BEHAVIOR_TREE_CPP_ZMQ
         groot_publisher_.reset();
         groot_publisher_ = std::make_shared<BT::Groot2Publisher>(tree_wrapper_.tree_, tree_server_port_);
         #else
-          RCLCPP_WARN(node_->get_logger(),"ZMQ logging is enabled but behavior_tree_core was not compiled with ZMQ support.");
+          RCLCPP_WARN(node_->get_logger(),"ZMQ logging is enabled but behavior_tree_cpp was not compiled with ZMQ support.");
         #endif
       }
 
@@ -146,7 +162,8 @@
         bt_execution_status_publisher_ = node_->create_publisher<TreeStatus>("/"+tree_name_+"/execution_status", 100);
     }
 
-    /*void sendBlackboardUpdates(const BT::Blackboard::SerializedEntriesMap& entries_map)
+    /* TODO:
+    void sendBlackboardUpdates(const BT::Blackboard::SerializedEntriesMap& entries_map)
     {
         // std::cout << "send BB UPDATES for tree " << service_tree_.tree_name_ << " " << std::to_string(entries_map.size()) << " \n" << std::flush;
         for(const auto ser_entry : entries_map)
@@ -160,7 +177,8 @@
         }
     }*/
 
-    /*void getBlackboardUpdates(const bool just_empty_values)
+    /* TODO:
+    void getBlackboardUpdates(const bool just_empty_values)
     {
         rclcpp::Client<GetBBValues>::SharedPtr client = node_->create_client<GetBBValues>("/behavior_tree_server/get_sync_bb_values"); 
         GetBBValues::Request request;
@@ -172,7 +190,8 @@
             SyncBlackboardUpdateCallback(response.entries, &tree_wrapper_.factory());
         }
     }*/
-    /* std::unordered_set<std::string> getSyncKeys(const bool just_empty_values)
+    /*  TODO:
+    std::unordered_set<std::string> getSyncKeys(const bool just_empty_values)
     {
       return tree_wrapper_.globalBlackboard()->getSyncKeys(just_empty_values);
     }*/
@@ -197,7 +216,8 @@
                 RCLCPP_INFO(node_->get_logger(),"TICK ONCE");
                 const auto tree_status = tree_wrapper_.tree_.tickOnce();
                 RCLCPP_INFO(node_->get_logger(),"TICK ONCE OK");
-                //TODO
+
+                //TODO:
                 //sendBlackboardUpdates(tree_wrapper_.getKeysValueToSync());
                 
                 // Publish the updated status
@@ -288,151 +308,71 @@
     void BehaviorTreeNode::LoadAllPlugins()
     {
         RCLCPP_INFO(node_->get_logger(),"LOADING PLUGINS");
-        LoadPluginsFromROS();
-
-        bool import_from_folder = false;
-        node_->get_parameter_or("import_from_folder",import_from_folder,false);
-
-        if(import_from_folder)
-        {
-            RCLCPP_INFO(node_->get_logger(),"LOADING PLUGINS FROM FOLDER");
-            std::string plugins_folder;
-            if (!node_->get_parameter("plugins_folder",plugins_folder))
-            {
-                RCLCPP_WARN(node_->get_logger(),"Import from folder option is set, but folder param is missing");
-            }
-            else
-            {
-                LoadPluginsFromFolder(plugins_folder);
-            }
-            RCLCPP_INFO(node_->get_logger(),"LOADING PLUGINS FROM FOLDER OK");
-        }
+        LoadPluginsFromROS(ros_plugin_directories_);
+        LoadPluginsFromFolder();
         RCLCPP_INFO(node_->get_logger(),"LOADED PLUGINS");
     }
 
-    void BehaviorTreeNode::LoadPluginsFromROS()
+    void BehaviorTreeNode::LoadPluginsFromFolder()
+    {
+      bool import_from_folder = false;
+      node_->get_parameter_or("import_from_folder",import_from_folder,false);
+
+      if(import_from_folder)
+      {
+          RCLCPP_INFO(node_->get_logger(),"LOADING PLUGINS FROM FOLDER");
+          std::string plugins_folder;
+          if (!node_->get_parameter("plugins_folder",plugins_folder))
+          {
+              RCLCPP_WARN(node_->get_logger(),"Import from folder option is set, but folder param is missing");
+          }
+          else
+          {
+              using namespace boost::filesystem;
+
+              if(!exists(plugins_folder))
+              {
+                RCLCPP_ERROR(node_->get_logger(),"Plugin folder %s does not exist.", plugins_folder.c_str());
+                return;
+              }
+
+              auto directory_list = [&] { return boost::make_iterator_range(directory_iterator(plugins_folder), {}); };
+
+              for(const auto& entry : directory_list())
+              {
+                  if((!is_regular_file(entry) && !is_symlink(entry)) || entry.path().extension() != ".so") { continue; }
+
+                  try
+                  {
+                    const auto& plugin_path = canonical(entry.path());
+
+                    tree_wrapper_.factory_.registerFromPlugin(plugin_path.string());
+                    RCLCPP_INFO(node_->get_logger(),"Loaded plugin %s from folder %s", plugin_path.filename().string().c_str(), plugins_folder.c_str());
+                  }
+                  catch(const std::runtime_error& ex)
+                  {
+                    RCLCPP_ERROR(node_->get_logger(),"Cannot load plugin %s from folder %s. Error: %s", entry.path().filename().string().c_str(), plugins_folder.c_str(), ex.what());
+                  }
+              }
+          }
+          RCLCPP_INFO(node_->get_logger(),"LOADING PLUGINS FROM FOLDER OK");
+      }
+    }
+
+    void BehaviorTreeNode::LoadPluginsFromROS(std::vector<std::string> ros_plugins_folders)
     {
         RCLCPP_INFO(node_->get_logger(),"LOADING PLUGINS FROM ROS");
-        using namespace BT_TinyXML2;
 
-        // ros::package::getPlugins returns a pair of strings for each result.
-        // The first one is the name of the package that exported the target xml entry (behavior_tree_ros)
-        // and the second one is the value of the attribute (plugin)
-        std::vector<std::pair<std::string, std::string>> exported_plugins;
-
-        //TODO:
-        //ros::package::getPlugins("behavior_tree_ros", "plugin", exported_plugins);
-
-        XMLDocument plugin_description;
-
-        for(const auto& plugin : exported_plugins)
+        bt_server::Params bt_params;
+        bt_params.ros_plugins_timeout = 1000;
+        bt_params.plugins = ros_plugins_folders;
+        for(const auto& plugin : bt_params.plugins)
         {
-            try
-            {
-                plugin_description.LoadFile(plugin.second.c_str());
-
-                if(plugin_description.Error())
-                {
-                    std::string error_msg;
-                    error_msg  =std::string { "XML file may be ill-formed ( " }
-                            + plugin_description.ErrorStr() ;
-                    throw std::runtime_error { error_msg };
-                }
-
-                XMLElement* root_entry = plugin_description.RootElement(); 
-
-                if(!root_entry)
-                {
-                    throw std::runtime_error { "No root element was found in XML file" };
-                }
-
-                XMLElement* plugin_entry = root_entry->FirstChildElement("plugin");
-
-                // This loop abort the parsing on first error. This could be a problem if there are multiple plugins
-                // defined in the same file.
-                while(plugin_entry)
-                {
-                    std::string plugin_lib = plugin_entry->Attribute("path");
-
-                    if(plugin_lib.empty())
-                    {
-                        throw std::runtime_error { "Missing path attribute in plugin element" };
-                    }
-
-                    std::string devel_path;
-                    const std::string& xml_path = plugin.second;
-
-                    // Is there a better way to do this?
-                    // Check if the path contains a src folder (then we assume is a local workspace)
-                    // or if it contains a share folder (then we assume we are in the system path)
-                    if(xml_path.find("/src/") != std::string::npos)
-                    {
-                        devel_path = xml_path.substr(0, xml_path.find("/src/")) + "/devel/";
-                    }
-                    else if(xml_path.find("/share/") != std::string::npos)
-                    {
-                        devel_path = xml_path.substr(0, xml_path.find("/share/")) + "/";
-                    }
-
-                    if(devel_path.empty())
-                    {
-                        throw std::runtime_error { "Cannot find devel path to plugin" };
-                    }
-
-                    std::string lib_full_path = devel_path + plugin_lib + ".so";
-                    LoadPlugin(lib_full_path);
-
-                    RCLCPP_INFO(node_->get_logger(),"Loaded plugin %s from ROS plugin", lib_full_path.c_str());
-                    plugin_entry = plugin_entry->NextSiblingElement("plugin");
-                }
-            }
-            catch(const std::runtime_error& ex)
-            {
-              RCLCPP_ERROR(node_->get_logger(),"Error loading plugin %s in path %s: %s.", plugin.first.c_str(), plugin.second.c_str(), ex.what());
-            }
+          RCLCPP_INFO(node_->get_logger(),"Added directory %s",plugin.c_str());
         }
+        RegisterPlugins(bt_params, tree_wrapper_.factory_, node_);
+
         RCLCPP_INFO(node_->get_logger(),"LOADING PLUGINS FROM ROS OK");
-    }
-    void BehaviorTreeNode::LoadPluginsFromFolder(const std::string& _folder)
-    {
-        using namespace boost::filesystem;
-
-        if(!exists(_folder))
-        {
-          RCLCPP_ERROR(node_->get_logger(),"Plugin folder %s does not exist.", _folder.c_str());
-	        return;
-        }
-
-        auto directory_list = [&] { return boost::make_iterator_range(directory_iterator(_folder), {}); };
-
-        for(const auto& entry : directory_list())
-        {
-            if((!is_regular_file(entry) && !is_symlink(entry)) || entry.path().extension() != ".so") { continue; }
-
-            try
-            {
-              const auto& plugin_path = canonical(entry.path());
-		          LoadPlugin(plugin_path.string());
-              RCLCPP_INFO(node_->get_logger(),"Loaded plugin %s from folder %s", plugin_path.filename().string().c_str(), _folder.c_str());
-            }
-            catch(const std::runtime_error& ex)
-            {
-              RCLCPP_ERROR(node_->get_logger(),"Cannot load plugin %s from folder %s. Error: %s", entry.path().filename().string().c_str(), _folder.c_str(), ex.what());
-            }
-        }
-    }
-
-    void BehaviorTreeNode::LoadPlugin(const std::string& _plugin_path)
-    {
-      try
-      {
-        tree_wrapper_.factory().registerFromPlugin(_plugin_path);
-        loaded_plugins_.emplace(_plugin_path);
-      }
-      catch(const BT::BehaviorTreeException& ex)
-      {
-        throw std::runtime_error { ex.what() };
-      }
     }
 
   void BehaviorTreeNode::getParameters (rclcpp::Node::SharedPtr nh)
@@ -457,28 +397,27 @@
     nh->declare_parameter("publisher_port", 1666);
     nh->declare_parameter("log_folder", "/tmp/");
     nh->declare_parameter("bb_init", "");
+    nh->declare_parameter("plugins_dir","[]");
 
     RCLCPP_INFO(nh->get_logger(),"LOADING PARAMS");
-
+     
     //2. Load Parameters
     trees_folder_ = nh->get_parameter("trees_folder").as_string();
-    nh->get_parameter_or("enable_cout_log",enable_cout_log_,false);
-    nh->get_parameter_or("enable_minitrace_log",enable_minitrace_log_,false);
-    nh->get_parameter_or("enable_rostopic_log",enable_rostopic_log_,false);
-    nh->get_parameter_or("enable_file_log",enable_file_log_,false);
-    nh->get_parameter_or("enable_zmq_log",enable_zmq_log_,false);
-    nh->get_parameter("tree_name").as_string();
-    if (!nh->get_parameter("tree_name",tree_name_)){ tree_name_=""; }
-    nh->get_parameter("tree_file",tree_filename_);
+    enable_cout_log_ = nh->get_parameter("enable_cout_log").as_bool();
+    enable_minitrace_log_ = nh->get_parameter("enable_minitrace_log").as_bool();
+    enable_rostopic_log_ = nh->get_parameter("enable_rostopic_log").as_bool();
+    enable_file_log_ = nh->get_parameter("enable_file_log").as_bool();
+    enable_zmq_log_ = nh->get_parameter("enable_zmq_log").as_bool();
+    tree_name_= nh->get_parameter("tree_name").as_string();
     tree_filename_ = nh->get_parameter("tree_file").as_string();
-   // if (!nh->get_parameter("tree_file",tree_filename_)){ tree_filename_=""; }
-    nh->get_parameter_or("tree_uid",tree_uid_,1);
-    nh->get_parameter_or("tree_debug",tree_debug_,false);
-    nh->get_parameter_or("tree_auto_restart",tree_auto_restart_,false);
-    nh->get_parameter_or("server_port",tree_server_port_,1667);
-    nh->get_parameter_or("publisher_port",tree_publisher_port_,1666);
-    if (!nh->get_parameter("log_folder",log_folder_)){ log_folder_ = "/tmp/"; }
-    if (!nh->get_parameter("bb_init",bb_init)){ bb_init = ""; }
+    tree_uid_ = nh->get_parameter("tree_uid").as_int();
+    tree_debug_ = nh->get_parameter("tree_debug").as_bool();
+    tree_auto_restart_ = nh->get_parameter("tree_auto_restart").as_bool();
+    tree_server_port_ = nh->get_parameter("server_port").as_int();
+    tree_publisher_port_ = nh->get_parameter("publisher_port").as_int();
+    log_folder_ = nh->get_parameter("log_folder").as_string();
+    bb_init = nh->get_parameter("bb_init").as_string();
+    ros_plugin_directories_ = node_->get_parameter("plugins_dir").as_string_array();
 
     RCLCPP_INFO(nh->get_logger(),"LOADED PARAMS");
 
@@ -491,11 +430,6 @@
       s.erase(std::remove(s.begin(), s.end(), '\''), s.end());
       tree_bb_init_.push_back(s);
     }   
-
-    //Init Log Folder
-    const char* home = getenv("HOME");
-    log_folder_ = log_folder_.front() == '~' ? std::string(home) + log_folder_.substr(1, log_folder_.size() - 1) : log_folder_;
-
     RCLCPP_INFO(nh->get_logger(),"GET PARAMS DONE");
   }
 
@@ -509,7 +443,7 @@
             {
                 const std::string& bb_key = it->first.as<std::string>();
                 std::string bb_val = it->second.as<std::string>();
-                //TODO
+                //TODO:
                 /*
                 const BT::Optional<std::string> bbentry_value_inferred_keyvalues = blackboard_ptr->replaceKeysWithStringValues(bb_val, true); // no effect if it has no key
                 if(!bbentry_value_inferred_keyvalues)
@@ -566,7 +500,7 @@ int main(int argc, char** argv)
   while(rclcpp::ok())
   {
     rclcpp::spin_some(nh);
-    //bt_node->Loop();
+    bt_node->Loop();
     rate.sleep();
   }
   rclcpp::shutdown();
