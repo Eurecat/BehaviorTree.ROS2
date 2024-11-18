@@ -16,6 +16,7 @@
 #include <behaviortree_cpp/bt_factory.h>
 
 #include "ros2_launch_manager.hpp"
+#include "utils.hpp"
 
 #include <chrono>
 using namespace std::chrono_literals;
@@ -31,11 +32,6 @@ using GetBBValuesSrv = behaviortree_server_interfaces::srv::GetBBValues;
 using GetTreeStatusSrv = behaviortree_server_interfaces::srv::GetTreeStatusByID;
 using GetAllTreeStatusSrv = behaviortree_server_interfaces::srv::GetAllTreesStatus;
 using EmptySrv = std_srvs::srv::Empty;
-
-inline std::string const BoolToString(bool b)
-{
-  return b ? "true" : "false";
-}
 
 class TreeProcessInfo
 {
