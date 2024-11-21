@@ -10,14 +10,13 @@ find_package(behaviortree_ros2 REQUIRED)
 find_package(btcpp_ros2_interfaces REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
-find_package(rosx_introspection REQUIRED)
+
 
 set(THIS_PACKAGE_DEPS
     behaviortree_ros2
     std_msgs
     std_srvs
     btcpp_ros2_interfaces 
-    rosx_introspection
     )
 
 ######################################################
@@ -56,13 +55,9 @@ add_executable(subscriber_test src/subscriber_test.cpp)
 ament_target_dependencies(subscriber_test ${THIS_PACKAGE_DEPS})
 
 ######################################################
-# Build subscriber_test
-add_library(subscriber_rosx_deserialization_plugin SHARED src/subscriber_rosx_deserialization_def.cpp)
-target_compile_definitions(subscriber_rosx_deserialization_plugin PRIVATE  BT_PLUGIN_EXPORT )
-ament_target_dependencies(subscriber_rosx_deserialization_plugin ${THIS_PACKAGE_DEPS})
-
-add_executable(subscriber_rosx_deserialization src/subscriber_rosx_deserialization.cpp)
-ament_target_dependencies(subscriber_rosx_deserialization ${THIS_PACKAGE_DEPS})
+# Build subscriber_rosx_test
+add_executable(subscriber_rosx_test src/subscriber_rosx_test.cpp)
+ament_target_dependencies(subscriber_rosx_test ${THIS_PACKAGE_DEPS})
 
 ######################################################
 # the SetBool test
@@ -81,8 +76,7 @@ install(TARGETS
   sleep_server
   sleep_plugin
   subscriber_test
-  subscriber_rosx_deserialization_plugin
-  subscriber_rosx_deserialization
+  subscriber_rosx_test
   sample_bt_executor
   bool_client
   bool_server
@@ -94,13 +88,6 @@ install(TARGETS
 
 install(TARGETS
   sleep_plugin
-  LIBRARY DESTINATION share/${PROJECT_NAME}/bt_plugins
-  ARCHIVE DESTINATION share/${PROJECT_NAME}/bt_plugins
-  RUNTIME DESTINATION share/${PROJECT_NAME}/bt_plugins
-  )
-
-install(TARGETS
-  subscriber_rosx_deserialization_plugin
   LIBRARY DESTINATION share/${PROJECT_NAME}/bt_plugins
   ARCHIVE DESTINATION share/${PROJECT_NAME}/bt_plugins
   RUNTIME DESTINATION share/${PROJECT_NAME}/bt_plugins

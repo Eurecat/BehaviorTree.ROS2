@@ -19,7 +19,9 @@
   <depend>behaviortree_cpp</depend>
   <depend>generate_parameter_library</depend>
   <depend>btcpp_ros2_interfaces</depend>
-
+  <depend>rosx_introspection</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
 <export>
   <build_type>ament_cmake</build_type>
 </export>

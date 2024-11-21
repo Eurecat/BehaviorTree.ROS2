@@ -16,6 +16,7 @@ services:
       - ../btcpp_ros2_samples:/eut_bt_ros2_ws/src/btcpp_ros2_samples
       - ../behaviortree_server:/eut_bt_ros2_ws/src/behaviortree_server
       - ../behaviortree_server_interfaces:/eut_bt_ros2_ws/src/behaviortree_server_interfaces
+      - ../behaviortree:/eut_bt_ros2_ws/src/behaviortree
       
     tty: true
     stdin_open: true
