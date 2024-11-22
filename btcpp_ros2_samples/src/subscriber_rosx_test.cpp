@@ -5,17 +5,47 @@
 using namespace BT;
 
 // Simple tree, used to execute once each action.
-static const char* xml_text = R"(
+static const char* xml_publisher_text = R"(
   <root BTCPP_format="4">
     <BehaviorTree>
       <Sequence>
         <PublishStdEmpty topic_name="/emptyyy" name="B"/>
-        <PublishStdUChar topic_name="/uchaaar" data="0" name="B"/>
-        <PublishStdChar topic_name="/chaar" data="5" name="B"/>
         <PublishStdShort topic_name="/shooort" data="1" name="A"/>
-        <PublishStdInt topic_name="/inttt" data="-2" name="B"/>
-        <PublishStdUInt topic_name="/uinttt" data="3" name="C"/>
         <MonitorStdBool topic_name="/asdf" name="D"/>
+      </Sequence>
+    </BehaviorTree>
+  </root>
+ )";
+
+ static const char* xml_subscriber_text = R"(
+  <root BTCPP_format="4">
+    <BehaviorTree>
+      <Sequence>
+        <MonitorStdBool topic_name="/asdf" name="D"/>
+        <MonitorStdEmpty topic_name="/emptyyy" name="B"/>
+        <MonitorStdShort topic_name="/shooort" data="1" name="A"/>
+      </Sequence>
+    </BehaviorTree>
+  </root>
+ )";
+
+ static const char* xml_service_text = R"(
+  <root BTCPP_format="4">
+    <BehaviorTree>
+      <Sequence>
+        <PublishStdBool topic_name="/booool" data="true" name="A"/>
+        <CallSetBoolService service_name="robotA/set_bool" data="false" name="callerservice"/>
+        <CallSetBoolService service_name="robotA/set_bool" data="true" name="callerservice"/>
+        <MonitorStdEmpty topic_name="/emptyyy" name="B"/>
+      </Sequence>
+    </BehaviorTree>
+  </root>
+ )";
+ static const char* xml_action_text = R"(
+  <root BTCPP_format="4">
+    <BehaviorTree>
+      <Sequence>
+        <TestActionSleep action_name="/sleep_service" msec_timeout="2000" name="sleepA"/>
       </Sequence>
     </BehaviorTree>
   </root>
@@ -49,7 +79,7 @@ int main(int argc, char** argv)
   //Register without plugin
   //factory.registerNodeType<ReceiveString>("ReceiveString", params);
 
-  auto tree = factory.createTreeFromText(xml_text);
+  auto tree = factory.createTreeFromText(xml_action_text);
   RCLCPP_INFO(nh->get_logger(),"Created OK");
   while(rclcpp::ok())
   {

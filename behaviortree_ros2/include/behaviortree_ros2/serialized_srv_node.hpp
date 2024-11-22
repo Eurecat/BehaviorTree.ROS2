@@ -1,13 +1,6 @@
-
-
-//#include <mutex>
-//#include <thread>
-
 #include "behaviortree_ros2/bt_service_node.hpp"
 #include "behaviortree_ros2/deserialization_policies.hpp"
 #include "behaviortree_ros2/serialization_policies.hpp"
-
-//#include <std_srvs/srv/empty.hpp>
 
 namespace BT
 {
@@ -20,7 +13,8 @@ namespace BT
     {
         public:
             SerializedServiceNode(const std::string& _name, const BT::NodeConfig& conf, const BT::RosNodeParams& params) :
-             RosServiceNode<ServiceT>(_name, conf, params){}
+                RosServiceNode<ServiceT>(_name, conf, params){}
+
             ~SerializedServiceNode(){}
                 
             static BT::PortsList providedPorts()
@@ -38,31 +32,31 @@ namespace BT
 
             bool setRequest(typename ServiceT::Request::SharedPtr& request) override
             {
-                //this->getInput("All_Data");
-                //request->data = request_policy_.buildMessage(*this);
+                if(!request_policy_.isParserInit() || this->service_name_ != prev_service_name_req)
+                {
+                    request_policy_.initParser(this->service_name_,msgName<typename ServiceT::Request>());
+                    prev_service_name_req = this->service_name_;
+                }
+                auto get_request = request_policy_.buildMessage(*this);
+                request = std::make_shared<typename ServiceT::Request>(get_request);
                 return true;
             }
 
             BT::NodeStatus
             onResponseReceived(const typename ServiceT::Response::SharedPtr& response) override
             {
-                std::cout << "onResponseReceived " << std::endl;
-               /* if(response->success)
+                if(!response_policy_.isParserInit() || this->service_name_ != prev_service_name_resp)
                 {
-                    response_policy_.onNewMessage(response, *this);
-                    RCLCPP_INFO(this->logger(), "Service succeeded.");
-                    return BT::NodeStatus::SUCCESS;
+                    response_policy_.initParser(this->service_name_,msgName<typename ServiceT::Response>());
+                    prev_service_name_resp = this->service_name_;
                 }
-                else
-                {
-                   // RCLCPP_INFO(this->logger(), "Service failed: %s", response->message.c_str());
-                    return BT::NodeStatus::FAILURE;
-                }*/
+                response_policy_.onNewMessage(response, *this);
                 return BT::NodeStatus::SUCCESS;
             }
 
         private:
-
+            std::string prev_service_name_req{""};
+            std::string prev_service_name_resp{""};
             RequestDeserializationPolicy<typename ServiceT::Request> request_policy_ {};
             ResponseSerializationPolicy<typename ServiceT::Response> response_policy_ {};
     };

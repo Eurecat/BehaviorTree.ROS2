@@ -69,7 +69,7 @@ struct JsonSerialization
         {
           
             if(isMsgEmpty<MessageType>()) { return {}; }
- 
+
             return { BT::OutputPort<nlohmann::json>("serialized_" + _base_port_name, "Serialized ROS message ["
                                                         + BT::demangle(typeid(MessageType)) + "]") };
         }
@@ -132,7 +132,6 @@ struct SmartJsonSerialization
         void onNewMessage(const std::shared_ptr<MessageType>& _message, BT::TreeNode& _tree_node,
                           const std::string& _base_port_name = "output")
         {
-
             if(isMsgEmpty<MessageType>()) { return; }
     
             useMsgBeforeSerialization(_message, _tree_node);

@@ -5,10 +5,6 @@
 #include "behaviortree_cpp/eut/eut_debug.h"
 namespace BT_ROS
 {
-
-
-    
-
     template <class MessageType>
     struct NoDeserialization
     {
@@ -46,9 +42,8 @@ namespace BT_ROS
             static BT::PortsList requiredPorts()
             {
                 BT::PortsList ports {};
-
+                if(isMsgEmpty<MessageType>()) { return ports; }
                 const auto& field_ports = fieldPorts();
-
                 for(const auto& field_port : field_ports)
                 {
                     // Time and duration defaults to ros::Time::now and zero
@@ -61,7 +56,6 @@ namespace BT_ROS
                     const auto& port = getTypedPort(field_port.second,BT::PortDirection::INPUT, field_port.first, std::string { "Auto-generated field from " } + BT::demangle(typeid(MessageType)));
 
                     ports.insert(port);
-                    std::cout << "PORT CREATED: " << field_port.first << "\n" << std::flush;
                 }
 
                 return ports;
@@ -70,6 +64,7 @@ namespace BT_ROS
             MessageType buildMessage(const BT::TreeNode& _tree_node)
             {
                 MessageType ros_message {};
+                if(isMsgEmpty<MessageType>()) { return ros_message; }
 
                 const auto& field_ports = fieldPorts();
               
@@ -83,7 +78,6 @@ namespace BT_ROS
                     ros_message = RosMsgParser::BufferToMessage<MessageType>( serializer_.getBufferData(), serializer_.getBufferSize() );
                    // auto std_msgs_string_out = BufferToMessage<MessageType>(
                    // serializer.getBufferData(), serializer.getBufferSize()
-
                     std::cout << "ros_message OK " << "\n" << std::flush;
                 }
                 catch(const std::out_of_range&)
@@ -117,8 +111,7 @@ namespace BT_ROS
                 recursive_gen = [&](const RosMsgParser::ROSMessage& _msg, const std::string _prefix)
                 {
                     using namespace RosMsgParser;
-                    std::cout << "fieldPorts() for msg type " << BT::demangle(typeid(MessageType)) << " size = "
-                        << _msg.fields().size() << "\n" << std::flush;
+                    //std::cout << "fieldPorts() for msg type " << BT::demangle(typeid(MessageType)) << " size = " << _msg.fields().size() << "\n" << std::flush;
                     for(const ROSField& field : _msg.fields())
                     {
                         // Skip constant fields
@@ -131,23 +124,6 @@ namespace BT_ROS
                         // call this function again recursively to extract its built-in fields
                          if (!field.type().isBuiltin())
                             {
-                              /*  const auto& msg_list = msgInfo()->root_msg->fields();
-
-                                // Find the message that corresponds to the field's type
-                                const auto msg_it = std::find_if(msg_list.cbegin(), msg_list.cend(), [&field](const ROSMessage& _msg) {
-                                    return _msg.type() == field.type();
-                                });
-
-                                // Ensure we found a matching ROSMessage
-                                if (msg_it != msg_list.cend())
-                                {
-                                    // Call recursive_gen with the found ROSMessage
-                                    // No need to dereference it again; msg_it is already pointing to a ROSMessage
-                                    recursive_gen(*msg_it, _prefix + field.name() + ".");
-                                }
-                                */
-
-
                                 auto msg_ptr = msgInfo()->msg_library.at(field.type());
                                 recursive_gen(*msg_ptr, _prefix + field.name() + ".");
                                 continue;
@@ -196,9 +172,8 @@ namespace BT_ROS
                         }
                         current = &(*current)[key];
                     }
-                    
                     //TODO: GET INPUT AS JSON
-                    auto portValue = BT::getPortValueAsJson(tree_node, name, BT::PortDirection::INPUT);
+                    auto portValue = BT::getPortValueAsJson(tree_node, port.first, BT::PortDirection::INPUT);
 
                     // Check if the Expected contains a valid value or an error
                     if (portValue.has_value()) {

@@ -16,7 +16,7 @@ set(THIS_PACKAGE_DEPS
     behaviortree_ros2
     std_msgs
     std_srvs
-    btcpp_ros2_interfaces 
+    btcpp_ros2_interfaces
     )
 
 ######################################################

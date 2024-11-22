@@ -3,28 +3,29 @@
 
 #include "rosx_introspection/ros_parser.hpp"
 #include "rosx_introspection/ros_utils/ros2_helpers.hpp"
+
 namespace BT_ROS
 {
-// e.g. std_msgs::msg::Bool
-template <class MessageType>
-inline const char* msgDataType()
-{
-   static std::string datatype = rosidl_generator_traits::data_type<MessageType>();
-   return datatype.c_str();;
-};
+  // e.g. std_msgs::msg::Bool
+  template <class MessageType>
+  inline const char* msgDataType()
+  {
+    static std::string datatype = rosidl_generator_traits::data_type<MessageType>();
+    return datatype.c_str();;
+  };
 
+  // e.g. std_msgs/msg/Bool
+  template <class MessageType>
+  inline const char* msgName()
+  {
+    return rosidl_generator_traits::name<MessageType>();
+  }
 
-// e.g. std_msgs/msg/Bool
-template <class MessageType>
-inline const char* msgName()
-{
-  return rosidl_generator_traits::name<MessageType>();
-}
-template <class MessageType>
-inline bool isMsgEmpty()
-{
-    return strcmp(RosMsgParser::GetMessageDefinition(msgName<MessageType>()).c_str(), "\n") == 0;
-};
+  template <class MessageType>
+  inline bool isMsgEmpty()
+  {
+      return RosMsgParser::GetMessageDefinition(msgName<MessageType>()).empty();
+  };
 
   using PortData     = std::pair<std::string, BT::PortInfo>;
   using SetPortFunction = std::function<PortData(const BT::PortDirection, const std::string&, const std::string&)>;
