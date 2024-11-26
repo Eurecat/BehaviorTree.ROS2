@@ -1,5 +1,5 @@
-#ifndef BEHAVIORTREE_NODE_H
-#define BEHAVIORTREE_NODE_H
+#ifndef BEHAVIORTREE_NODE_HPP
+#define BEHAVIORTREE_NODE_HPP
 
 #include "rclcpp/rclcpp.hpp"
 
@@ -61,7 +61,7 @@ namespace BT_SERVER
       bool StopTree();
 
       rclcpp::Node::SharedPtr node_ ;
-      BT::TreeWrapper tree_wrapper_;
+      TreeWrapper tree_wrapper_;
       std::string trees_folder_;
       std::string tree_name_;
 

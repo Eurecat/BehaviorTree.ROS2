@@ -264,12 +264,14 @@ namespace BT_SERVER
   bool BehaviorTreeNode::PauseTreeCallback(const std::shared_ptr<TriggerSrv::Request> _request, std::shared_ptr<TriggerSrv::Response> _response)
   {
     //TODO:
+    // - Missing Tree-->PAUSERESUME
     //  _response = tree_wrapper_.tree().PauseResume(true);
       return true;
   }
   bool BehaviorTreeNode::ResumeTreeCallback(const std::shared_ptr<TriggerSrv::Request> _request, std::shared_ptr<TriggerSrv::Response> _response)
   {
     //TODO:
+    // - Missing Tree-->PAUSERESUME
     //  _response = tree_wrapper_.tree().PauseResume(false);
       return true;
   }

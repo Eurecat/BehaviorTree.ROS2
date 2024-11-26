@@ -1,5 +1,5 @@
-#ifndef BEHAVIORTREE_SERVER_H
-#define BEHAVIORTREE_SERVER_H
+#ifndef BEHAVIORTREE_SERVER_HPP
+#define BEHAVIORTREE_SERVER_HPP
 
 #include "rclcpp/rclcpp.hpp"
 
@@ -16,7 +16,6 @@
 
 #include "behaviortree_cpp/blackboard.h"
 #include "behaviortree_cpp/eut/eut_debug.h"
-//#include "behaviortree_cpp/eut/eut_basic_types.h"
 #include <behaviortree_cpp/bt_factory.h>
 
 #include "ros2_launch_manager.hpp"
@@ -109,4 +108,4 @@ namespace BT_SERVER
       rclcpp::Node::SharedPtr node_ ;
   };
 }
-#endif  // BEHAVIORTREE_SERVER_H
+#endif

@@ -1,3 +1,6 @@
+#ifndef TREE_WRAPPER_HPP
+#define TREE_WRAPPER_HPP
+
 #include "rclcpp/rclcpp.hpp"
 
 #include "behaviortree_cpp/loggers/groot2_publisher.h"
@@ -7,6 +10,7 @@
 #include <behaviortree_cpp/loggers/bt_minitrace_logger.h>
 #include <behaviortree_cpp/loggers/bt_zmq_publisher.h>
 
+#include "bt_transition_logger.hpp"
 #include "behaviortree_ros2/bt_utils.hpp"
 
 #include <boost/filesystem.hpp>
@@ -23,7 +27,7 @@ using TreeStatus = behaviortree_server_interfaces::msg::TreeExecutionStatus;
 using Transition = behaviortree_server_interfaces::msg::Transition;
 using BBEntry = behaviortree_server_interfaces::msg::BBEntry;
 
-namespace BT
+namespace BT_SERVER
 {
 
   /**
@@ -166,9 +170,10 @@ namespace BT
     std::unique_ptr<BT::MinitraceLogger> bt_logger_trace_;
     std::unique_ptr<BT::PublisherZMQ>    bt_logger_zmq_;
     std::shared_ptr<BT::Groot2Publisher> groot_publisher_;
+    std::shared_ptr<RosTopicTransitionLogger> bt_logger_transition_rostopic_;
 
     //Publishers
-    rclcpp::Publisher<Transition>::SharedPtr bt_transition_publisher_;
+    //rclcpp::Publisher<Transition>::SharedPtr bt_transition_publisher_;
     rclcpp::Publisher<TreeStatus>::SharedPtr bt_execution_status_publisher_;
 
     //Tree Status
@@ -180,4 +185,5 @@ namespace BT
 
   };
 
-}  // namespace BT
+}
+#endif

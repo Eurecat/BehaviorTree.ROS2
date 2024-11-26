@@ -2,7 +2,7 @@
 
 #include "yaml-cpp/yaml.h"
 
-namespace BT
+namespace BT_SERVER
 {
 
   TreeWrapper::TreeWrapper(const rclcpp::Node::SharedPtr& node)
@@ -38,7 +38,7 @@ namespace BT
 
   size_t TreeWrapper::TreeNodesCount() 
   {
-      std::vector<const TreeNode*> nodes;
+      std::vector<const BT::TreeNode*> nodes;
       size_t nodes_count = 0;
       for(auto const& subtree : tree_.subtrees)
       {
@@ -124,7 +124,6 @@ void TreeWrapper::PublishExecutionStatus(bool error, std::string error_data)
 
 void TreeWrapper::InitializeStatusPublisher()
 {
-    bt_transition_publisher_ = node_->create_publisher<Transition>("/"+tree_name_+"/transition_status", 1);
     bt_execution_status_publisher_ = node_->create_publisher<TreeStatus>("/"+tree_name_+"/execution_status", 100);
 }
 
@@ -217,7 +216,7 @@ void TreeWrapper::SyncBlackboardUpdateCallback(const std::vector<BBEntry>& _bulk
     bt_logger_cout_.reset();
     bt_logger_trace_.reset();
     bt_logger_file_.reset();
-    //bt_logger_transition_rostopic_.reset();
+    bt_logger_transition_rostopic_.reset();
     bt_logger_zmq_.reset();
   }
 
@@ -261,8 +260,8 @@ void TreeWrapper::SyncBlackboardUpdateCallback(const std::vector<BBEntry>& _bulk
     }
     if(enable_rostopic_log_)
     {
-      //TODO:
-     //bt_logger_transition_rostopic_ = std::make_unique<BT_ROS::RosTopicTransitionLogger>(tree_, bt_transition_publisher_);
+      auto bt_transition_publisher_ = node_->create_publisher<Transition>("/"+tree_name_+"/transition_status", 1);
+      bt_logger_transition_rostopic_ = std::make_unique<RosTopicTransitionLogger>(tree_, bt_transition_publisher_);
     }
 
     if (enable_zmq_log_) 
@@ -374,7 +373,6 @@ void TreeWrapper::SyncBlackboardUpdateCallback(const std::vector<BBEntry>& _bulk
         {
             const std::string& bb_key = it->first.as<std::string>();
             std::string bb_val = it->second.as<std::string>();
-            //TODO:
             
             const BT::Optional<std::string> bbentry_value_inferred_keyvalues = blackboard_ptr->replaceKeysWithStringValues(bb_val, true); // no effect if it has no key
             if(!bbentry_value_inferred_keyvalues)
@@ -405,4 +403,4 @@ void TreeWrapper::SyncBlackboardUpdateCallback(const std::vector<BBEntry>& _bulk
   {
     tree_ = factory_.createTreeFromFile(full_path,global_blackboard_);
   }
-}  // namespace BT
+}

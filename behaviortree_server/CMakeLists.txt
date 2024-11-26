@@ -28,8 +28,7 @@ endforeach()
 
 
 add_executable(behaviortree_server
-    src/behaviortree_server.cpp
-    src/utils.cpp )
+    src/behaviortree_server.cpp )
 ament_target_dependencies(behaviortree_server ${THIS_PACKAGE_DEPS})
 
 target_include_directories(behaviortree_server PUBLIC
@@ -41,7 +40,7 @@ list(APPEND ${PROJECT_NAME}_targets behaviortree_server)
 add_executable(behaviortree_node
     src/behaviortree_node.cpp 
     src/tree_wrapper.cpp
-    src/utils.cpp)
+    src/bt_transition_logger.cpp)
 
 ament_target_dependencies(behaviortree_node ${THIS_PACKAGE_DEPS})
 target_include_directories(behaviortree_node PUBLIC

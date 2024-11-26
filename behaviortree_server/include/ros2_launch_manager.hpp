@@ -15,27 +15,12 @@
 
 #include "rclcpp/rclcpp.hpp"
 
-/*#include "ros/ros.h"
-#include "ros/console.h"
-#include "rospack/rospack.h"*/
-
 class ROS2LaunchManager 
 {
-    std::vector<pid_t> m_pids;
-
-    std::atomic<bool> m_running;
-    std::thread m_thread;
-    std::mutex m_mutex;
-    
 public:
-    ROS2LaunchManager(ROS2LaunchManager const &)
-    {
-    }
-
     ROS2LaunchManager()
     {
         std::atomic_init(&m_running, true);
-
         m_thread = std::thread(&ROS2LaunchManager::wait, this);
     }
 
@@ -154,4 +139,9 @@ private:
             ::waitpid(pid, &status, 0);
         }
     }
+
+    std::vector<pid_t> m_pids;
+    std::atomic<bool> m_running;
+    std::thread m_thread;
+    std::mutex m_mutex;
 };
