@@ -45,6 +45,7 @@ static const char* xml_publisher_text = R"(
   <root BTCPP_format="4">
     <BehaviorTree>
       <Sequence>
+        <TestExecuteTree action_name="/executeTree" target_tree="test.xml" payload=""  name="ExecuteTreeActionName"/>
         <TestActionSleep action_name="/sleep_service" msec_timeout="2000" name="sleepA"/>
       </Sequence>
     </BehaviorTree>

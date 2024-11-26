@@ -57,8 +57,7 @@ namespace BT
         BT::NodeStatus onResultReceived(const typename rclcpp_action::ClientGoalHandle<ActionType>::WrappedResult& wr_result) override
         {
             if (wr_result.code == rclcpp_action::ResultCode::SUCCEEDED) {
-                // Access the result directly from the WrappedResult
-                const auto & result = wr_result.result;  // This is the result from the action
+                const auto & result = wr_result.result;
                 //RCLCPP_INFO(this->logger(), "Action succeeded with result: %d", result->done);
                 if(!result_policy_.isParserInit() || this->action_name_ != prev_action_name_result)
                 {

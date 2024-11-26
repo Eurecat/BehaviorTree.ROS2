@@ -23,10 +23,10 @@
 
 //TEST!
 #include <std_msgs/msg/int8_multi_array.hpp>
-
-
-
 #include "btcpp_ros2_interfaces/action/sleep.hpp"
+#include "btcpp_ros2_interfaces/action/execute_tree.hpp"
+
+
 
 using namespace BT;
 
@@ -66,8 +66,10 @@ BT_REGISTER_ROS_NODES(factory, params)
     // //PRIMITIVE SERVICES
     factory.registerNodeType<AutomaticServiceClient<std_srvs::srv::Empty>>("CallEmptyService",params);
     factory.registerNodeType<AutomaticServiceClient<std_srvs::srv::SetBool>>("CallSetBoolService",params);
+    
     // //TEST ACTIONS
     factory.registerNodeType<AutomaticSimpleActionClient<btcpp_ros2_interfaces::action::Sleep>>("TestActionSleep",params);
+    factory.registerNodeType<AutomaticSimpleActionClient<btcpp_ros2_interfaces::action::ExecuteTree>>("TestExecuteTree",params);
     //TEST
    // factory.registerNodeType<AutomaticPublisher<std_msgs::msg::Int8MultiArray>>("PublishStdMultiArray",params);
 };

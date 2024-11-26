@@ -72,13 +72,8 @@ namespace BT_ROS
                 {
                     RosMsgParser::ROS2_Serializer serializer_;
                     nlohmann::json result = buildJson(field_ports, _tree_node);
-                    std::cout << "serializeFromJson" << "\n" << std::flush;
                     parser_->serializeFromJson(result.dump(), &serializer_);
-                    std::cout << "serializeFromJson OK " << "\n" << std::flush;
                     ros_message = RosMsgParser::BufferToMessage<MessageType>( serializer_.getBufferData(), serializer_.getBufferSize() );
-                   // auto std_msgs_string_out = BufferToMessage<MessageType>(
-                   // serializer.getBufferData(), serializer.getBufferSize()
-                    std::cout << "ros_message OK " << "\n" << std::flush;
                 }
                 catch(const std::out_of_range&)
                 {
@@ -117,9 +112,6 @@ namespace BT_ROS
                         // Skip constant fields
                         if(field.isConstant()) { continue; }
                         
-                        // if(field.isArray()) // TODO array should be handled appropriately
-                        //     std::cout << "Found an array in " << BT::demangle(typeid(MessageType)) << " of length " << field.arraySize() << "\n";
-
                         // If the field is not a built-in type, then find the message definition of that type and
                         // call this function again recursively to extract its built-in fields
                          if (!field.type().isBuiltin())
@@ -155,7 +147,6 @@ namespace BT_ROS
             
             nlohmann::json buildJson(const std::vector<FieldPort>& ports,const BT::TreeNode& tree_node) {
                 nlohmann::json result;
-                std::cout << "buildJson" << "\n" << std::flush;
                 for (const auto& port : ports) {
                     
                     std::string name = port.first;
@@ -172,7 +163,7 @@ namespace BT_ROS
                         }
                         current = &(*current)[key];
                     }
-                    //TODO: GET INPUT AS JSON
+
                     auto portValue = BT::getPortValueAsJson(tree_node, port.first, BT::PortDirection::INPUT);
 
                     // Check if the Expected contains a valid value or an error
@@ -185,16 +176,12 @@ namespace BT_ROS
                         (*current)[name] = nullptr;  // You could assign a default value, e.g., null or an empty object
                     }
                 }
-                std::cout << "buildJson OK " << result.dump() << "\n" << std::flush;
-                std::cout << "buildJson OK " << result["data"].type_name() << "\n" << std::flush;
-
                 return result;
             }
 
             std::string topic_type_;
             std::shared_ptr<RosMsgParser::Parser> parser_;
            
-        
             bool parser_init_{false};
     };
 

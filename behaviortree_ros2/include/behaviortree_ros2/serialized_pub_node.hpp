@@ -11,14 +11,13 @@ namespace BT
             SerializedPubNode(const std::string& name, const NodeConfig& conf, const RosNodeParams& params) 
             : RosTopicPubNode<MessageType>(name, conf, params )
             {
-                // advertisePublisher(false); //do not trigger a fatal failure if you don't have the possibility to advertise topic now, i.e. instantiate publisher
                 topic_type_ = msgName<MessageType>();
             }
             ~SerializedPubNode() = default;
 
             static BT::PortsList providedPorts()
             {
-                std::cout << "ProvidedPorts in SerializedPubNode for " << BT::demangle(typeid(MessageType)) << "\n" << std::flush;
+               // std::cout << "ProvidedPorts in SerializedPubNode for " << BT::demangle(typeid(MessageType)) << "\n" << std::flush;
                 PortsList provided_port_list =  RosTopicPubNode<MessageType>::providedPorts();
 
                 const auto& policy_ports = DeserializationPolicy<MessageType>::requiredPorts();

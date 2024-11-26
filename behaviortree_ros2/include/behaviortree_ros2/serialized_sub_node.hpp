@@ -14,7 +14,7 @@ namespace BT
             : RosTopicSubNode<MessageType>(name, conf, params)
         {
            /* std::cout << "Creating sub for " << BT::demangle(typeid(MessageType)) << " - " << msgName<MessageType>() << " (vs std_msgs/String)\n" << std::flush;*/
-            topic_type_ = msgName<MessageType>(); //BT::demangle(typeid(MessageType)); //"std_msgs/String";
+            topic_type_ = msgName<MessageType>();
         }
         
         static BT::PortsList providedPorts()
@@ -53,7 +53,6 @@ namespace BT
 
             if(last_msg)  // empty if no new message received, since the last tick
             {
-               //auto bt_tree_node =  static_cast<BT::TreeNode*>(this);
                 serialization_policy_.onNewMessage(last_msg,*this);
                 if (reinit_)
                 {
