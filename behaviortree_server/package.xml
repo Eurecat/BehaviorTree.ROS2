@@ -1,8 +1,8 @@
 <package format="3">
-  <name>behaviortree_server</name>
+  <name>behaviortree_forest</name>
   <version>0.0.1</version>
   <description>
-  This package provides a BehaviorTree Server to Control, monitor and synchronize multiple BehaviorTrees.
+  This package provides the BehaviorTree Forest functionality to Control, monitor and synchronize multiple BehaviorTrees.
   </description>
 
   <maintainer email="david.calero@eurecat.org">David Calero</maintainer>
@@ -22,7 +22,7 @@
   <depend>generate_parameter_library</depend>
   <depend>btcpp_ros2_interfaces</depend>
   <depend>behaviortree_ros2</depend>
-  <depend>behaviortree_server_interfaces</depend>
+  <depend>behaviortree_forest_interfaces</depend>
   
 <export>
   <build_type>ament_cmake</build_type>

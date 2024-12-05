@@ -9,17 +9,19 @@
 #include "std_srvs/srv/empty.hpp"
 #include "std_srvs/srv/trigger.hpp"
 
-#include "behaviortree_server_interfaces/msg/bb_entry.hpp"
-#include "behaviortree_server_interfaces/srv/get_loaded_plugins.hpp"
-#include "behaviortree_server_interfaces/srv/get_bb_values.hpp"
+#include "behaviortree_forest_interfaces/msg/bb_entry.hpp"
+#include "behaviortree_forest_interfaces/srv/get_loaded_plugins.hpp"
+#include "behaviortree_forest_interfaces/srv/get_bb_values.hpp"
+
+#include "behaviortree_cpp/blackboard.h"
 
 using std::placeholders::_1;
 using std::placeholders::_2;
 
-using BBEntry = behaviortree_server_interfaces::msg::BBEntry;
-using GetLoadedPluginsSrv = behaviortree_server_interfaces::srv::GetLoadedPlugins;
-using GetTreeStatusSrv = behaviortree_server_interfaces::srv::GetTreeStatus;
-using GetBBValues = behaviortree_server_interfaces::srv::GetBBValues;
+using BBEntry = behaviortree_forest_interfaces::msg::BBEntry;
+using GetLoadedPluginsSrv = behaviortree_forest_interfaces::srv::GetLoadedPlugins;
+using GetTreeStatusSrv = behaviortree_forest_interfaces::srv::GetTreeStatus;
+using GetBBValues = behaviortree_forest_interfaces::srv::GetBBValues;
 using TriggerSrv = std_srvs::srv::Trigger;
 using EmptySrv = std_srvs::srv::Empty;
 
@@ -30,35 +32,26 @@ namespace BT_SERVER
     public:
       BehaviorTreeNode(const rclcpp::Node::SharedPtr& node);
       ~BehaviorTreeNode() = default;
-
-      void Loop();
-
+      void loop();
       uint loop_rate_ = 30;
 
     private:
+      void sendBlackboardUpdates(const SyncMap& entries_map);
+      void getBlackboardUpdates();
+      
+      void syncBBUpdateCB(const BBEntry::SharedPtr _topic_msg);
+      bool getLoadedPluginsCB(const std::shared_ptr<GetLoadedPluginsSrv::Request> _request, std::shared_ptr<GetLoadedPluginsSrv::Response> _response);
+      bool stopTreeCB(const std::shared_ptr<EmptySrv::Request> _request, std::shared_ptr<EmptySrv::Response> _response);
+      bool pauseTreeCB(const std::shared_ptr<TriggerSrv::Request> _request, std::shared_ptr<TriggerSrv::Response> _response);
+      bool resumeTreeCB(const std::shared_ptr<TriggerSrv::Request> _request, std::shared_ptr<TriggerSrv::Response> _response);
+      bool restartTreeCB(const std::shared_ptr<EmptySrv::Request> _request, std::shared_ptr<EmptySrv::Response> _response);
+      bool statusTreeCB(const std::shared_ptr<GetTreeStatusSrv::Request> _request, std::shared_ptr<GetTreeStatusSrv::Response> _response);
+      void checkPausedCB();
 
-      //TODO:
-      //void sendBlackboardUpdates(const BT::Blackboard::SerializedEntriesMap& entries_map);
-
-      void getBlackboardUpdates(const bool just_empty_values = false);
-      void SyncBlackboardUpdateCallback(const BBEntry::SharedPtr _topic_msg);
-
-      //TODO:
-      // - Missing BLACKBOARD->GETSYNCKEYS
-      //std::unordered_set<std::string> getSyncKeys(const bool just_empty_values){return tree_wrapper_.globalBlackboard()->getSyncKeys(just_empty_values);};
-      bool LoadTree();
+      void removeTree();
+      bool stopTree();
+      bool loadTree();
       void getParameters (rclcpp::Node::SharedPtr nh);
-
-      bool GetLoadedPluginsServiceCallback(const std::shared_ptr<GetLoadedPluginsSrv::Request> _request, std::shared_ptr<GetLoadedPluginsSrv::Response> _response);
-      bool StopTreeCallback(const std::shared_ptr<EmptySrv::Request> _request, std::shared_ptr<EmptySrv::Response> _response);
-      bool PauseTreeCallback(const std::shared_ptr<TriggerSrv::Request> _request, std::shared_ptr<TriggerSrv::Response> _response);
-      bool ResumeTreeCallback(const std::shared_ptr<TriggerSrv::Request> _request, std::shared_ptr<TriggerSrv::Response> _response);
-      bool RestartTreeCallback(const std::shared_ptr<EmptySrv::Request> _request, std::shared_ptr<EmptySrv::Response> _response);
-      bool StatusTreeCallback(const std::shared_ptr<GetTreeStatusSrv::Request> _request, std::shared_ptr<GetTreeStatusSrv::Response> _response);
-      void CheckPausedCallback();
-
-      void RemoveTree();
-      bool StopTree();
 
       rclcpp::Node::SharedPtr node_ ;
       TreeWrapper tree_wrapper_;
@@ -82,7 +75,7 @@ namespace BT_SERVER
       //Publishers
       rclcpp::Publisher<BBEntry>::SharedPtr sync_bb_pub_;
 
-      //rclcpp::WallTimer<rclcpp::VoidCallbackType>::SharedPtr check_paused_timer_;
+      //Timers
       rclcpp::TimerBase::SharedPtr check_paused_timer_; 
   };
 }

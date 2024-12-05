@@ -12,6 +12,7 @@
 #include <vector>
 #include <algorithm>
 #include <numeric>
+#include <cstring>
 
 #include "rclcpp/rclcpp.hpp"
 
@@ -33,6 +34,42 @@ public:
                 m_thread.join();
             }
         }
+    }
+
+    pid_t extract_bt_node_pid_from_python_pid(pid_t python_pid) 
+    {
+        pid_t bt_node_pid = 0;
+        std::string cmd = "ps --ppid " + std::to_string(python_pid) + " -o pid,comm";
+        FILE* fp = popen(cmd.c_str(), "r");
+        std::cout << "FROM Python PID: " << std::to_string(python_pid) << " Extracting BT_Node PID with cmd: " << cmd << std::endl;
+        if (fp == nullptr) {
+            std::cout << "Failed to run command: " << cmd << std::endl;
+        }
+        else
+        {
+            char buffer[128];
+            std::string ps_output;
+            while (fgets(buffer, sizeof(buffer), fp)) {
+                ps_output += buffer;  // Append each line of output
+            }
+            fclose(fp);
+            std::cout << "RAW OUTPUT: " << ps_output << std::endl;
+
+            // Split ps_output into lines
+            size_t pos = 0;
+            while ((pos = ps_output.find('\n')) != std::string::npos) {
+                std::string line = ps_output.substr(0, pos);
+                if (line.find("behaviortree_node") != std::string::npos) {
+                    // Extract PID from the line that contains 'behaviortree_node'
+                    std::string pid_str = line.substr(0, line.find(' ')); // The PID is the first element in the line
+                    sscanf(pid_str.c_str(), "%d", &bt_node_pid);  // Parse the PID
+                    std::cout << "Node process PID extracted: " << bt_node_pid << std::endl;
+                    break;
+                }
+                ps_output.erase(0, pos + 1);
+            }
+        }
+        return bt_node_pid;
     }
 
     template<typename... Args>

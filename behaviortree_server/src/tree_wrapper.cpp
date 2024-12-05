@@ -4,7 +4,6 @@
 
 namespace BT_SERVER
 {
-
   TreeWrapper::TreeWrapper(const rclcpp::Node::SharedPtr& node)
     : node_(node)
   {
@@ -13,30 +12,31 @@ namespace BT_SERVER
 
   TreeWrapper::~TreeWrapper() {}
 
-  bool TreeWrapper::ResetTree()
+  bool TreeWrapper::resetTree()
   {
-      if(IsTreeLoaded() )
+      if(isTreeLoaded() )
       {
           tree_.haltTree();
-          is_tree_loaded_ = false;
           return true;
       }
       return false;
   }
 
-  void TreeWrapper::RemoveTree()
+  void TreeWrapper::removeTree()
   {
-     ResetTree();
+     resetTree();
+     is_tree_loaded_ = false;
   }
 
-  void TreeWrapper::InitGrootV2Publisher()
+  void TreeWrapper::initGrootV2Pub()
   {
     //TODO: NEW GROOT
     groot_publisher_.reset();
     groot_publisher_ = std::make_shared<BT::Groot2Publisher>(tree_, tree_server_port_);
   }
 
-  size_t TreeWrapper::TreeNodesCount() 
+  //TODO: Bug counting nodes!
+  size_t TreeWrapper::treeNodesCount() 
   {
       std::vector<const BT::TreeNode*> nodes;
       size_t nodes_count = 0;
@@ -83,7 +83,7 @@ namespace BT_SERVER
           return status;
       };
 
-      BT::NodeStatus bt_tree_status = GetTreeStatus();
+      BT::NodeStatus bt_tree_status = getTreeExecutionStatus();
 
       //Fill Service Tree info
       tree_status_msg.status = to_msg_status(bt_tree_status);
@@ -98,7 +98,7 @@ namespace BT_SERVER
   }
 
   // Update and publishes atomically and mutually exclusive the current execution status.
-  void TreeWrapper::UpdatePublishTreeExecutionStatus(const BT::NodeStatus status, const bool avoid_duplicate)
+  void TreeWrapper::updatePublishTreeExecutionStatus(const BT::NodeStatus status, const bool avoid_duplicate)
   {
       {
           std::lock_guard<std::mutex> lk(status_lock_);
@@ -106,41 +106,44 @@ namespace BT_SERVER
           status_ = status;
           if(duplicate && avoid_duplicate) return; //already published
       }
-      PublishExecutionStatus();
+      publishExecutionStatus();
   }
 
+  void TreeWrapper::publishExecutionStatus(bool error, std::string error_data)
+  {
+    TreeStatus status_msg = buildTreeExecutionStatus();
 
-void TreeWrapper::PublishExecutionStatus(bool error, std::string error_data)
-{
-  TreeStatus status_msg = buildTreeExecutionStatus();
+      if (error)
+      {
+          status_msg.status    = TreeStatus::CRASHED;
+          status_msg.details      = error_data;
+      }
+      bt_execution_status_publisher_->publish(status_msg);
+  }
 
-    if (error)
-    {
-        status_msg.status    = TreeStatus::CRASHED;
-        status_msg.details      = error_data;
-    }
-    bt_execution_status_publisher_->publish(status_msg);
-}
+  void TreeWrapper::initStatusPublisher()
+  {
+      bt_execution_status_publisher_ = node_->create_publisher<TreeStatus>("/"+tree_name_+"/execution_status", 100);
+  }
 
-void TreeWrapper::InitializeStatusPublisher()
-{
-    bt_execution_status_publisher_ = node_->create_publisher<TreeStatus>("/"+tree_name_+"/execution_status", 100);
-}
-
-void TreeWrapper::SyncBlackboardUpdateCallback(const std::vector<BBEntry>& _bulk_upd)
+  void TreeWrapper::syncBBUpdateCB(const std::vector<BBEntry>& _bulk_upd)
   {
       for(const auto& upd : _bulk_upd)
-          SyncBlackboardUpdateCallback(upd);
+          syncBBUpdateCB(upd);
   }
 
-  void TreeWrapper::SyncBlackboardUpdateCallback(const BBEntry& _single_upd)
+  void TreeWrapper::syncBBUpdateCB(const BBEntry& _single_upd)
   {
-    //TODO:
-    // - Missing BLACKBOARD::ENTRY-->ISSYNC() method
-    // - Missing BLACKBOARD-->SET and BLACKBOARD-->SETANY
-    /*  if(!is_tree_loaded_) return;
+      //Check that the tree is loaded
+      if(!is_tree_loaded_) return;
 
-      // std::cout << "[BTWrapper "<<tree_identifier_<<"]::SyncBlackboardUpdateCallback " << 
+      //Updates are republished from bt_server, check that the update comes from another BT
+      if (_single_upd.bt_id == tree_name_) return;
+
+      //Check that the Entry received is Sync for this BT
+      if (!hasSyncKey(_single_upd.key)) return;
+
+      // std::cout << "[BTWrapper "<<tree_identifier_<<"]::syncBBUpdateCB " << 
       //     "\tkey=" << _single_upd.key << 
       //     "\ttype=" << _single_upd.type << 
       //     "\tvalue=" << _single_upd.value << "\n" << std::flush;
@@ -163,7 +166,7 @@ void TreeWrapper::SyncBlackboardUpdateCallback(const std::vector<BBEntry>& _bulk
       }
 
       //retrieve current entry in bt server bb
-      if(entry_ptr && entry_ptr->isSync())
+      if(entry_ptr)
       {
           // if(entry_ptr->port_info.missingTypeInfo()) is it necessary??? I would not update type info if received from another tree (i.e. from void to type T, with T != void)
           // {
@@ -191,26 +194,28 @@ void TreeWrapper::SyncBlackboardUpdateCallback(const std::vector<BBEntry>& _bulk
                   // convert from string new value
                   BT::Any new_any_value = type_info->parseString(_single_upd.value);
                   
-                  // std::cout << "[BTWrapper "<<tree_identifier_<<"]::SyncBlackboardUpdateCallback built new_any_value with type " << BT::demangle(new_any_value.type()) << " \n" << std::flush;
+                  // std::cout << "[BTWrapper "<<tree_identifier_<<"]::syncBBUpdateCB built new_any_value with type " << BT::demangle(new_any_value.type()) << " \n" << std::flush;
                   // update it into the sync BB
-                  global_blackboard_->setAny(_single_upd.key, std::move(new_any_value), true);
+                  global_blackboard_->set(_single_upd.key, std::move(new_any_value));
               }
               else
-                  global_blackboard_->set(_single_upd.key, _single_upd.value, true);
+                  global_blackboard_->set(_single_upd.key, _single_upd.value);
           
           }
           catch(const std::exception& e)
           {
-              std::cerr << "[BTWrapper "<<tree_name_<<"]::SyncBlackboardUpdateCallback fail to update value in BB for key [" << _single_upd.key << "]: " << e.what() << " \n" << std::flush;
+              std::cerr << "[BTWrapper "<<tree_name_<<"]::syncBBUpdateCB fail to update value in BB for key [" << _single_upd.key << "]: " << e.what() << " \n" << std::flush;
               return;
           }
 
-          // std::cout << "[BTWrapper "<<tree_identifier_<<"]::SyncBlackboardUpdateCallback updated value in BB for key [" << _single_upd.key << "] \n" << std::flush;
+          // std::cout << "[BTWrapper "<<tree_identifier_<<"]::syncBBUpdateCB updated value in BB for key [" << _single_upd.key << "] \n" << std::flush;
           // update_successful = true;
-      }*/
+      }
+    //Update sync timestamp
+    last_sync_update_ = std::chrono::steady_clock::now().time_since_epoch();
   }
 
-  void TreeWrapper::ResetLoggers()
+  void TreeWrapper::resetLoggers()
   {
     loggers_init_ = false;
     bt_logger_cout_.reset();
@@ -220,7 +225,7 @@ void TreeWrapper::SyncBlackboardUpdateCallback(const std::vector<BBEntry>& _bulk
     bt_logger_zmq_.reset();
   }
 
-  void TreeWrapper::InitializeLoggers()
+  void TreeWrapper::initLoggers()
   {
     //Create Loggers
     const char* home = getenv("HOME");
@@ -268,22 +273,22 @@ void TreeWrapper::SyncBlackboardUpdateCallback(const std::vector<BBEntry>& _bulk
     {
       bt_logger_zmq_ = std::make_unique<BT::PublisherZMQ>(tree_, 25, tree_publisher_port_,tree_server_port_);
       //TODO:
-      //InitGrootV2Publisher();
+      //initGrootV2Pub();
     }
 
     loggers_init_ = true;
   }
 
-  void TreeWrapper::LoadAllPlugins()
+  void TreeWrapper::loadAllPlugins()
   {
       RCLCPP_INFO(node_->get_logger(),"LOADING PLUGINS");
-      LoadPluginsFromROS(ros_plugin_directories_);
-      LoadPluginsFromFolder();
+      loadPluginsFromROS(ros_plugin_directories_);
+      loadPluginsFromFolder();
       RCLCPP_INFO(node_->get_logger(),"LOADED PLUGINS");
 
   }
 
-  void TreeWrapper::LoadPluginsFromFolder()
+  void TreeWrapper::loadPluginsFromFolder()
   {
     bool import_from_folder = false;
     node_->get_parameter_or("import_from_folder",import_from_folder,false);
@@ -330,7 +335,7 @@ void TreeWrapper::SyncBlackboardUpdateCallback(const std::vector<BBEntry>& _bulk
     }
   }
 
-  void TreeWrapper::LoadPluginsFromROS(std::vector<std::string> ros_plugins_folders)
+  void TreeWrapper::loadPluginsFromROS(std::vector<std::string> ros_plugins_folders)
   {
       RCLCPP_INFO(node_->get_logger(),"LOADING PLUGINS FROM ROS");
 
@@ -346,7 +351,7 @@ void TreeWrapper::SyncBlackboardUpdateCallback(const std::vector<BBEntry>& _bulk
       RCLCPP_INFO(node_->get_logger(),"LOADING PLUGINS FROM ROS OK");
   }
   
-  void TreeWrapper::InitializeBlackboard()
+  void TreeWrapper::initBB()
   {
     RCLCPP_INFO(node_->get_logger(),"CREATING BB");
     if (tree_bb_init_.size() > 0)
@@ -354,27 +359,30 @@ void TreeWrapper::SyncBlackboardUpdateCallback(const std::vector<BBEntry>& _bulk
       for(const auto& bb_init_abs_filepath: tree_bb_init_)
       {
           if(bb_init_abs_filepath.length() < 3) continue;
-          InitializeBlackboardFile(bb_init_abs_filepath, false);
+          initBBFromFile(bb_init_abs_filepath);
       }
     }
     RCLCPP_INFO(node_->get_logger(),"CREATING BB OK");
   }
   
-  void TreeWrapper::InitializeBlackboardFile(const std::string& abs_file_path, const bool sync_bb)
+  void TreeWrapper::initBBFromFile(const std::string& abs_file_path)
   {
-    //TODO:
-    // - Missing BLACKBOARD-->SET
-    // - Missing BLACKBOARD-->replaceKeysWithStringValues
-    /*try 
+    try 
     {
         // ROS_INFO("Initializing BB from YAML file %s", abs_file_path.c_str());
         YAML::Node config = YAML::LoadFile(abs_file_path);
         for(YAML::const_iterator it=config.begin();it!=config.end();++it)
         {
-            const std::string& bb_key = it->first.as<std::string>();
+            std::string bb_key = it->first.as<std::string>();
             std::string bb_val = it->second.as<std::string>();
             
-            const BT::Optional<std::string> bbentry_value_inferred_keyvalues = blackboard_ptr->replaceKeysWithStringValues(bb_val, true); // no effect if it has no key
+            //Check if is a SyncKey --> ${key}
+            bool sync_entry = isSharedBlackboardPointer(bb_key);
+
+            //Remove First '$' if is a SyncKey
+            if (sync_entry) {bb_key.erase(0, 1);}
+
+            const BT::Expected<std::string> bbentry_value_inferred_keyvalues = replaceKeysWithStringValues(bb_val, global_blackboard_, true); // no effect if it has no key
             if(!bbentry_value_inferred_keyvalues)
             {
                 // but will complain if it has a reference to a wrong key
@@ -389,18 +397,105 @@ void TreeWrapper::SyncBlackboardUpdateCallback(const std::vector<BBEntry>& _bulk
 
             RCLCPP_INFO(node_->get_logger(),"Init. BB key [\"%s\"] with value \"%s\"", bb_key.c_str(), bb_val.c_str());
             // use the string here and blackboard_ptr->set(...)
-            blackboard_ptr->set(bb_key, bb_val, sync_bb);
+            global_blackboard_->set(bb_key, bb_val);
+            
+            //ADD VALUE TO SYNC MAP
+            if (sync_entry)
+            {
+              syncMap_.emplace(bb_key,std::make_pair(SyncStatus::TO_SYNC,global_blackboard_->getEntry(bb_key)));
+            }
         }
         RCLCPP_INFO(node_->get_logger(),"Initialized BB with %ld entries from YAML file %s", global_blackboard_->getKeys().size(), abs_file_path.c_str());
     }
     catch(const YAML::Exception& ex) 
     { 
         RCLCPP_ERROR(node_->get_logger(),"Initializing. BB key from file '%s' did not succeed: %s", abs_file_path.c_str(), ex.what());
-    }*/
+    }
+  }
+  void TreeWrapper::updateSyncStatus()
+  {
+    //SEARCH ON THE BLACKBOARD FOR NEW SYNC PORTS UPDATED
+    std::unordered_set<std::string> syncKeys = getSyncKeysList();
+
+    for (auto key : syncKeys)
+    {
+      auto entry = global_blackboard_->getEntry(key);
+      if (entry->stamp > last_sync_update_)
+      {
+        syncMap_[key] = std::make_pair(SyncStatus::TO_SYNC,entry);
+      }
+    }
+
+    //Update sync timestamp
+    last_sync_update_ = std::chrono::steady_clock::now().time_since_epoch();
   }
 
-  void TreeWrapper::CreateTree(const std::string& full_path)
+  void TreeWrapper::createTree(const std::string& full_path)
   {
-    tree_ = factory_.createTreeFromFile(full_path,global_blackboard_);
+    std::string tree_xml;
+    std::vector<std::string> sync_keys;
+    if (loadXMLToString(full_path, tree_xml))
+    {
+      //Extract SyncKeys from the XML Tree and Replace '$${key}' --> '${key}'
+      sync_keys = extractSyncKeys(tree_xml);
+      //Create the tree
+      tree_ = factory_.createTreeFromText(tree_xml,global_blackboard_);
+    }
+    else
+    {
+        throw BT::RuntimeError("Failed to open the file: "+full_path );
+    }
+
+    //Add the syncKeys to the syncMap
+    for (auto key: sync_keys)
+    {
+      syncMap_.emplace(key,std::make_pair(SyncStatus::TO_SYNC,global_blackboard_->getEntry(key)));
+    }
+
+    //DEBUG:
+    for (auto key: syncMap_)
+    {
+      RCLCPP_INFO(node_->get_logger(),"SyncMap_ : %s", key.first.c_str());
+    }
+
+  }
+
+  void TreeWrapper::setTreeLoaded(bool loaded)
+  { 
+    is_tree_loaded_ = loaded;
+    if (loaded)
+    {
+      start_execution_time_ = node_->get_clock()->now();
+      last_sync_update_ = std::chrono::steady_clock::now().time_since_epoch();
+    }
+  }
+
+  SyncMap TreeWrapper::getKeysValueToSync ()
+  {
+    //RCLCPP_INFO(node_->get_logger()," Getting Keys Value to Sync"); 
+    SyncMap ports_to_be_sync_cpy;
+    for(auto element : syncMap_)
+    {
+      if(element.second.first == SyncStatus::TO_SYNC)
+      {
+        element.second.first = SyncStatus::SYNCING;
+        updateSyncMap(element.first,element.second);
+        ports_to_be_sync_cpy.emplace(element);
+      }
+    }
+    //RCLCPP_INFO(node_->get_logger()," Getting Keys Value to Sync OK"); 
+    return ports_to_be_sync_cpy;
+  }
+
+  std::unordered_set<std::string> TreeWrapper::getSyncKeysList()
+  {
+    std::unordered_set<std::string> keys;
+    {
+      for (auto element : syncMap_)
+      {
+        keys.insert(element.first);
+      }
+    }
+    return keys;
   }
 }

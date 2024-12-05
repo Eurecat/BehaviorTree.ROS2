@@ -16,114 +16,70 @@
 #include <boost/filesystem.hpp>
 #include <boost/range/iterator_range.hpp>
 
-#include "behaviortree_server_interfaces/srv/get_tree_status.hpp"
-#include "behaviortree_server_interfaces/msg/transition.hpp"
-#include "behaviortree_server_interfaces/msg/bb_entry.hpp"
+#include "behaviortree_forest_interfaces/srv/get_tree_status.hpp"
+#include "behaviortree_forest_interfaces/msg/transition.hpp"
+#include "behaviortree_forest_interfaces/msg/bb_entry.hpp"
+
+#include "sync_blackboard.hpp"
+#include "utils.hpp"
 
 // generated file
 #include "bt_executor_parameters.hpp"
 
-using TreeStatus = behaviortree_server_interfaces::msg::TreeExecutionStatus;
-using Transition = behaviortree_server_interfaces::msg::Transition;
-using BBEntry = behaviortree_server_interfaces::msg::BBEntry;
+using TreeStatus = behaviortree_forest_interfaces::msg::TreeExecutionStatus;
+using Transition = behaviortree_forest_interfaces::msg::Transition;
+using BBEntry = behaviortree_forest_interfaces::msg::BBEntry;
 
 namespace BT_SERVER
 {
 
-  /**
-   * @brief TreeWrapper class hosts a BT
-   */
   class TreeWrapper
   {
 
   public:
-
-    /**
-     * @brief Constructor to use when an already existing node should be used.
-    */
     TreeWrapper(const rclcpp::Node::SharedPtr& node);
-
-    /// @brief Destructor
     ~TreeWrapper();
-
-    /// @brief Gets the rclcpp::Node pointer
     rclcpp::Node::SharedPtr node() { return node_; }
-
-    /// @brief Tree being executed.
     const BT::Tree& tree() const { return tree_; }
-
-    /// @brief Pointer to the global blackboard
     BT::Blackboard::Ptr globalBlackboard() { return global_blackboard_; }
-
-    /// @brief Pointer to the global blackboard
     BT::BehaviorTreeFactory& factory() { return factory_; }
+    BT::NodeStatus tickTree() { return tree_.tickOnce();};
 
-    /// @brief Call Init Status Publisher
-    void InitializeStatusPublisher();
-
-    /// @brief Call Load All plugins
-    void LoadAllPlugins();
-
-    /// @brief Call Init Blackboard
-    void InitializeBlackboard();
-
-    /// @brief Create Tree Status message
+    void loadAllPlugins();
+    void initBB();
+    void initStatusPublisher();
     TreeStatus buildTreeExecutionStatus();
+    void updatePublishTreeExecutionStatus(const BT::NodeStatus status, const bool avoid_duplicate = true);
+    void publishExecutionStatus(bool error=false, std::string error_data="");
+    BT::NodeStatus getTreeExecutionStatus() { 
+      std::lock_guard<std::mutex> lk(status_lock_);
+      return status_;
+    }
+    bool isTreeLoaded() { return is_tree_loaded_; }
+    void setTreeLoaded(bool loaded);
 
-    /// @brief Publish Execution Status with new status
-    void UpdatePublishTreeExecutionStatus(const BT::NodeStatus status, const bool avoid_duplicate = true);
+    void removeTree();
+    bool resetTree();
+    void createTree(const std::string& full_path);
 
-    /// @brief Publish Execution Status
-    void PublishExecutionStatus(bool error=false, std::string error_data="");
+    void initLoggers();
+    bool areLoggersInit() { return loggers_init_; }
 
-    /// @brief Check if tree is loaded
-    bool IsTreeLoaded() { return is_tree_loaded_; }
+    void setExecuted(bool executed) { executed_ = executed; }
+    bool hasExecutionTerminated() { return executed_; }
 
-    /// @brief Check if tree is loaded
-    void SetTreeLoaded(bool loaded) { is_tree_loaded_ = loaded; }
+    size_t treeNodesCount();
 
-    /// @brief Destroy the tree
-    void RemoveTree();
-
-    /// @brief Reset the tree
-    bool ResetTree();
-
-    /// @brief Create the tree
-    void CreateTree(const std::string& full_path);
-
-    /// @brief Init BT Loggers
-    void InitializeLoggers();
-
-    /// @brief Get Single Blackboard Update
-    void SyncBlackboardUpdateCallback(const BBEntry& _single_upd);
-
-    /// @brief Check if loggers are init
-    bool AreLoggersInitialized() { return loggers_init_; }
-
-    /// @brief Check if execution is finished
-    bool HasExecutionTerminated() { return executed_; }
-
-    /// @brief Set execution status
-    void SetExecuted(bool executed) { executed_ = executed; }
-
-    /// @brief Get Number of Tree nodes
-    size_t TreeNodesCount();
-
-    /// @brief  Check if the tree is Paused
     // TODO: Check if tree is Paused
     // - Missing TREE->ISPAUSED IMPLEMENTATION
-    //bool IsTreePaused() { return IsTreeLoaded() && tree_->isPaused(); }
+    //bool IsTreePaused() { return isTreeLoaded() && tree_->isPaused(); }
 
-
-    void SyncBlackboardUpdateCallback(const std::vector<BBEntry>& _bulk_upd);
-
-    BT::NodeStatus GetTreeStatus()
-    {
-        std::lock_guard<std::mutex> lk(status_lock_);
-        return status_;
-    }
-
-    BT::Tree tree_;
+    void syncBBUpdateCB(const BBEntry& _single_upd);
+    void syncBBUpdateCB(const std::vector<BBEntry>& _bulk_upd);
+    SyncMap getKeysValueToSync ();
+    void updateSyncMap(const std::string key, SyncEntry syncEntry) { syncMap_[key] = syncEntry;}
+    void updateSyncStatus();
+    std::unordered_set<std::string> getSyncKeysList();
 
     //Tree Status
     std::string execution_tree_status_ {};
@@ -144,19 +100,22 @@ namespace BT_SERVER
     std::string tree_filename_;
     std::string tree_name_;
     std::vector<std::string> tree_bb_init_ {};
-    rclcpp::Time start_execution_time_;
     std::set<std::string> loaded_plugins_;
 
   private:
-    void LoadPluginsFromROS(std::vector<std::string> ros_plugins_folders);
-    void LoadPluginsFromFolder();
+    void loadPluginsFromROS(std::vector<std::string> ros_plugins_folders);
+    void loadPluginsFromFolder();
 
-    void InitializeBlackboardFile(const std::string& abs_file_path, const bool sync_bb);
-    void InitGrootV2Publisher();
-    void ResetLoggers();
+    void initBBFromFile(const std::string& abs_file_path);
+    void initGrootV2Pub();
+    void resetLoggers();
+    bool hasSyncKey(const std::string& key)
+    {
+      return syncMap_.find(key) != syncMap_.end();
+    }
 
     rclcpp::Node::SharedPtr node_;
-
+    BT::Tree tree_;
     BT::BehaviorTreeFactory factory_;
     BT::Blackboard::Ptr global_blackboard_;
 
@@ -173,17 +132,16 @@ namespace BT_SERVER
     std::shared_ptr<RosTopicTransitionLogger> bt_logger_transition_rostopic_;
 
     //Publishers
-    //rclcpp::Publisher<Transition>::SharedPtr bt_transition_publisher_;
     rclcpp::Publisher<TreeStatus>::SharedPtr bt_execution_status_publisher_;
 
-    //Tree Status
     BT::NodeStatus status_ { BT::NodeStatus::IDLE };
-
     std::atomic_bool loggers_init_{false};
-
+    rclcpp::Time start_execution_time_;
     std::mutex status_lock_;
 
+    //Sync
+    SyncMap syncMap_;
+    std::chrono::nanoseconds last_sync_update_ = std::chrono::nanoseconds{ 0 };
   };
-
 }
 #endif

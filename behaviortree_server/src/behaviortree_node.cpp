@@ -9,71 +9,66 @@ namespace BT_SERVER
     getParameters(node);
 
     //Create BT_NODE Tree ROS Services
-    RCLCPP_INFO(node_->get_logger(),"CREATING SERVICES");
-    get_loaded_plugins_srv_ =node->create_service<GetLoadedPluginsSrv>("/"+tree_name_+"/get_loaded_plugins",std::bind(&BehaviorTreeNode::GetLoadedPluginsServiceCallback,this,_1,_2));
-    pause_tree_srv_  = node->create_service<TriggerSrv>("/"+tree_name_+"/pause_tree", std::bind(&BehaviorTreeNode::PauseTreeCallback,this,_1,_2));
-    resume_tree_srv_  = node->create_service<TriggerSrv>("/"+tree_name_+"/pause_tree", std::bind(&BehaviorTreeNode::ResumeTreeCallback,this,_1,_2));
-    stop_tree_srv_ = node_->create_service<EmptySrv>("/"+tree_name_+"/stop_tree",std::bind(&BehaviorTreeNode::StopTreeCallback,this,_1,_2));
-    restart_tree_srv_ = node_->create_service<EmptySrv>("/"+tree_name_+"/restart_tree",std::bind(&BehaviorTreeNode::RestartTreeCallback,this,_1,_2));
-    get_tree_status_srv_ = node_->create_service<GetTreeStatusSrv>("/"+tree_name_+"/status_tree",std::bind(&BehaviorTreeNode::StatusTreeCallback,this,_1,_2));
-    RCLCPP_INFO(node_->get_logger(),"CREATING SERVICES OK");
+    RCLCPP_INFO(node_->get_logger(),"Creating ROS2 Services, Subscribers and Publishers");
+    get_loaded_plugins_srv_ =node->create_service<GetLoadedPluginsSrv>("/"+tree_name_+"/get_loaded_plugins",std::bind(&BehaviorTreeNode::getLoadedPluginsCB,this,_1,_2));
+    pause_tree_srv_  = node->create_service<TriggerSrv>("/"+tree_name_+"/pause_tree", std::bind(&BehaviorTreeNode::pauseTreeCB,this,_1,_2));
+    resume_tree_srv_  = node->create_service<TriggerSrv>("/"+tree_name_+"/pause_tree", std::bind(&BehaviorTreeNode::resumeTreeCB,this,_1,_2));
+    stop_tree_srv_ = node_->create_service<EmptySrv>("/"+tree_name_+"/stop_tree",std::bind(&BehaviorTreeNode::stopTreeCB,this,_1,_2));
+    restart_tree_srv_ = node_->create_service<EmptySrv>("/"+tree_name_+"/restart_tree",std::bind(&BehaviorTreeNode::restartTreeCB,this,_1,_2));
+    get_tree_status_srv_ = node_->create_service<GetTreeStatusSrv>("/"+tree_name_+"/status_tree",std::bind(&BehaviorTreeNode::statusTreeCB,this,_1,_2));
+
+    // Updates subscriber server side
+    sync_bb_sub_ = node_->create_subscription<BBEntry>("behavior_tree_forest/broadcast_update", 10, std::bind(&BehaviorTreeNode::syncBBUpdateCB, this, _1)) ;
+    
+    // Updates republisher for all trees (put latch to true atm, because seems a good option that you receive last update from the server)
+    sync_bb_pub_ = node_->create_publisher<BBEntry>("/behavior_tree_forest/local_update", 10);
 
     //Init Publishers
-    tree_wrapper_.InitializeStatusPublisher();
+    tree_wrapper_.initStatusPublisher();
 
-    if (tree_wrapper_.tree_uid_ >= 0) 
+    if (tree_wrapper_.tree_uid_ >= 1) 
     {
       //Load Plugins
-      tree_wrapper_.LoadAllPlugins();
+      tree_wrapper_.loadAllPlugins();
 
       //Create Blackboard
-      tree_wrapper_.InitializeBlackboard();
+      tree_wrapper_.initBB();
 
       //Load Tree
-      LoadTree();
+      if (!loadTree()) {return;}
+     
+      tree_wrapper_.setTreeLoaded(true);
 
-      tree_wrapper_.start_execution_time_ = node_->get_clock()->now();
-      tree_wrapper_.SetTreeLoaded(true);
-
-      RCLCPP_INFO(node_->get_logger(),"TREE LOADED OK");
+      RCLCPP_INFO(node_->get_logger(),"Tree loaded OK");
     }
     else
     {
-        RCLCPP_ERROR(node_->get_logger(),"ERROR: UID CAN'T HAVE NEGATIVE VALUE");
+        RCLCPP_ERROR(node_->get_logger(),"Tree UID must be greater than 1");
         return;
     }
 
-    RCLCPP_INFO(node_->get_logger(),"CREATE PUB & SUB to SYNC values with BT_SERVER");
-
-    // Updates subscriber server side
-    sync_bb_sub_ = node_->create_subscription<BBEntry>("behavior_tree_server/broadcast_update", 10, std::bind(&BehaviorTreeNode::SyncBlackboardUpdateCallback, this, _1)) ;
-    
-    // Updates republisher for all trees (put latch to true atm, because seems a good option that you receive last update from the server)
-    sync_bb_pub_ = node_->create_publisher<BBEntry>("/behavior_tree_server/local_update", 10);
-
     // Publish the initial status (IDLE + no tree loaded).
-    tree_wrapper_.UpdatePublishTreeExecutionStatus(BT::NodeStatus::IDLE,false);
+    tree_wrapper_.updatePublishTreeExecutionStatus(BT::NodeStatus::IDLE,false);
 
     // Publish Paused Status Timer
-    check_paused_timer_ = node_->create_wall_timer(std::chrono::milliseconds(loop_rate_), std::bind(&BehaviorTreeNode::CheckPausedCallback,this));
+    check_paused_timer_ = node_->create_wall_timer(std::chrono::milliseconds(loop_rate_), std::bind(&BehaviorTreeNode::checkPausedCB,this));
   }
 
-  bool BehaviorTreeNode::LoadTree()
+  bool BehaviorTreeNode::loadTree()
   {
-    const auto& full_path = GetFullPath(tree_wrapper_.tree_filename_, trees_folder_);
+    const auto& full_path = getTreeFullPath(tree_wrapper_.tree_filename_, trees_folder_);
 
     //Init error in case of CRASH
     tree_wrapper_.execution_tree_status_ = "ERROR LOADING";
     tree_wrapper_.execution_tree_error_ = "COULD NOT LOAD";
 
     // If there's a tree being executed, halt and destoy it to execute the new one
-    if (tree_wrapper_.IsTreeLoaded()) { tree_wrapper_.RemoveTree(); }
+    if (tree_wrapper_.isTreeLoaded()) { tree_wrapper_.removeTree(); }
 
     try
     {
-      RCLCPP_INFO(node_->get_logger(),"CREATING TREE FROM FILE %s", full_path.c_str());
-      tree_wrapper_.CreateTree(full_path);
-      RCLCPP_INFO(node_->get_logger(),"CREATED TREE FROM FILE OK");
+      RCLCPP_INFO(node_->get_logger(),"Creating tree from file %s", full_path.c_str());
+      tree_wrapper_.createTree(full_path);
     }
     catch(const std::runtime_error& ex)
     {
@@ -83,7 +78,7 @@ namespace BT_SERVER
       tree_wrapper_.execution_tree_status_ = "ERROR LOADING";
       tree_wrapper_.execution_tree_error_ = ex.what() ;
 
-      tree_wrapper_.PublishExecutionStatus(true,error_str);
+      tree_wrapper_.publishExecutionStatus(true,error_str);
       return false;
     }
 
@@ -91,122 +86,136 @@ namespace BT_SERVER
     // - Missing TREE->SETDEBUG implementation
     //if (tree_debug_) tree_wrapper_.tree_.setDebug();
 
-    //TODO: Send Sync Blackboard updates
-    // - Missing TREE->GETKEYSVALUETOSYNC implementation
-    /*sendBlackboardUpdates(tree_wrapper_.getKeysValueToSync()); // send updates  */
+    // Send Sync Blackboard updates
+    sendBlackboardUpdates(tree_wrapper_.getKeysValueToSync()); // send updates 
     getBlackboardUpdates(); // blocking call to update bb with missing values that need to be retrieved from server
 
     //Init Loggers
-    tree_wrapper_.InitializeLoggers();
+    tree_wrapper_.initLoggers();
 
     tree_wrapper_.execution_tree_status_ = "IDLE";
     tree_wrapper_.execution_tree_error_ = "";
-    tree_wrapper_.UpdatePublishTreeExecutionStatus(BT::NodeStatus::IDLE, false);
+    tree_wrapper_.updatePublishTreeExecutionStatus(BT::NodeStatus::IDLE, false);
 
-    RCLCPP_INFO(node_->get_logger(),"Loaded srv tree %s counting of %ld nodes", full_path.c_str(), tree_wrapper_.TreeNodesCount());
+    RCLCPP_INFO(node_->get_logger(),"Loaded srv tree %s counting of %ld nodes", full_path.c_str(), tree_wrapper_.treeNodesCount());
     return true;
   }
 
-  void BehaviorTreeNode::CheckPausedCallback()
+  void BehaviorTreeNode::checkPausedCB()
   {
     //TODO: Check if Tree is Paused
     // - Missing BT::NodeStatus::PAUSED definition
 
-    /*if(tree_wrapper_.IsTreeLoaded())
+    /*if(tree_wrapper_.isTreeLoaded())
     {
         if(tree_wrapper_.IsTreePaused() && tree_wrapper_.GetTreeStatus() != BT::NodeStatus::PAUSED)
         {
-            tree_wrapper_.UpdatePublishTreeExecutionStatus(BT::NodeStatus::PAUSED);
+            tree_wrapper_.updatePublishTreeExecutionStatus(BT::NodeStatus::PAUSED);
         } 
     }*/
   }
 
-  void BehaviorTreeNode::SyncBlackboardUpdateCallback(const BBEntry::SharedPtr _topic_msg)
+  void BehaviorTreeNode::syncBBUpdateCB(const BBEntry::SharedPtr _topic_msg)
   {   
     // Forward received update to tree
-    if(tree_wrapper_.IsTreeLoaded()) tree_wrapper_.SyncBlackboardUpdateCallback(*_topic_msg);
+    if(tree_wrapper_.isTreeLoaded()) tree_wrapper_.syncBBUpdateCB(*_topic_msg);
   }
 
-  //TODO: Notify Changed SYNC PORT VALUES
-  // - Missing BLACKBOARD::SerializedEntriesMap definition
-  /*void BehaviorTreeNode::sendBlackboardUpdates(const BT::Blackboard::SerializedEntriesMap& entries_map)
+  void BehaviorTreeNode::sendBlackboardUpdates(const SyncMap& entries_map)
   {
-      // std::cout << "send BB UPDATES for tree " << service_tree_.tree_name_ << " " << std::to_string(entries_map.size()) << " \n" << std::flush;
-      for(const auto ser_entry : entries_map)
+    RCLCPP_INFO(node_->get_logger(), "sendBlackboardUpdates()");
+    for(auto ser_entry : entries_map)
+    {
+      //Check Sync Value is initialized
+      auto val = BT::getEntryAsString(ser_entry.first, tree_wrapper_.globalBlackboard());
+      //if (val.has_value())
       {
-          BBEntry bb_entry_msg;
-          bb_entry_msg.key = ser_entry.first;
-          bb_entry_msg.type = ser_entry.second.first;
-          bb_entry_msg.value = ser_entry.second.second;
-          sync_bb_pub_->publish(bb_entry_msg);
+        BBEntry bb_entry_msg;
+        bb_entry_msg.key = ser_entry.first;
+        bb_entry_msg.type = ser_entry.second.second->info.typeName();
+        if (val.has_value())
+          bb_entry_msg.value = val.value();
+        else
+          bb_entry_msg.value = "";
+        bb_entry_msg.bt_id = tree_name_;
+        sync_bb_pub_->publish(bb_entry_msg);
+        ser_entry.second.first = SyncStatus::SYNCED;
+        tree_wrapper_.updateSyncMap(ser_entry.first,ser_entry.second);
       }
-  }*/
+      // else
+      // {
+      //   RCLCPP_ERROR(node_->get_logger(), "Sync Key: %s with type [%s] has not got a Value", ser_entry.first.c_str(), ser_entry.second.second->info.typeName().c_str() );
+      // }
+    }
+    //std::cout << "send BB UPDATES OK" << std::flush;
+  }
 
-  void BehaviorTreeNode::getBlackboardUpdates(const bool just_empty_values)
+  void BehaviorTreeNode::getBlackboardUpdates()
   {
-    //TODO:
-    // - GetSyncKeys Missing
-   /* 
-    rclcpp::Client<GetBBValues>::SharedPtr client = node_->create_client<GetBBValues>("/behavior_tree_server/get_sync_bb_values"); 
+    RCLCPP_INFO(node_->get_logger(), "getBlackboardUpdates()");
+    rclcpp::Client<GetBBValues>::SharedPtr client = node_->create_client<GetBBValues>("/behavior_tree_forest/get_sync_bb_values"); 
     auto request = std::make_shared<GetBBValues::Request>();
 
-    const std::unordered_set<std::string> keys = getSyncKeys(just_empty_values);
+    const std::unordered_set<std::string> keys = tree_wrapper_.getSyncKeysList();
     request->keys = std::vector<std::string>(keys.begin(), keys.end());
 
     while (!client->wait_for_service()) 
     {
       if (!rclcpp::ok()) {
-        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Interrupted while waiting for the service. Exiting.");
+        RCLCPP_ERROR(node_->get_logger(), "Interrupted while waiting for the service. Exiting.");
         return;
       }
-      RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "service not available, waiting again...");
+      RCLCPP_INFO(node_->get_logger(), "service not available, waiting again...");
     }
     auto result = client->async_send_request(request);
     // Wait for the result.
     if (rclcpp::spin_until_future_complete(node_, result) == rclcpp::FutureReturnCode::SUCCESS)
     {
-      tree_wrapper_.SyncBlackboardUpdateCallback(result.get()->entries);
+      tree_wrapper_.syncBBUpdateCB(result.get()->entries);
     } else {
-      RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "ERROR: Failed to call service get_sync_bb_values");
-    }*/
+      RCLCPP_ERROR(node_->get_logger(), "ERROR: Failed to call service get_sync_bb_values");
+    }
   }
 
-  void BehaviorTreeNode::Loop()
+  void BehaviorTreeNode::loop()
   {
       // Sleep if no tree running (main and remote)
-      if(!tree_wrapper_.IsTreeLoaded())
+      if(!tree_wrapper_.isTreeLoaded())
       {
-        RCLCPP_INFO(node_->get_logger(),"TREE NOT LOADED -- END");
+        RCLCPP_INFO(node_->get_logger(),"TREE NOT LOADED -- ENDING");
         rclcpp::shutdown();
         return;
       }
 
-      if(tree_wrapper_.AreLoggersInitialized() && !tree_wrapper_.HasExecutionTerminated()) { 
+      if(tree_wrapper_.areLoggersInit() && !tree_wrapper_.hasExecutionTerminated()) { 
           try
           {
-              RCLCPP_INFO(node_->get_logger(),"TICK ONCE");
-              const auto tree_status = tree_wrapper_.tree_.tickOnce();
-              RCLCPP_INFO(node_->get_logger(),"TICK ONCE OK");
+           //   RCLCPP_INFO(node_->get_logger(),"TICK ONCE");
+              const auto tree_status = tree_wrapper_.tickTree();
+           //   RCLCPP_INFO(node_->get_logger(),"TICK ONCE OK");
 
-              //TODO:
-              //sendBlackboardUpdates(tree_wrapper_.getKeysValueToSync());
+           //   RCLCPP_INFO(node_->get_logger(),"updateSyncStatus");
+              tree_wrapper_.updateSyncStatus();
+           //   RCLCPP_INFO(node_->get_logger(),"updateSyncStatus OK");
+
+              sendBlackboardUpdates(tree_wrapper_.getKeysValueToSync());
               
               // Publish the updated status if there have been changes.
-              if(tree_status != tree_wrapper_.GetTreeStatus())
+              if(tree_status != tree_wrapper_.getTreeExecutionStatus())
               {
-                  tree_wrapper_.UpdatePublishTreeExecutionStatus(tree_status);
+                  tree_wrapper_.updatePublishTreeExecutionStatus(tree_status);
               }
 
               // Publish the updated status
               if(tree_status == BT::NodeStatus::FAILURE)
               {
-                  tree_wrapper_.ResetTree();
-                  tree_wrapper_.SetExecuted(!tree_auto_restart_); // if auto restart is false, set executed to true to stop the tick, otherwise will restart the tick from the beginning
+                  tree_wrapper_.resetTree();
+                  tree_wrapper_.setExecuted(!tree_auto_restart_); // if auto restart is false, set executed to true to stop the tick, otherwise will restart the tick from the beginning
               }
               else if(tree_status == BT::NodeStatus::SUCCESS)
               {
-                  tree_wrapper_.ResetTree();
-                  tree_wrapper_.SetExecuted(!tree_auto_restart_); // if auto restart is false, set executed to true to stop the tick, otherwise will restart the tick from the beginning
+                  tree_wrapper_.resetTree();
+                  tree_wrapper_.setExecuted(!tree_auto_restart_); // if auto restart is false, set executed to true to stop the tick, otherwise will restart the tick from the beginning
               }
           }
           catch(const BT::BehaviorTreeException& ex)
@@ -215,8 +224,8 @@ namespace BT_SERVER
               RCLCPP_ERROR(node_->get_logger(),"Tree crashed with exception: %s", ex.what());
               tree_wrapper_.execution_tree_status_ = "CRASHED";
               tree_wrapper_.execution_tree_error_ = ex.what() ;
-              tree_wrapper_.PublishExecutionStatus(true, error_str);
-              RemoveTree();
+              tree_wrapper_.publishExecutionStatus(true, error_str);
+              removeTree();
           }
       }
       else
@@ -227,66 +236,74 @@ namespace BT_SERVER
   }
 
 
-  bool BehaviorTreeNode::GetLoadedPluginsServiceCallback(const std::shared_ptr<GetLoadedPluginsSrv::Request> _request, std::shared_ptr<GetLoadedPluginsSrv::Response> _response)
+  bool BehaviorTreeNode::getLoadedPluginsCB(const std::shared_ptr<GetLoadedPluginsSrv::Request> _request, std::shared_ptr<GetLoadedPluginsSrv::Response> _response)
   {
     _response->plugins.assign(tree_wrapper_.loaded_plugins_.cbegin(), tree_wrapper_.loaded_plugins_.cend());
     return true;
   }
 
-  void BehaviorTreeNode::RemoveTree()
+  void BehaviorTreeNode::removeTree()
   {
-      tree_wrapper_.RemoveTree();
+    RCLCPP_INFO(node_->get_logger(),"removeTree()");
+    tree_wrapper_.removeTree();
 
-      // Update and publish the status here too
-      // (neeed to cover the case where users manually
-      // stop a tree by calling the stop_tree service).
-      tree_wrapper_.UpdatePublishTreeExecutionStatus(BT::NodeStatus::IDLE, false);
+    // Update and publish the status here too
+    // (neeed to cover the case where users manually
+    // stop a tree by calling the stop_tree service).
+    tree_wrapper_.updatePublishTreeExecutionStatus(BT::NodeStatus::IDLE, false);
   }
 
-  bool BehaviorTreeNode::StopTree()
+  bool BehaviorTreeNode::stopTree()
   {
-      if(tree_wrapper_.IsTreeLoaded())
-      {
-          RemoveTree();
-          RCLCPP_INFO(node_->get_logger(),"Tree stopped");
-      }
-      return !tree_wrapper_.IsTreeLoaded();
+    RCLCPP_INFO(node_->get_logger(),"stopTree()");
+    if(tree_wrapper_.isTreeLoaded())
+    {
+        removeTree();
+    }
+    return !tree_wrapper_.isTreeLoaded();
   }
 
-  bool BehaviorTreeNode::StopTreeCallback(const std::shared_ptr<EmptySrv::Request> _request, std::shared_ptr<EmptySrv::Response> _response)
+  bool BehaviorTreeNode::stopTreeCB(const std::shared_ptr<EmptySrv::Request> _request, std::shared_ptr<EmptySrv::Response> _response)
   {
+    RCLCPP_INFO(node_->get_logger(),"stopTreeCB");
     tree_wrapper_.execution_tree_status_ = "FINISHED";
-    tree_wrapper_.execution_tree_error_ = "Canceled by StopTree Service";
-    tree_wrapper_.UpdatePublishTreeExecutionStatus(BT::NodeStatus::IDLE, false);
-    tree_wrapper_.ResetTree();
-    return StopTree();
+    tree_wrapper_.execution_tree_error_ = "Canceled by stopTree Service";
+    tree_wrapper_.updatePublishTreeExecutionStatus(BT::NodeStatus::IDLE, false);
+    tree_wrapper_.resetTree();
+    bool res = stopTree();
+    _response = std::make_shared <EmptySrv::Response>();
+    return res;
   }
-  bool BehaviorTreeNode::PauseTreeCallback(const std::shared_ptr<TriggerSrv::Request> _request, std::shared_ptr<TriggerSrv::Response> _response)
+  bool BehaviorTreeNode::pauseTreeCB(const std::shared_ptr<TriggerSrv::Request> _request, std::shared_ptr<TriggerSrv::Response> _response)
   {
+    RCLCPP_INFO(node_->get_logger(),"pauseTreeCB");
     //TODO:
     // - Missing Tree-->PAUSERESUME
     //  _response = tree_wrapper_.tree().PauseResume(true);
       return true;
   }
-  bool BehaviorTreeNode::ResumeTreeCallback(const std::shared_ptr<TriggerSrv::Request> _request, std::shared_ptr<TriggerSrv::Response> _response)
+  bool BehaviorTreeNode::resumeTreeCB(const std::shared_ptr<TriggerSrv::Request> _request, std::shared_ptr<TriggerSrv::Response> _response)
   {
+    RCLCPP_INFO(node_->get_logger(),"resumeTreeCB");
     //TODO:
     // - Missing Tree-->PAUSERESUME
     //  _response = tree_wrapper_.tree().PauseResume(false);
       return true;
   }
-  bool BehaviorTreeNode::RestartTreeCallback(const std::shared_ptr<EmptySrv::Request> _request, std::shared_ptr<EmptySrv::Response> _response)
+  bool BehaviorTreeNode::restartTreeCB(const std::shared_ptr<EmptySrv::Request> _request, std::shared_ptr<EmptySrv::Response> _response)
   {
-    if (tree_wrapper_.IsTreeLoaded())
+    RCLCPP_INFO(node_->get_logger(),"restartTreeCB");
+    if (tree_wrapper_.isTreeLoaded())
     {
-      tree_wrapper_.SetExecuted(false);
+      tree_wrapper_.setExecuted(false);
       return true;
     }
     return false;
   }
-  bool BehaviorTreeNode::StatusTreeCallback(const std::shared_ptr<GetTreeStatusSrv::Request> _request, std::shared_ptr<GetTreeStatusSrv::Response> _response)
+  bool BehaviorTreeNode::statusTreeCB(const std::shared_ptr<GetTreeStatusSrv::Request> _request, std::shared_ptr<GetTreeStatusSrv::Response> _response)
   {
-    if (tree_wrapper_.IsTreeLoaded())
+    RCLCPP_INFO(node_->get_logger(),"statusTreeCB");
+    if (tree_wrapper_.isTreeLoaded())
     {
       _response->status = tree_wrapper_.buildTreeExecutionStatus();
       return true;
@@ -297,9 +314,6 @@ namespace BT_SERVER
 
   void BehaviorTreeNode::getParameters (rclcpp::Node::SharedPtr nh)
   {
-
-    RCLCPP_INFO(nh->get_logger(),"DECLARING PARAMS");
-
     // Declare parameters
     nh->declare_parameter("trees_folder", "src/behaviortree_server/behavior_trees");
     nh->declare_parameter("enable_cout_log", true);
@@ -309,25 +323,22 @@ namespace BT_SERVER
     nh->declare_parameter("enable_zmq_log", true);
     nh->declare_parameter("tree_name", "cross_door_name");
     nh->declare_parameter("tree_file", "test_2.xml");
-    nh->declare_parameter("tree_uid", 1);
+    nh->declare_parameter("tree_uid", 0);
     nh->declare_parameter("tree_debug", true);
     nh->declare_parameter("tree_auto_restart", true);
     nh->declare_parameter("server_port", 1667);
     nh->declare_parameter("publisher_port", 1666);
     nh->declare_parameter("log_folder", "/tmp/");
-    nh->declare_parameter("bb_init", "");
-    nh->declare_parameter("plugins_dir","[]");
+    nh->declare_parameter("bb_init", std::vector<std::string>());
+    nh->declare_parameter("plugins_dir",std::vector<std::string>());
 
-    RCLCPP_INFO(nh->get_logger(),"LOADING PARAMS");
+    RCLCPP_INFO(nh->get_logger(),"Loading parameters");
       
     // Load Parameters
     trees_folder_ = nh->get_parameter("trees_folder").as_string();
-
     tree_name_= nh->get_parameter("tree_name").as_string();
-
     tree_debug_ = nh->get_parameter("tree_debug").as_bool();
     tree_auto_restart_ = nh->get_parameter("tree_auto_restart").as_bool();
-
     tree_wrapper_.tree_name_ = tree_name_;
     tree_wrapper_.tree_uid_ = nh->get_parameter("tree_uid").as_int();
     tree_wrapper_.tree_filename_ = nh->get_parameter("tree_file").as_string();
@@ -340,8 +351,10 @@ namespace BT_SERVER
     tree_wrapper_.tree_server_port_ = nh->get_parameter("server_port").as_int();
     tree_wrapper_.tree_publisher_port_ = nh->get_parameter("publisher_port").as_int();
     tree_wrapper_.params_.groot2_port = tree_wrapper_.tree_server_port_;
-    tree_wrapper_.ros_plugin_directories_ = node_->get_parameter("plugins_dir").as_string_array();
 
+    tree_wrapper_.ros_plugin_directories_ = node_->get_parameter("plugins_dir").as_string_array();
+    tree_wrapper_.ros_plugin_directories_.push_back("behaviortree_ros2/bt_plugins");
+ 
     //Build BB_init Vector (OLD WAY)
     /*std::string bb_init;
     bb_init = nh->get_parameter("bb_init").as_string();
@@ -357,7 +370,7 @@ namespace BT_SERVER
     //Build BB_init Vector (New WAY TO TEST)
     tree_wrapper_.tree_bb_init_ = node_->get_parameter("bb_init").as_string_array();
 
-    RCLCPP_INFO(nh->get_logger(),"LOADED PARAMS OK");
+    RCLCPP_INFO(nh->get_logger(),"Parameters Loaded succesfully");
   }
 }
 
@@ -373,9 +386,10 @@ int main(int argc, char** argv)
   while(rclcpp::ok())
   {
     rclcpp::spin_some(nh);
-    bt_node->Loop();
+    bt_node->loop();
     rate.sleep();
   }
+  RCLCPP_INFO(nh->get_logger(),"END");
   rclcpp::shutdown();
   return 0;
 }

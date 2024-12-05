@@ -1,5 +1,5 @@
 <package format="3">
-  <name>behaviortree_server_interfaces</name>
+  <name>behaviortree_forest_interfaces</name>
   <version>0.0.1</version>
   <description>
   BehaviorTree Server interfaces, used for behaviorTree Server

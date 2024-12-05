@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<root BTCPP_format="4" main_tree_to_execute="BehaviorTree">
+    <!-- ////////// -->
+    <BehaviorTree ID="BehaviorTree">
+        <Sequence>
+            <Repeat num_cycles="-1">
+                <Fallback>
+                    <Sequence>
+                        <Sleep msec="2000"/>
+                         <!--PublishStdEmpty topic_name="/emptyyy" name="A"/>
+                        <PublishStdShort topic_name="/shooort" data="1" name="B"/>
+                        <MonitorStdBool topic_name="/asdf" name="C"/-->
+                    </Sequence>
+                    <AlwaysSuccess/>
+                </Fallback>
+            </Repeat>
+        </Sequence>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <TreeNodesModel>
+        <SubTree ID="BehaviorTree" description=""/>
+    </TreeNodesModel>
+    <!-- ////////// -->
+</root>

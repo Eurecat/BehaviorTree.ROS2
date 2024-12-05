@@ -17,7 +17,7 @@ services:
       - ../behaviortree_server:/eut_bt_ros2_ws/src/behaviortree_server
       - ../behaviortree_server_interfaces:/eut_bt_ros2_ws/src/behaviortree_server_interfaces
       - ../behaviortree:/eut_bt_ros2_ws/src/behaviortree
-      
+      - ../groot:/eut_bt_ros2_ws/src/groot
     tty: true
     stdin_open: true
     environment:

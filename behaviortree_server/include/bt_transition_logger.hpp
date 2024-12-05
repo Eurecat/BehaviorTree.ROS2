@@ -3,9 +3,9 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include <behaviortree_cpp/loggers/abstract_logger.h>
-#include "behaviortree_server_interfaces/msg/transition.hpp"
+#include "behaviortree_forest_interfaces/msg/transition.hpp"
 
-using Transition = behaviortree_server_interfaces::msg::Transition;
+using Transition = behaviortree_forest_interfaces::msg::Transition;
 
 namespace BT_SERVER
 {

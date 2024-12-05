@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(behaviortree_server)
+project(behaviortree_forest)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -13,7 +13,7 @@ set(THIS_PACKAGE_DEPS
     btcpp_ros2_interfaces
     generate_parameter_library
     behaviortree_ros2
-    behaviortree_server_interfaces
+    behaviortree_forest_interfaces
     )
 
 find_package(ament_cmake REQUIRED)
