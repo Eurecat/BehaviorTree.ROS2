@@ -37,9 +37,6 @@ namespace BT_SERVER
             case BT::NodeStatus::SKIPPED:
                 return "SKIPPED";
                 break;
-            /*case BT::NodeStatus::PAUSED:
-                return "PAUSED";
-                break;*/
             default:
                 return "IDLE";
                 break;

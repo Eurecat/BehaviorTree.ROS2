@@ -4,6 +4,8 @@
 #include "rclcpp/rclcpp.hpp"
 
 #include "std_srvs/srv/empty.hpp"
+#include "std_srvs/srv/trigger.hpp"
+
 #include "behaviortree_forest_interfaces/msg/bb_entry.hpp"
 #include "behaviortree_forest_interfaces/msg/tree_execution_status.hpp"
 
@@ -37,6 +39,7 @@ using TreeRequestSrv = behaviortree_forest_interfaces::srv::TreeRequest;
 using GetBBValuesSrv = behaviortree_forest_interfaces::srv::GetBBValues;
 using GetTreeStatusSrv = behaviortree_forest_interfaces::srv::GetTreeStatusByID;
 using GetAllTreeStatusSrv = behaviortree_forest_interfaces::srv::GetAllTreesStatus;
+using TriggerSrv = std_srvs::srv::Trigger;
 using EmptySrv = std_srvs::srv::Empty;
 
 namespace BT_SERVER
@@ -66,6 +69,8 @@ namespace BT_SERVER
       bool stopTreeCB(const std::shared_ptr<TreeRequestSrv::Request> req, std::shared_ptr<TreeRequestSrv::Response> res);
       bool killTreeCB(const std::shared_ptr<TreeRequestSrv::Request> req, std::shared_ptr<TreeRequestSrv::Response> res);
       bool killAllTreesCB(const std::shared_ptr<EmptySrv::Request> req, std::shared_ptr<EmptySrv::Response> res);
+      bool pauseTreeCB(const std::shared_ptr<TreeRequestSrv::Request> req, std::shared_ptr<TreeRequestSrv::Response> res);
+      bool resumeTreeCB(const std::shared_ptr<TreeRequestSrv::Request> req, std::shared_ptr<TreeRequestSrv::Response> res);
       bool restartTreeCB(const std::shared_ptr<TreeRequestSrv::Request> req, std::shared_ptr<TreeRequestSrv::Response> res);
       bool getSyncBBValuesCB (const std::shared_ptr<GetBBValuesSrv::Request> req, std::shared_ptr<GetBBValuesSrv::Response> res);
       bool getTreeStatusCB(const std::shared_ptr<GetTreeStatusSrv::Request> req, std::shared_ptr<GetTreeStatusSrv::Response> res);
@@ -74,6 +79,7 @@ namespace BT_SERVER
       void syncBBCB(const BBEntry::SharedPtr msg) const;
       void initBB(const std::string& abs_file_path, BT::Blackboard::Ptr blackboard_ptr);
       bool handleCallEmptySrv(rclcpp::Client<EmptySrv>::SharedPtr service_client,const std::string tree_name, const std::string service_type_name);
+      void emptySrvCB(rclcpp::Client<std_srvs::srv::Empty>::SharedFuture future);
       bool rosServiceStopCall (std::string tree_name);
       bool rosServiceRestartCall (std::string tree_name);
 
@@ -86,6 +92,12 @@ namespace BT_SERVER
       rclcpp::Service<GetBBValuesSrv>::SharedPtr get_sync_bb_values_srv_; 
       rclcpp::Service<GetTreeStatusSrv>::SharedPtr get_tree_status_srv_;
       rclcpp::Service<GetAllTreeStatusSrv>::SharedPtr get_all_trees_status_srv_;
+      rclcpp::Service<TreeRequestSrv>::SharedPtr pause_tree_srv_;
+      rclcpp::Service<TreeRequestSrv>::SharedPtr resume_tree_srv_;
+
+      //Service Clients
+      rclcpp::Client<EmptySrv>::SharedPtr stop_service_client_;
+      rclcpp::Client<EmptySrv>::SharedPtr restart_service_client_;
 
       //Subscribers
       rclcpp::Subscription<BBEntry>::SharedPtr sync_bb_sub_;

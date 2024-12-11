@@ -14,8 +14,6 @@
 #include <numeric>
 #include <cstring>
 
-#include "rclcpp/rclcpp.hpp"
-
 class ROS2LaunchManager 
 {
 public:
@@ -59,11 +57,25 @@ public:
             size_t pos = 0;
             while ((pos = ps_output.find('\n')) != std::string::npos) {
                 std::string line = ps_output.substr(0, pos);
-                if (line.find("behaviortree_node") != std::string::npos) {
+                if (line.find("behaviortree") != std::string::npos) {
                     // Extract PID from the line that contains 'behaviortree_node'
+                    size_t startPos = line.find_first_not_of(" \t"); // Find the first non-space character
+                    if (startPos != std::string::npos) {
+                        line = line.substr(startPos); // Trim leading spaces
+                    }
                     std::string pid_str = line.substr(0, line.find(' ')); // The PID is the first element in the line
                     sscanf(pid_str.c_str(), "%d", &bt_node_pid);  // Parse the PID
                     std::cout << "Node process PID extracted: " << bt_node_pid << std::endl;
+
+                    // Option2: Extract the number using stoi
+                    /*try {
+                        int number = std::stoi(line); // Convert the number from the string
+                        std::cout << "Extracted number: " << number << std::endl;
+                    } catch (const std::invalid_argument& e) {
+                        std::cout << "No valid number found." << std::endl;
+                    } catch (const std::out_of_range& e) {
+                        std::cout << "Number is out of range." << std::endl;
+                    }*/
                     break;
                 }
                 ps_output.erase(0, pos + 1);
@@ -73,7 +85,7 @@ public:
     }
 
     template<typename... Args>
-    pid_t start(const rclcpp::Node::SharedPtr& nh, Args... args) 
+    pid_t start(Args... args) 
     {
         std::vector<std::string> args_vector = { args... };
 
@@ -81,7 +93,7 @@ public:
             pid_t pid = ::fork();
            // int r = prctl(PR_SET_PDEATHSIG, SIGTERM);
             if (pid == 0) {
-                RCLCPP_INFO(nh->get_logger(),"PID EQUALS TO 0");
+                std::cout << "BT_SERVER: PID == 0" << std::endl;
                 ::setsid();
                 
                 ::signal(SIGINT, SIG_IGN);
@@ -93,13 +105,12 @@ public:
                 ::execlp("ros2", "ros2", "run", args..., nullptr);
             }
             else {
-                RCLCPP_INFO(nh->get_logger(),"PID NOT EQUALS TO 0");
+                std::cout << "BT_SERVER: PID != 0" << std::endl;
                 std::scoped_lock<std::mutex> scoped_lock(m_mutex);
 
                 std::string args_string = std::accumulate(std::next(std::begin(args_vector)), std::end(args_vector), args_vector[0], [](std::string lhs, std::string rhs) -> std::string { return lhs + " " + rhs; });
 
-                RCLCPP_INFO(nh->get_logger(),"Starting \"ros2 %s\" with PID %d", args_string.c_str(), pid);
-
+                std::cout << "BT_SERVER: Starting \"ros2" << args_string << "\" with PID" << pid << std::endl;
                 m_pids.push_back(pid);
             }
 
@@ -110,7 +121,7 @@ public:
         }
     }
 
-    void stop(const rclcpp::Node::SharedPtr& nh, pid_t const &pid, int32_t const &signal) 
+    void stop(pid_t const &pid, int32_t const &signal) 
     {
         std::scoped_lock<std::mutex> scoped_lock(m_mutex);
 
@@ -118,8 +129,7 @@ public:
 
         if (pid_it != m_pids.end()) {
             ::kill(pid, signal);
-
-            RCLCPP_INFO(nh->get_logger(),"Stopping process with PID %d and signal %d", pid, signal);
+            std::cout << "BT_SERVER: Stopping process with PID " << pid << "and signal " << signal << std::endl;
         }
         else {
             throw std::runtime_error("ROSLaunchManager::stop - PID " + std::to_string(pid) + " not found");

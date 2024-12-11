@@ -38,8 +38,8 @@ RUN apt-get install terminator -y
 
 
 # BT.CPP dependencies
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install libzmq3-dev libsqlite3-dev libboost-dev -y
-
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install libzmq3-dev libsqlite3-dev -y
+RUN DEBIAN_FRONTEND=noninteractive apt-get install libncurses5-dev libncursesw5-dev -y
 
 RUN mkdir -p /eut_bt_ros2_ws/src
 WORKDIR /eut_bt_ros2_ws/src
@@ -51,6 +51,9 @@ RUN git clone https://github.com/facontidavide/rosx_introspection.git
 
 # RUN wget https://s3.us-west-1.amazonaws.com/download.behaviortree.dev/groot2_linux_installer/Groot2-v1.6.1-linux-installer.run 
 #RUN chmod +x Groot2-v1.5.2-linux-installer.run
+
+#Groot dependencies
+RUN apt-get install qtbase5-dev libqt5svg5-dev libzmq3-dev libdw-dev -y
 
 WORKDIR /eut_bt_ros2_ws
 RUN /bin/bash -c "source /opt/ros/${ROS_DISTRO}/setup.bash;sudo rosdep init;rosdep update; rosdep install -y -r -q --from-paths src --ignore-src --rosdistro ${ROS_DISTRO};"

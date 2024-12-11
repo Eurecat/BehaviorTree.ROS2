@@ -77,6 +77,7 @@ namespace BT_SERVER
 
       //Timers
       rclcpp::TimerBase::SharedPtr check_paused_timer_; 
+      rclcpp::Rate rate;
   };
 }
 

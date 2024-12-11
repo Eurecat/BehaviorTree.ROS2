@@ -8,6 +8,10 @@ namespace BT_SERVER
     : node_(node)
   {
     global_blackboard_ = BT::Blackboard::create();
+
+    RCLCPP_INFO(node_->get_logger(),"Init tree_ptr");
+    // Init Tree_ptr and debugTree
+    tree_ptr_ = std::make_shared<BT::Tree> ();
   }
 
   TreeWrapper::~TreeWrapper() {}
@@ -16,7 +20,7 @@ namespace BT_SERVER
   {
       if(isTreeLoaded() )
       {
-          tree_.haltTree();
+          tree_ptr_->haltTree();
           return true;
       }
       return false;
@@ -28,11 +32,44 @@ namespace BT_SERVER
      is_tree_loaded_ = false;
   }
 
+  BT::NodeAdvancedStatus TreeWrapper::tickTree()
+  {
+    auto status = tree_ptr_->tickOnce();
+    return toAdvancedNodeStatus(status);
+  }
+
+  BT::NodeAdvancedStatus TreeWrapper::toAdvancedNodeStatus (BT::NodeStatus status)
+  {
+    BT::NodeAdvancedStatus adv_status;
+      switch(status)
+      {
+          case BT::NodeStatus::FAILURE:
+              adv_status = BT::NodeAdvancedStatus::FAILURE;
+              break;
+          case BT::NodeStatus::IDLE:
+              adv_status = BT::NodeAdvancedStatus::IDLE;
+              break;
+          case BT::NodeStatus::RUNNING:
+              adv_status = BT::NodeAdvancedStatus::RUNNING;
+              break;
+          case BT::NodeStatus::SUCCESS:
+              adv_status = BT::NodeAdvancedStatus::SUCCESS;
+              break;
+          case BT::NodeStatus::SKIPPED:
+              adv_status = BT::NodeAdvancedStatus::SKIPPED;
+              break;
+      }
+      if (debug_tree_ptr->isPaused())
+        adv_status = BT::NodeAdvancedStatus::PAUSED;
+
+      return adv_status;
+  }
+
   void TreeWrapper::initGrootV2Pub()
   {
     //TODO: NEW GROOT
     groot_publisher_.reset();
-    groot_publisher_ = std::make_shared<BT::Groot2Publisher>(tree_, tree_server_port_);
+    groot_publisher_ = std::make_shared<BT::Groot2Publisher>(*tree_ptr_, tree_server_port_);
   }
 
   //TODO: Bug counting nodes!
@@ -40,7 +77,7 @@ namespace BT_SERVER
   {
       std::vector<const BT::TreeNode*> nodes;
       size_t nodes_count = 0;
-      for(auto const& subtree : tree_.subtrees)
+      for(auto const& subtree : tree_ptr_->subtrees)
       {
         for(auto const& node : subtree->nodes)
         {
@@ -54,36 +91,36 @@ namespace BT_SERVER
   {
       TreeStatus tree_status_msg;
 
-      static const auto to_msg_status = [](const BT::NodeStatus& bt_status)
+      static const auto to_msg_status = [](const BT::NodeAdvancedStatus& bt_status)
       {
           auto status { TreeStatus::IDLE };
 
           switch(bt_status)
           {
-              case BT::NodeStatus::FAILURE:
+              case BT::NodeAdvancedStatus::FAILURE:
                   status = TreeStatus::FAILURE;
                   break;
-              case BT::NodeStatus::IDLE:
+              case BT::NodeAdvancedStatus::IDLE:
                   status = TreeStatus::IDLE;
                   break;
-              case BT::NodeStatus::RUNNING:
+              case BT::NodeAdvancedStatus::RUNNING:
                   status = TreeStatus::RUNNING;
                   break;
-              case BT::NodeStatus::SUCCESS:
+              case BT::NodeAdvancedStatus::SUCCESS:
                   status = TreeStatus::SUCCESS;
                   break;
-              case BT::NodeStatus::SKIPPED:
+              case BT::NodeAdvancedStatus::SKIPPED:
                   status = TreeStatus::SKIPPED;
                   break;
-              /*case BT::NodeStatus::PAUSED:
+              case BT::NodeAdvancedStatus::PAUSED:
                   status = TreeStatus::PAUSED;
-                  break;*/
+                  break;
           }
 
           return status;
       };
 
-      BT::NodeStatus bt_tree_status = getTreeExecutionStatus();
+      BT::NodeAdvancedStatus bt_tree_status = getTreeExecutionStatus();
 
       //Fill Service Tree info
       tree_status_msg.status = to_msg_status(bt_tree_status);
@@ -98,7 +135,7 @@ namespace BT_SERVER
   }
 
   // Update and publishes atomically and mutually exclusive the current execution status.
-  void TreeWrapper::updatePublishTreeExecutionStatus(const BT::NodeStatus status, const bool avoid_duplicate)
+  void TreeWrapper::updatePublishTreeExecutionStatus(const BT::NodeAdvancedStatus status, const bool avoid_duplicate)
   {
       {
           std::lock_guard<std::mutex> lk(status_lock_);
@@ -238,14 +275,14 @@ namespace BT_SERVER
     if (enable_file_log_)
     {
       const auto& log_file       = file_base.str() + ".fbl";
-      bt_logger_file_ = std::make_unique<BT::FileLogger>(tree_, log_file.c_str(), 20, true);
+      bt_logger_file_ = std::make_unique<BT::FileLogger>(*tree_ptr_, log_file.c_str(), 20, true);
     }
     if (enable_minitrace_log_)
     {
       const auto& minitrace_file = file_base.str() + ".json";
       try
       {
-          bt_logger_trace_ = std::make_unique<BT::MinitraceLogger>(tree_, minitrace_file.c_str());
+          bt_logger_trace_ = std::make_unique<BT::MinitraceLogger>(*tree_ptr_, minitrace_file.c_str());
       }
       catch(const BT::LogicError& ex)
       {
@@ -256,7 +293,7 @@ namespace BT_SERVER
     {
       try
       {
-          bt_logger_cout_ = std::make_unique<BT::StdCoutLogger>(tree_);
+          bt_logger_cout_ = std::make_unique<BT::StdCoutLogger>(*tree_ptr_);
       }
       catch(const BT::LogicError& ex)
       {
@@ -266,12 +303,12 @@ namespace BT_SERVER
     if(enable_rostopic_log_)
     {
       auto bt_transition_publisher_ = node_->create_publisher<Transition>("/"+tree_name_+"/transition_status", 1);
-      bt_logger_transition_rostopic_ = std::make_unique<RosTopicTransitionLogger>(tree_, bt_transition_publisher_);
+      bt_logger_transition_rostopic_ = std::make_unique<RosTopicTransitionLogger>(*tree_ptr_, bt_transition_publisher_);
     }
 
     if (enable_zmq_log_) 
     {
-      bt_logger_zmq_ = std::make_unique<BT::PublisherZMQ>(tree_, 25, tree_publisher_port_,tree_server_port_);
+      bt_logger_zmq_ = std::make_unique<BT::PublisherZMQ>(*debug_tree_ptr, 25, tree_publisher_port_,tree_server_port_);
       //TODO:
       //initGrootV2Pub();
     }
@@ -430,7 +467,7 @@ namespace BT_SERVER
     last_sync_update_ = std::chrono::steady_clock::now().time_since_epoch();
   }
 
-  void TreeWrapper::createTree(const std::string& full_path)
+  void TreeWrapper::createTree(const std::string& full_path, bool tree_debug)
   {
     std::string tree_xml;
     std::vector<std::string> sync_keys;
@@ -439,7 +476,7 @@ namespace BT_SERVER
       //Extract SyncKeys from the XML Tree and Replace '$${key}' --> '${key}'
       sync_keys = extractSyncKeys(tree_xml);
       //Create the tree
-      tree_ = factory_.createTreeFromText(tree_xml,global_blackboard_);
+      tree_ptr_ = std::make_shared<BT::Tree> (factory_.createTreeFromText(tree_xml,global_blackboard_));
     }
     else
     {
@@ -452,11 +489,15 @@ namespace BT_SERVER
       syncMap_.emplace(key,std::make_pair(SyncStatus::TO_SYNC,global_blackboard_->getEntry(key)));
     }
 
-    //DEBUG:
+    /*
     for (auto key: syncMap_)
     {
       RCLCPP_INFO(node_->get_logger(),"SyncMap_ : %s", key.first.c_str());
-    }
+    }*/
+
+    //Create debug_tree_ptr
+    RCLCPP_INFO(node_->get_logger(),"Init debug_tree_ptr");
+    debug_tree_ptr = std::make_shared<BT::DebuggableTree>(tree_ptr_,tree_debug);
 
   }
 

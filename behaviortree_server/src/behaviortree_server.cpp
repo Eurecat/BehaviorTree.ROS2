@@ -15,6 +15,8 @@ namespace BT_SERVER
     kill_tree_srv_ = node_->create_service<TreeRequestSrv>("behavior_tree_forest/kill_tree",std::bind(&BehaviorTreeServer::killTreeCB,this,_1,_2));
     kill_all_trees_srv_ = node_->create_service<EmptySrv>("behavior_tree_forest/kill_all_trees",std::bind(&BehaviorTreeServer::killAllTreesCB,this,_1,_2));
     restart_tree_srv_  = node_->create_service<TreeRequestSrv>("behavior_tree_forest/restart_tree",std::bind(&BehaviorTreeServer::restartTreeCB,this,_1,_2));
+    pause_tree_srv_ = node_->create_service<TreeRequestSrv>("behavior_tree_forest/pause_tree",std::bind(&BehaviorTreeServer::pauseTreeCB,this,_1,_2));
+    resume_tree_srv_ = node_->create_service<TreeRequestSrv>("behavior_tree_forest/resume_tree",std::bind(&BehaviorTreeServer::resumeTreeCB,this,_1,_2));    
     get_sync_bb_values_srv_ = node_->create_service<GetBBValuesSrv>("behavior_tree_forest/get_sync_bb_values",std::bind(&BehaviorTreeServer::getSyncBBValuesCB,this,_1,_2));
     get_tree_status_srv_ = node_->create_service<GetTreeStatusSrv>("behavior_tree_forest/get_tree_status",std::bind(&BehaviorTreeServer::getTreeStatusCB,this,_1,_2));
     get_all_trees_status_srv_ = node_->create_service<GetAllTreeStatusSrv>("behavior_tree_forest/get_all_trees_status",std::bind(&BehaviorTreeServer::getAllTreeStatusCB,this,_1,_2));
@@ -196,7 +198,7 @@ namespace BT_SERVER
     const char* package_name = "behaviortree_forest"; 
     const char* executable_name = "behaviortree_node";
     try {
-      pid = ros2_launch_manager_.start(node_,
+      pid = ros2_launch_manager_.start(
             package_name,
             executable_name,
             "--ros-args",
@@ -235,23 +237,38 @@ namespace BT_SERVER
     auto empty_request = std::make_shared<std_srvs::srv::Empty::Request>();
 
     // Send the request asynchronously and get the FutureAndRequestId
-    auto future_response = service_client->async_send_request(empty_request);
-
+    //auto future_response = service_client->async_send_request(empty_request);
+    auto future = service_client->async_send_request(empty_request, std::bind(&BehaviorTreeServer::emptySrvCB, this, std::placeholders::_1));
     RCLCPP_INFO(node_->get_logger(), "handleCallEmptySrv END");
 
     return true; // Indicate that the service was received
   }
 
+  void BehaviorTreeServer::emptySrvCB(rclcpp::Client<std_srvs::srv::Empty>::SharedFuture future)
+  {
+      try {
+          auto response = future.get();  // This will block until the response is received
+          //RCLCPP_INFO(node_->get_logger(), "Empty Service Responded");
+      } catch (const std::exception &e) {
+          RCLCPP_ERROR(node_->get_logger(), "Empty Service call failed: %s", e.what());
+      }
+  }
+
+
   bool BehaviorTreeServer::rosServiceStopCall (std::string tree_name)
   {
-    rclcpp::Client<EmptySrv>::SharedPtr service_client = node_->create_client<EmptySrv>("/"+tree_name+ "/stop_tree"); 
-    return handleCallEmptySrv(service_client,tree_name,"STOP TREE");
+    if (rclcpp::ok())
+    {
+      stop_service_client_ = node_->create_client<EmptySrv>("/"+tree_name+ "/stop_tree"); 
+      return handleCallEmptySrv(stop_service_client_,tree_name,"STOP TREE");
+    }
+    return true;
   }
 
   bool BehaviorTreeServer::rosServiceRestartCall (std::string tree_name)
   {
-    rclcpp::Client<EmptySrv>::SharedPtr service_client = node_->create_client<EmptySrv>("/"+tree_name+ "/restart_tree"); 
-    return handleCallEmptySrv(service_client,tree_name,"RESTART TREE");
+    restart_service_client_ = node_->create_client<EmptySrv>("/"+tree_name+ "/restart_tree"); 
+    return handleCallEmptySrv(restart_service_client_,tree_name,"RESTART TREE");
   }
 
   bool BehaviorTreeServer::stopTreeCB(const std::shared_ptr<TreeRequestSrv::Request> req, std::shared_ptr<TreeRequestSrv::Response> res)
@@ -282,20 +299,15 @@ namespace BT_SERVER
             TreeProcessInfo tree_info = uids_to_tree_info_.at(req->tree_uid);
             //Extract extra PIDs created when executing "ros2 run ..." with fork()
             pid_t bt_node_pid = ros2_launch_manager_.extract_bt_node_pid_from_python_pid(tree_info.pid);
-            std::string command1 = "kill -9 "+ std::to_string(tree_info.pid);
-            std::string command2 = "kill -9 "+ std::to_string(bt_node_pid);
+            std::string command = "kill -9 "+ std::to_string(bt_node_pid) + " ; " + "kill -9 "+ std::to_string(tree_info.pid);
+            //std::string command2 = "kill -9 "+ std::to_string(bt_node_pid);
 
-            int result = system(command1.c_str());
+            RCLCPP_INFO(node_->get_logger(), "EXECUTING KILL COMMAND: %s", command.c_str());
+            int result = system(command.c_str());
             if (result != -1)
-              RCLCPP_INFO(node_->get_logger(), "Succesfully killed process with PID %s",std::to_string(tree_info.pid).c_str());
+              RCLCPP_INFO(node_->get_logger(), "Succesfully killed processes with PIDs: %s & %s",std::to_string(tree_info.pid).c_str(), std::to_string(bt_node_pid).c_str());
             else
-              RCLCPP_ERROR(node_->get_logger(), "Failed to kill process with PID %s",std::to_string(tree_info.pid).c_str());
-
-           /* int result = system(command2.c_str());
-            if (result != -1)
-              RCLCPP_INFO(node_->get_logger(), "Succesfully killed process with PID %s",std::to_string(bt_node_pid).c_str());
-            else
-              RCLCPP_ERROR(node_->get_logger(), "Failed to kill process with PID %s",std::to_string(bt_node_pid).c_str());*/
+              RCLCPP_ERROR(node_->get_logger(), "Failed to kill process with PIDs %s & %s",std::to_string(tree_info.pid).c_str(), std::to_string(bt_node_pid).c_str());
 
             return true;
         }
@@ -339,11 +351,47 @@ namespace BT_SERVER
     return false;
   }
 
+  bool BehaviorTreeServer::pauseTreeCB(const std::shared_ptr<TreeRequestSrv::Request> req, std::shared_ptr<TreeRequestSrv::Response> res)
+  {
+    RCLCPP_INFO(node_->get_logger(), "Pausing tree with UID: '%u' ", req->tree_uid);
+    if(uids_to_tree_info_.find(req->tree_uid) != uids_to_tree_info_.end())
+    {
+        TreeProcessInfo tree_info = uids_to_tree_info_.at(req->tree_uid);
+        rclcpp::Client<TriggerSrv>::SharedPtr service_client = node_->create_client<TriggerSrv>("/"+tree_info.tree_name+ "/pause_tree"); 
+        auto trigger_request = std::make_shared<TriggerSrv::Request>();
+        service_client->async_send_request(trigger_request);
+        RCLCPP_INFO(node_->get_logger(), "Paused tree with UID: '%u' done ", req->tree_uid);
+        return true;
+    }
+    else
+    {
+      RCLCPP_ERROR(node_->get_logger(), "Failed to Pause tree: UID %u does not exist", req->tree_uid);
+    }
+    return false;
+  }
+  bool BehaviorTreeServer::resumeTreeCB(const std::shared_ptr<TreeRequestSrv::Request> req, std::shared_ptr<TreeRequestSrv::Response> res)
+  {
+    RCLCPP_INFO(node_->get_logger(), "Resuming tree with UID: '%u' ", req->tree_uid);
+    if(uids_to_tree_info_.find(req->tree_uid) != uids_to_tree_info_.end())
+    {
+        TreeProcessInfo tree_info = uids_to_tree_info_.at(req->tree_uid);
+        rclcpp::Client<TriggerSrv>::SharedPtr service_client = node_->create_client<TriggerSrv>("/"+tree_info.tree_name+ "/resume_tree"); 
+        auto trigger_request = std::make_shared<TriggerSrv::Request>();
+        service_client->async_send_request(trigger_request);
+        RCLCPP_INFO(node_->get_logger(), "Resumed tree with UID: '%u' done ", req->tree_uid);
+        return true;
+    }
+    else
+    {
+      RCLCPP_ERROR(node_->get_logger(), "Failed to Resume tree: UID %u does not exist", req->tree_uid);
+    }
+    return false;
+  }
+
   bool BehaviorTreeServer::getSyncBBValuesCB (const std::shared_ptr<GetBBValuesSrv::Request> req, std::shared_ptr<GetBBValuesSrv::Response> res)
   {
     RCLCPP_INFO(node_->get_logger(), "getSyncBBValuesCB");
 
-    //auto blackboard_ptr_ = std::static_pointer_cast<BT::Blackboard>(sync_blackboard_ptr_);
     for (auto key : req->keys)
     {
       RCLCPP_INFO(node_->get_logger(), "Sync Key: '%s' ", key.c_str());
@@ -369,8 +417,17 @@ namespace BT_SERVER
   bool BehaviorTreeServer::getTreeStatusCB(const std::shared_ptr<GetTreeStatusSrv::Request> req, std::shared_ptr<GetTreeStatusSrv::Response> res)
   {
     RCLCPP_INFO(node_->get_logger(), "Getting Tree status with UID: '%u' ", req->tree_uid);
-  //Method 2. Get Saved Status updated by ROS topic
-    res->status = uids_to_tree_info_.at(req->tree_uid).tree_status;
+    // Get Saved Status updated by ROS topic
+    if (uids_to_tree_info_.find(req->tree_uid) != uids_to_tree_info_.end())
+    {
+      res->status = uids_to_tree_info_.at(req->tree_uid).tree_status;
+    }
+    else
+    {
+      RCLCPP_ERROR(node_->get_logger(), "Failed to get status tree: UID %u does not exist", req->tree_uid);
+      return false;
+    }
+
     return true;
   }
   
@@ -405,7 +462,6 @@ namespace BT_SERVER
             if(!bbentry_value_inferred_keyvalues)
             {
                 // but will complain if it has a reference to a wrong key
-                
                 RCLCPP_ERROR(node_->get_logger(), "Init. of BB key %s for value %s, value inference did not succeed: %s", 
                     bb_key.c_str(), 
                     bb_val.c_str(),
