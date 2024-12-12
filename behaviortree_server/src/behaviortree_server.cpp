@@ -246,6 +246,7 @@ namespace BT_SERVER
 
   void BehaviorTreeServer::emptySrvCB(rclcpp::Client<std_srvs::srv::Empty>::SharedFuture future)
   {
+      RCLCPP_INFO(node_->get_logger(), "emptySrvCB");
       try {
           auto response = future.get();  // This will block until the response is received
           //RCLCPP_INFO(node_->get_logger(), "Empty Service Responded");
@@ -253,7 +254,16 @@ namespace BT_SERVER
           RCLCPP_ERROR(node_->get_logger(), "Empty Service call failed: %s", e.what());
       }
   }
-
+  void BehaviorTreeServer::triggerSrvCB(rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future)
+  {
+      RCLCPP_INFO(node_->get_logger(), "triggerSrvCB");
+      try {
+          auto response = future.get();  // This will block until the response is received
+          //RCLCPP_INFO(node_->get_logger(), "Empty Service Responded");
+      } catch (const std::exception &e) {
+          RCLCPP_ERROR(node_->get_logger(), "Trigger Service call failed: %s", e.what());
+      }
+  }
 
   bool BehaviorTreeServer::rosServiceStopCall (std::string tree_name)
   {
@@ -357,9 +367,11 @@ namespace BT_SERVER
     if(uids_to_tree_info_.find(req->tree_uid) != uids_to_tree_info_.end())
     {
         TreeProcessInfo tree_info = uids_to_tree_info_.at(req->tree_uid);
-        rclcpp::Client<TriggerSrv>::SharedPtr service_client = node_->create_client<TriggerSrv>("/"+tree_info.tree_name+ "/pause_tree"); 
+        pause_service_client_ = node_->create_client<TriggerSrv>("/"+tree_info.tree_name+ "/pause_tree"); 
         auto trigger_request = std::make_shared<TriggerSrv::Request>();
-        service_client->async_send_request(trigger_request);
+        //service_client->async_send_request(trigger_request);
+        auto future = pause_service_client_->async_send_request(trigger_request, std::bind(&BehaviorTreeServer::triggerSrvCB, this, std::placeholders::_1));
+    
         RCLCPP_INFO(node_->get_logger(), "Paused tree with UID: '%u' done ", req->tree_uid);
         return true;
     }
@@ -375,9 +387,10 @@ namespace BT_SERVER
     if(uids_to_tree_info_.find(req->tree_uid) != uids_to_tree_info_.end())
     {
         TreeProcessInfo tree_info = uids_to_tree_info_.at(req->tree_uid);
-        rclcpp::Client<TriggerSrv>::SharedPtr service_client = node_->create_client<TriggerSrv>("/"+tree_info.tree_name+ "/resume_tree"); 
+        resume_service_client_ = node_->create_client<TriggerSrv>("/"+tree_info.tree_name+ "/resume_tree"); 
         auto trigger_request = std::make_shared<TriggerSrv::Request>();
-        service_client->async_send_request(trigger_request);
+        //service_client->async_send_request(trigger_request);
+        auto future = resume_service_client_->async_send_request(trigger_request, std::bind(&BehaviorTreeServer::triggerSrvCB, this, std::placeholders::_1));
         RCLCPP_INFO(node_->get_logger(), "Resumed tree with UID: '%u' done ", req->tree_uid);
         return true;
     }

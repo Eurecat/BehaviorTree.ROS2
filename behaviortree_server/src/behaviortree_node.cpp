@@ -177,6 +177,8 @@ namespace BT_SERVER
 
   void BehaviorTreeNode::loop()
   {
+    while(rclcpp::ok())
+    {
       // Sleep if no tree running (main and remote)
       if(!tree_wrapper_.isTreeLoaded())
       {
@@ -231,6 +233,7 @@ namespace BT_SERVER
           rclcpp::shutdown();
       }
       rate.sleep();
+    }
   }
 
 
