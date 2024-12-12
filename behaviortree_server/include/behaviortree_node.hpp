@@ -42,6 +42,7 @@ namespace BT_SERVER
       void syncBBUpdateCB(const BBEntry::SharedPtr _topic_msg);
       bool getLoadedPluginsCB(const std::shared_ptr<GetLoadedPluginsSrv::Request> _request, std::shared_ptr<GetLoadedPluginsSrv::Response> _response);
       bool stopTreeCB(const std::shared_ptr<EmptySrv::Request> _request, std::shared_ptr<EmptySrv::Response> _response);
+      bool killTreeCB(const std::shared_ptr<EmptySrv::Request> _request, std::shared_ptr<EmptySrv::Response> _response);
       bool pauseTreeCB(const std::shared_ptr<TriggerSrv::Request> _request, std::shared_ptr<TriggerSrv::Response> _response);
       bool resumeTreeCB(const std::shared_ptr<TriggerSrv::Request> _request, std::shared_ptr<TriggerSrv::Response> _response);
       bool restartTreeCB(const std::shared_ptr<EmptySrv::Request> _request, std::shared_ptr<EmptySrv::Response> _response);
@@ -64,9 +65,10 @@ namespace BT_SERVER
       //Services
       rclcpp::Service<GetLoadedPluginsSrv>::SharedPtr get_loaded_plugins_srv_;
       rclcpp::Service<EmptySrv>::SharedPtr stop_tree_srv_;
+      rclcpp::Service<EmptySrv>::SharedPtr kill_tree_srv_;
+      rclcpp::Service<EmptySrv>::SharedPtr restart_tree_srv_;
       rclcpp::Service<TriggerSrv>::SharedPtr pause_tree_srv_;
       rclcpp::Service<TriggerSrv>::SharedPtr resume_tree_srv_;
-      rclcpp::Service<EmptySrv>::SharedPtr restart_tree_srv_;
       rclcpp::Service<GetTreeStatusSrv>::SharedPtr get_tree_status_srv_;
 
       //Subscribers

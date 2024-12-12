@@ -13,6 +13,7 @@ namespace BT_SERVER
     RCLCPP_INFO(node_->get_logger(),"Creating ROS2 Services, Subscribers and Publishers");
     get_loaded_plugins_srv_ =node->create_service<GetLoadedPluginsSrv>("/"+tree_name_+"/get_loaded_plugins",std::bind(&BehaviorTreeNode::getLoadedPluginsCB,this,_1,_2));
     stop_tree_srv_ = node_->create_service<EmptySrv>("/"+tree_name_+"/stop_tree",std::bind(&BehaviorTreeNode::stopTreeCB,this,_1,_2));
+    kill_tree_srv_ = node_->create_service<EmptySrv>("/"+tree_name_+"/kill_tree",std::bind(&BehaviorTreeNode::killTreeCB,this,_1,_2));
     restart_tree_srv_ = node_->create_service<EmptySrv>("/"+tree_name_+"/restart_tree",std::bind(&BehaviorTreeNode::restartTreeCB,this,_1,_2));
     get_tree_status_srv_ = node_->create_service<GetTreeStatusSrv>("/"+tree_name_+"/status_tree",std::bind(&BehaviorTreeNode::statusTreeCB,this,_1,_2));
 
@@ -182,7 +183,7 @@ namespace BT_SERVER
       // Sleep if no tree running (main and remote)
       if(!tree_wrapper_.isTreeLoaded())
       {
-        RCLCPP_INFO(node_->get_logger(),"TREE NOT LOADED -- ENDING");
+        RCLCPP_INFO(node_->get_logger(),"TREE NOT LOADED -- Killing Node");
         rclcpp::shutdown();
         return;
       }
@@ -229,8 +230,7 @@ namespace BT_SERVER
       }
       else
       {
-          RCLCPP_INFO(node_->get_logger(),"EXEC TERMINATED");
-          rclcpp::shutdown();
+          //RCLCPP_INFO(node_->get_logger(),"EXEC TERMINATED");
       }
       rate.sleep();
     }
@@ -261,7 +261,8 @@ namespace BT_SERVER
     {
         removeTree();
     }
-    return !tree_wrapper_.isTreeLoaded();
+    tree_wrapper_.setExecuted(true);
+    return true;
   }
 
   bool BehaviorTreeNode::stopTreeCB(const std::shared_ptr<EmptySrv::Request> _request, std::shared_ptr<EmptySrv::Response> _response)
@@ -269,11 +270,21 @@ namespace BT_SERVER
     RCLCPP_INFO(node_->get_logger(),"stopTreeCB");
     tree_wrapper_.execution_tree_error_ = "Canceled by stopTree Service";
     tree_wrapper_.updatePublishTreeExecutionStatus(BT::NodeAdvancedStatus::IDLE, false);
-    tree_wrapper_.resetTree();
+
     bool res = stopTree();
     _response = std::make_shared <EmptySrv::Response>();
     return res;
   }
+  bool BehaviorTreeNode::killTreeCB(const std::shared_ptr<EmptySrv::Request> _request, std::shared_ptr<EmptySrv::Response> _response)
+  {
+    RCLCPP_INFO(node_->get_logger(),"killTreeCB");
+    bool res = stopTreeCB(_request,_response);
+    tree_wrapper_.setTreeLoaded (false);
+    tree_wrapper_.execution_tree_error_ = "Canceled by killTree Service";
+    tree_wrapper_.updatePublishTreeExecutionStatus(BT::NodeAdvancedStatus::IDLE, false);
+    return res;
+  }
+
   bool BehaviorTreeNode::pauseTreeCB(const std::shared_ptr<TriggerSrv::Request> _request, std::shared_ptr<TriggerSrv::Response> _response)
   {
     RCLCPP_INFO(node_->get_logger(),"pauseTreeCB");
@@ -392,9 +403,8 @@ int main(int argc, char** argv)
   while(rclcpp::ok())
   {
     rclcpp::spin_some(nh);
-    //bt_node->loop();
   }
-  //executor_thread.join();
+  executor_thread.join();
   RCLCPP_INFO(nh->get_logger(),"END");
   rclcpp::shutdown();
   return 0;

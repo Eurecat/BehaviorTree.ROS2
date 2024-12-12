@@ -2,7 +2,7 @@
   <name>behaviortree_forest_interfaces</name>
   <version>0.0.1</version>
   <description>
-  BehaviorTree Server interfaces, used for behaviorTree Server
+  BehaviorTree Forest interfaces, used in behaviorTree_Forest package
   </description>
 
   <maintainer email="david.calero@eurecat.org">David Calero</maintainer>

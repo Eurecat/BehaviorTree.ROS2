@@ -2,7 +2,7 @@
   <name>behaviortree_forest</name>
   <version>0.0.1</version>
   <description>
-  This package provides the BehaviorTree Forest functionality to Control, monitor and synchronize multiple BehaviorTrees.
+  This package provides the BehaviorTree Forest functionality to Control, monitor and synchronize multiple BehaviorTree nodes.
   </description>
 
   <maintainer email="david.calero@eurecat.org">David Calero</maintainer>

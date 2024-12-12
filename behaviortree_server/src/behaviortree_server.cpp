@@ -265,6 +265,21 @@ namespace BT_SERVER
       }
   }
 
+  bool BehaviorTreeServer::rosServiceKillCall (std::string tree_name)
+  {
+    if (rclcpp::ok())
+    {
+      kill_service_client_ = node_->create_client<EmptySrv>("/"+tree_name+ "/kill_tree"); 
+      if (!kill_service_client_->service_is_ready()) 
+      {
+        RCLCPP_ERROR(node_->get_logger(), "Failed to Kill tree: Service %s does not exist", kill_service_client_->get_service_name());
+        return false;
+      }
+      return handleCallEmptySrv(kill_service_client_);
+    }
+    return true;
+  }
+
   bool BehaviorTreeServer::rosServiceStopCall (std::string tree_name)
   {
     if (rclcpp::ok())
@@ -311,35 +326,34 @@ namespace BT_SERVER
   bool BehaviorTreeServer::killTreeCB(const std::shared_ptr<TreeRequestSrv::Request> req, std::shared_ptr<TreeRequestSrv::Response> res)
   {
     RCLCPP_INFO(node_->get_logger(), "Killing tree with UID: '%u' ", req->tree_uid);
-    if (stopTreeCB(req,res))
+    if(uids_to_tree_info_.find(req->tree_uid) != uids_to_tree_info_.end())
     {
-        RCLCPP_INFO(node_->get_logger(), "Tree with UID: '%u' stopped succesfully", req->tree_uid);
-        if(uids_to_tree_info_.find(req->tree_uid) != uids_to_tree_info_.end())
+        TreeProcessInfo tree_info = uids_to_tree_info_.at(req->tree_uid);
+        if (rosServiceKillCall(tree_info.tree_name))
         {
-            TreeProcessInfo tree_info = uids_to_tree_info_.at(req->tree_uid);
-            //Extract extra PIDs created when executing "ros2 run ..." with fork()
-            pid_t bt_node_pid = ros2_launch_manager_.extract_bt_node_pid_from_python_pid(tree_info.pid);
-            std::string command = "kill -9 "+ std::to_string(bt_node_pid) + " ; " + "kill -9 "+ std::to_string(tree_info.pid);
-            //std::string command2 = "kill -9 "+ std::to_string(bt_node_pid);
+          //Extract extra PIDs created when executing "ros2 run ..." with fork()
+          pid_t bt_node_pid = ros2_launch_manager_.extract_bt_node_pid_from_python_pid(tree_info.pid);
+          std::string command;
+          if (bt_node_pid!=0) 
+            command = "kill -9 "+ std::to_string(bt_node_pid) + " ; " + "kill -9 "+ std::to_string(tree_info.pid);
+          else
+            command = "kill -9 "+ std::to_string(tree_info.pid);
 
-            RCLCPP_INFO(node_->get_logger(), "EXECUTING KILL COMMAND: %s", command.c_str());
-            int result = system(command.c_str());
-            if (result != -1)
-              RCLCPP_INFO(node_->get_logger(), "Succesfully killed processes with PIDs: %s & %s",std::to_string(tree_info.pid).c_str(), std::to_string(bt_node_pid).c_str());
-            else
-              RCLCPP_ERROR(node_->get_logger(), "Failed to kill process with PIDs %s & %s",std::to_string(tree_info.pid).c_str(), std::to_string(bt_node_pid).c_str());
-
-            return true;
-        }
-        else
-        {
-            RCLCPP_ERROR(node_->get_logger(), "Failed to kill process: UID %u does not exist", req->tree_uid);
+          //RCLCPP_INFO(node_->get_logger(), "EXECUTING KILL COMMAND: %s", command.c_str());
+          int resultcmd = system(command.c_str());
+          /*if (resultcmd != -1)
+            RCLCPP_INFO(node_->get_logger(), "Succesfully killed processes with PIDs: %s & %s",std::to_string(tree_info.pid).c_str(), std::to_string(bt_node_pid).c_str());
+          else
+            RCLCPP_ERROR(node_->get_logger(), "Failed to kill process with PIDs %s & %s",std::to_string(tree_info.pid).c_str(), std::to_string(bt_node_pid).c_str());
+          */
+          return true;
         }
     }
     else
     {
-      RCLCPP_ERROR(node_->get_logger(), "Failed to stop tree:");
+        RCLCPP_ERROR(node_->get_logger(), "Failed to kill process: UID %u does not exist", req->tree_uid);
     }
+
     return false;
   }
 
@@ -396,6 +410,7 @@ namespace BT_SERVER
     }
     return false;
   }
+
   bool BehaviorTreeServer::resumeTreeCB(const std::shared_ptr<TreeRequestSrv::Request> req, std::shared_ptr<TreeRequestSrv::Response> res)
   {
     RCLCPP_INFO(node_->get_logger(), "Resuming tree with UID: '%u' ", req->tree_uid);
@@ -460,7 +475,6 @@ namespace BT_SERVER
       RCLCPP_ERROR(node_->get_logger(), "Failed to get status tree: UID %u does not exist", req->tree_uid);
       return false;
     }
-
     return true;
   }
   

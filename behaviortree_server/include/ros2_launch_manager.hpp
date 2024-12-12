@@ -39,7 +39,7 @@ public:
         pid_t bt_node_pid = 0;
         std::string cmd = "ps --ppid " + std::to_string(python_pid) + " -o pid,comm";
         FILE* fp = popen(cmd.c_str(), "r");
-        std::cout << "FROM Python PID: " << std::to_string(python_pid) << " Extracting BT_Node PID with cmd: " << cmd << std::endl;
+        //std::cout << "FROM Python PID: " << std::to_string(python_pid) << " Extracting BT_Node PID with cmd: " << cmd << std::endl;
         if (fp == nullptr) {
             std::cout << "Failed to run command: " << cmd << std::endl;
         }
@@ -51,7 +51,7 @@ public:
                 ps_output += buffer;  // Append each line of output
             }
             fclose(fp);
-            std::cout << "RAW OUTPUT: " << ps_output << std::endl;
+            //std::cout << "RAW OUTPUT: " << ps_output << std::endl;
 
             // Split ps_output into lines
             size_t pos = 0;
@@ -65,7 +65,7 @@ public:
                     }
                     std::string pid_str = line.substr(0, line.find(' ')); // The PID is the first element in the line
                     sscanf(pid_str.c_str(), "%d", &bt_node_pid);  // Parse the PID
-                    std::cout << "Node process PID extracted: " << bt_node_pid << std::endl;
+                    //std::cout << "Node process PID extracted: " << bt_node_pid << std::endl;
 
                     // Option2: Extract the number using stoi
                     /*try {
@@ -93,7 +93,7 @@ public:
             pid_t pid = ::fork();
            // int r = prctl(PR_SET_PDEATHSIG, SIGTERM);
             if (pid == 0) {
-                std::cout << "BT_SERVER: PID == 0" << std::endl;
+                //std::cout << "BT_SERVER: PID == 0" << std::endl;
                 ::setsid();
                 
                 ::signal(SIGINT, SIG_IGN);
@@ -105,7 +105,7 @@ public:
                 ::execlp("ros2", "ros2", "run", args..., nullptr);
             }
             else {
-                std::cout << "BT_SERVER: PID != 0" << std::endl;
+                //std::cout << "BT_SERVER: PID != 0" << std::endl;
                 std::scoped_lock<std::mutex> scoped_lock(m_mutex);
 
                 std::string args_string = std::accumulate(std::next(std::begin(args_vector)), std::end(args_vector), args_vector[0], [](std::string lhs, std::string rhs) -> std::string { return lhs + " " + rhs; });
@@ -117,7 +117,7 @@ public:
             return pid;
         }
         else {
-            throw std::runtime_error("ROSLaunchManager::start - No arguments provided");
+            throw std::runtime_error("ROS2LaunchManager::start - No arguments provided");
         }
     }
 
@@ -132,7 +132,7 @@ public:
             std::cout << "BT_SERVER: Stopping process with PID " << pid << "and signal " << signal << std::endl;
         }
         else {
-            throw std::runtime_error("ROSLaunchManager::stop - PID " + std::to_string(pid) + " not found");
+            throw std::runtime_error("ROS2LaunchManager::stop - PID " + std::to_string(pid) + " not found");
         }
     }
 

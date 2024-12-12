@@ -81,6 +81,7 @@ namespace BT_SERVER
       bool handleCallEmptySrv(rclcpp::Client<EmptySrv>::SharedPtr service_client);
       void emptySrvCB(rclcpp::Client<std_srvs::srv::Empty>::SharedFuture future);
       void triggerSrvCB(rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
+      bool rosServiceKillCall (std::string tree_name);
       bool rosServiceStopCall (std::string tree_name);
       bool rosServiceRestartCall (std::string tree_name);
 
@@ -97,6 +98,7 @@ namespace BT_SERVER
       rclcpp::Service<TreeRequestSrv>::SharedPtr resume_tree_srv_;
 
       //Service Clients
+      rclcpp::Client<EmptySrv>::SharedPtr kill_service_client_;
       rclcpp::Client<EmptySrv>::SharedPtr stop_service_client_;
       rclcpp::Client<EmptySrv>::SharedPtr restart_service_client_;
       rclcpp::Client<TriggerSrv>::SharedPtr  pause_service_client_;

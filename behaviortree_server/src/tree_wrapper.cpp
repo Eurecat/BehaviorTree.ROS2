@@ -29,7 +29,7 @@ namespace BT_SERVER
   void TreeWrapper::removeTree()
   {
      resetTree();
-     is_tree_loaded_ = false;
+     //is_tree_loaded_ = true;
   }
 
   BT::NodeAdvancedStatus TreeWrapper::tickTree()
