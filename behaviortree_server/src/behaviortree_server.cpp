@@ -229,7 +229,7 @@ namespace BT_SERVER
     return true;
   }
 
-  bool BehaviorTreeServer::handleCallEmptySrv(rclcpp::Client<EmptySrv>::SharedPtr service_client, const std::string tree_name, const std::string service_type_name)
+  bool BehaviorTreeServer::handleCallEmptySrv(rclcpp::Client<EmptySrv>::SharedPtr service_client)
   {
     RCLCPP_INFO(node_->get_logger(), "handleCallEmptySrv START");
 
@@ -270,15 +270,25 @@ namespace BT_SERVER
     if (rclcpp::ok())
     {
       stop_service_client_ = node_->create_client<EmptySrv>("/"+tree_name+ "/stop_tree"); 
-      return handleCallEmptySrv(stop_service_client_,tree_name,"STOP TREE");
+      if (!stop_service_client_->service_is_ready()) 
+      {
+        RCLCPP_ERROR(node_->get_logger(), "Failed to Stop tree: Service %s does not exist", stop_service_client_->get_service_name());
+        return false;
+      }
+      return handleCallEmptySrv(stop_service_client_);
     }
     return true;
   }
 
   bool BehaviorTreeServer::rosServiceRestartCall (std::string tree_name)
   {
-    restart_service_client_ = node_->create_client<EmptySrv>("/"+tree_name+ "/restart_tree"); 
-    return handleCallEmptySrv(restart_service_client_,tree_name,"RESTART TREE");
+    restart_service_client_ = node_->create_client<EmptySrv>("/"+tree_name+ "/restart_tree");
+    if (!restart_service_client_->service_is_ready()) 
+    {
+      RCLCPP_ERROR(node_->get_logger(), "Failed to Restart tree: Service %s does not exist", restart_service_client_->get_service_name());
+      return false;
+    }
+    return handleCallEmptySrv(restart_service_client_);
   }
 
   bool BehaviorTreeServer::stopTreeCB(const std::shared_ptr<TreeRequestSrv::Request> req, std::shared_ptr<TreeRequestSrv::Response> res)
@@ -368,6 +378,11 @@ namespace BT_SERVER
     {
         TreeProcessInfo tree_info = uids_to_tree_info_.at(req->tree_uid);
         pause_service_client_ = node_->create_client<TriggerSrv>("/"+tree_info.tree_name+ "/pause_tree"); 
+        if (!pause_service_client_->service_is_ready()) 
+        {
+          RCLCPP_ERROR(node_->get_logger(), "Failed to Pause tree: Service %s does not exist", pause_service_client_->get_service_name());
+          return false;
+        }
         auto trigger_request = std::make_shared<TriggerSrv::Request>();
         //service_client->async_send_request(trigger_request);
         auto future = pause_service_client_->async_send_request(trigger_request, std::bind(&BehaviorTreeServer::triggerSrvCB, this, std::placeholders::_1));
@@ -388,6 +403,11 @@ namespace BT_SERVER
     {
         TreeProcessInfo tree_info = uids_to_tree_info_.at(req->tree_uid);
         resume_service_client_ = node_->create_client<TriggerSrv>("/"+tree_info.tree_name+ "/resume_tree"); 
+        if (!resume_service_client_->service_is_ready()) 
+        {
+          RCLCPP_ERROR(node_->get_logger(), "Failed to Pause tree: Service %s does not exist", resume_service_client_->get_service_name());
+          return false;
+        }
         auto trigger_request = std::make_shared<TriggerSrv::Request>();
         //service_client->async_send_request(trigger_request);
         auto future = resume_service_client_->async_send_request(trigger_request, std::bind(&BehaviorTreeServer::triggerSrvCB, this, std::placeholders::_1));

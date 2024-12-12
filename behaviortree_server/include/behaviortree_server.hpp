@@ -78,7 +78,7 @@ namespace BT_SERVER
       void treeStatusTopicCB(const TreeStatus::SharedPtr msg);
       void syncBBCB(const BBEntry::SharedPtr msg) const;
       void initBB(const std::string& abs_file_path, BT::Blackboard::Ptr blackboard_ptr);
-      bool handleCallEmptySrv(rclcpp::Client<EmptySrv>::SharedPtr service_client,const std::string tree_name, const std::string service_type_name);
+      bool handleCallEmptySrv(rclcpp::Client<EmptySrv>::SharedPtr service_client);
       void emptySrvCB(rclcpp::Client<std_srvs::srv::Empty>::SharedFuture future);
       void triggerSrvCB(rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future);
       bool rosServiceStopCall (std::string tree_name);
