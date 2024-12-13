@@ -93,7 +93,11 @@
         "ranges": "cpp",
         "semaphore": "cpp",
         "stop_token": "cpp",
-        "span": "cpp"
-    }
+        "span": "cpp",
+        "*.txx": "cpp",
+        "filesystem": "cpp"
+    },
+    "cmake.sourceDirectory": "/eut_bt_ros2_ws/src/behaviortree_ros2",
+    "C_Cpp.default.compilerPath": "/usr/bin/g++"
 
 }

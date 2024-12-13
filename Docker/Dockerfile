@@ -45,9 +45,11 @@ RUN mkdir -p /eut_bt_ros2_ws/src
 WORKDIR /eut_bt_ros2_ws/src
 
 # BT.CPP v 4.6.2
+RUN git clone https://github.com/BehaviorTree/BehaviorTree.CPP.git --branch 4.6.2 --single-branch
+
 # REMAP THE v4_pub from EUT gitlab
 # Successor of ros type introspection, ros2 type introspection and ros msg parser (to be tested) 
-RUN git clone https://github.com/facontidavide/rosx_introspection.git
+# RUN git clone https://github.com/facontidavide/rosx_introspection.git
 
 # RUN wget https://s3.us-west-1.amazonaws.com/download.behaviortree.dev/groot2_linux_installer/Groot2-v1.6.1-linux-installer.run 
 #RUN chmod +x Groot2-v1.5.2-linux-installer.run
