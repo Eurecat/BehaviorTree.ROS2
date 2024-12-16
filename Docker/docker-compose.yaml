@@ -11,12 +11,11 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ~/.xauth_docker/share/:/tmp/xauth/
       - ./.vscode:/eut_bt_ros2_ws/.vscode
-      - ../behavior_tree_eut_plugins:/eut_bt_ros2_ws/src/behavior_tree_eut_plugins
       - ../behaviortree_ros2:/eut_bt_ros2_ws/src/behaviortree_ros2
       - ../btcpp_ros2_interfaces:/eut_bt_ros2_ws/src/btcpp_ros2_interfaces
       - ../btcpp_ros2_samples:/eut_bt_ros2_ws/src/btcpp_ros2_samples
-      - ../groot:/eut_bt_ros2_ws/src/groot
-      - ../rosx_introspection:/eut_bt_ros2_ws/src/rosx_introspection
+      - ./depend/behavior_tree_eut_plugins:/eut_bt_ros2_ws/src/behavior_tree_eut_plugins
+      - ./depend/groot:/eut_bt_ros2_ws/src/groot
     tty: true
     stdin_open: true
     environment:
@@ -27,4 +26,4 @@ services:
     devices:
       - /dev/dri:/dev/dri
       - /dev/snd:/dev/snd
-    # command: bash -c "rosdep update && rosdep install -y -r -q --from-paths src --ignore-src --rosdistro humble"
+    # command: bash -c ""

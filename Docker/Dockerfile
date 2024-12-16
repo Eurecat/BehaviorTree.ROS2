@@ -46,6 +46,7 @@ WORKDIR /eut_bt_ros2_ws/src
 
 # BT.CPP v 4.6.2
 RUN git clone https://github.com/BehaviorTree/BehaviorTree.CPP.git --branch 4.6.2 --single-branch
+RUN git clone https://github.com/DavidCalero1/rosx_introspection.git
 
 # REMAP THE v4_pub from EUT gitlab
 # Successor of ros type introspection, ros2 type introspection and ros msg parser (to be tested) 
