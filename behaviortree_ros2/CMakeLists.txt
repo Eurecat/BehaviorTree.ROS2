@@ -9,7 +9,7 @@ set(THIS_PACKAGE_DEPS
     rclcpp_action
     ament_index_cpp
     behaviortree_cpp
-    behavior_tree_eut_plugins
+    behaviortree_eut_plugins
     btcpp_ros2_interfaces
     generate_parameter_library
     rosx_introspection
