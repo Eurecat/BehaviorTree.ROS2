@@ -2,7 +2,7 @@
 #define DESERIALIZATION_POLICIES_HPP
 
 #include "behaviortree_ros2/parser_utils.hpp"
-#include "behaviortree_eut_plugins/eut_utils.h"
+#include "behaviortree_eut_plugins/utils/eut_utils.h"
 
 namespace BT_ROS
 {
@@ -165,7 +165,7 @@ namespace BT_ROS
                         current = &(*current)[key];
                     }
 
-                    auto portValue = BT::getPortValueAsJson(tree_node, port.first, BT::PortDirection::INPUT);
+                    auto portValue = BT::EutUtils::getPortValueAsJson(tree_node, port.first, BT::PortDirection::INPUT);
 
                     // Check if the Expected contains a valid value or an error
                     if (portValue.has_value()) {
