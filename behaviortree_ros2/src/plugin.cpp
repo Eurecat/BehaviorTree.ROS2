@@ -25,6 +25,7 @@
 #include <std_msgs/msg/int8_multi_array.hpp>
 #include "btcpp_ros2_interfaces/action/sleep.hpp"
 #include "btcpp_ros2_interfaces/action/execute_tree.hpp"
+#include "btcpp_ros2_interfaces/msg/custom_msg.hpp"
 
 
 
@@ -71,5 +72,9 @@ BT_REGISTER_ROS_NODES(factory, params)
     factory.registerNodeType<AutomaticSimpleActionClient<btcpp_ros2_interfaces::action::Sleep>>("TestActionSleep",params);
     factory.registerNodeType<AutomaticSimpleActionClient<btcpp_ros2_interfaces::action::ExecuteTree>>("TestExecuteTree",params);
     //TEST
-   // factory.registerNodeType<AutomaticPublisher<std_msgs::msg::Int8MultiArray>>("PublishStdMultiArray",params);
+    factory.registerNodeType<AutomaticPublisher<btcpp_ros2_interfaces::msg::NodeStatus>>("PublishNodeStatus",params);
+    factory.registerNodeType<SmartSerializedSubscriber<btcpp_ros2_interfaces::msg::NodeStatus>>("MonitorNodeStatus",params);
+    factory.registerNodeType<AutomaticPublisher<btcpp_ros2_interfaces::msg::CustomMsg>>("PublishCustomMsg",params);
+    factory.registerNodeType<SmartSerializedSubscriber<btcpp_ros2_interfaces::msg::CustomMsg>>("MonitorCustomMsg",params);
+    factory.registerNodeType<AutomaticPublisher<std_msgs::msg::Int8MultiArray>>("PublishStdMultiArray",params);
 };
