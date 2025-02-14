@@ -8,6 +8,7 @@ bt_action_server:
     plugins:
       - behaviortree_cpp/bt_plugins
       - btcpp_ros2_samples/bt_plugins
+      - behaviortree_ros2/bt_plugins
 
     behavior_trees:
       - btcpp_ros2_samples/behavior_trees
