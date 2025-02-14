@@ -13,6 +13,9 @@
                         <MonitorStdBool topic_name="/asdf" name="D"/>
                         <PublishCustomMsg topic_name="/custom" value="1" name="E"/>
                         <MonitorCustomMsg topic_name="/custom" name="F"/>
+                        <PublishNodeStatus topic_name="/node_status" name="G" status="1"/>
+                        <!-- Deserialization fails with the last one (MonitorNodeStatus)-->
+                        <MonitorNodeStatus topic_name="/node_status" name="H" serialized_output="{output}"/>
                     </Sequence>
                     <AlwaysSuccess/>
                 </Fallback>
