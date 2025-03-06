@@ -13,8 +13,8 @@ namespace BT
         SerializedSubNode(const std::string& name, const NodeConfig& conf, const RosNodeParams& params)
             : RosTopicSubNode<MessageType>(name, conf, params)
         {
-           /* std::cout << "Creating sub for " << BT::demangle(typeid(MessageType)) << " - " << msgName<MessageType>() << " (vs std_msgs/String)\n" << std::flush;*/
-            topic_type_ = msgName<MessageType>();
+           /* std::cout << "Creating sub for " << BT::demangle(typeid(MessageType)) << " - " << BT_ROS::msgName<MessageType>() << " (vs std_msgs/String)\n" << std::flush;*/
+            topic_type_ = BT_ROS::msgName<MessageType>();
         }
         
         static BT::PortsList providedPorts()
@@ -33,12 +33,12 @@ namespace BT
         
         bool latchLastMessage() const override
         {
-            return isLatch_;
+            return consume_msgs_;
         }
         void fetchSubscriberValues()
         {
             this->topic_name_ = this->template getInput<std::string>("topic_name").value_or(this->topic_name_);
-            isLatch_ = this->template getInput<bool>("consume_msgs").value_or(false);
+            consume_msgs_ = this->template getInput<bool>("consume_msgs").value_or(false);
             reinit_ = this->template getInput<bool>("reinit").value_or(false);
         }
         NodeStatus onTick(const std::shared_ptr<MessageType>& last_msg) override
@@ -58,6 +58,10 @@ namespace BT
                 {
                     this->sub_instance_ = nullptr;
                 }
+                if(consume_msgs_)
+                {
+                    this->last_msg_ = nullptr;
+                }
             }
             else
                 return NodeStatus::FAILURE;
@@ -69,7 +73,7 @@ namespace BT
         SerializationPolicy<MessageType> serialization_policy_ {};
         std::string topic_type_;
         std::string prev_topic_name_{""};
-        bool isLatch_{false};
+        bool consume_msgs_{false};
         bool reinit_{false};
     };
 

@@ -11,7 +11,7 @@ namespace BT
             SerializedPubNode(const std::string& name, const NodeConfig& conf, const RosNodeParams& params) 
             : RosTopicPubNode<MessageType>(name, conf, params )
             {
-                topic_type_ = msgName<MessageType>();
+                topic_type_ = BT_ROS::msgName<MessageType>();
             }
             ~SerializedPubNode() = default;
 

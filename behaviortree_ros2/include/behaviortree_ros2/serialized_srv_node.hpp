@@ -34,7 +34,7 @@ namespace BT
             {
                 if(!request_policy_.isParserInit() || this->service_name_ != prev_service_name_req)
                 {
-                    request_policy_.initParser(this->service_name_,msgName<typename ServiceT::Request>());
+                    request_policy_.initParser(this->service_name_,BT_ROS::msgName<typename ServiceT::Request>());
                     prev_service_name_req = this->service_name_;
                 }
                 auto get_request = request_policy_.buildMessage(*this);
@@ -47,7 +47,7 @@ namespace BT
             {
                 if(!response_policy_.isParserInit() || this->service_name_ != prev_service_name_resp)
                 {
-                    response_policy_.initParser(this->service_name_,msgName<typename ServiceT::Response>());
+                    response_policy_.initParser(this->service_name_,BT_ROS::msgName<typename ServiceT::Response>());
                     prev_service_name_resp = this->service_name_;
                 }
                 response_policy_.onNewMessage(response, *this);

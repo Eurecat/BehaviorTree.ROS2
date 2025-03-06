@@ -114,8 +114,8 @@ struct SmartJsonSerialization
         static void additionalPortsMessageSpecific(BT::PortsList& portsList){}
 
         // additional msg & json handling MessageType specific
-        void useMsgBeforeSerialization(const std::shared_ptr<MessageType>& _message, BT::TreeNode& _tree_node){}
-        void processMsgPostSerialization(const std::shared_ptr<MessageType>& _message, nlohmann::json& json, BT::TreeNode& _tree_node){}
+        void useMsgBeforeSerialization(const std::shared_ptr<MessageType> _message, BT::TreeNode& _tree_node){}
+        void processMsgPostSerialization(const std::shared_ptr<MessageType> _message, nlohmann::json& json, BT::TreeNode& _tree_node){}
 
         static BT::PortsList requiredPorts(const std::string& _base_port_name = "output")
         {

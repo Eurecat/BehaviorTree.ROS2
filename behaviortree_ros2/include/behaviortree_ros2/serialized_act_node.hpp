@@ -37,10 +37,12 @@ namespace BT
         {
             if(!goal_policy_.isParserInit() || this->action_name_ != prev_action_name_goal)
             {
-                goal_policy_.initParser(this->action_name_,msgName<typename ActionType::Goal>());
+                goal_policy_.initParser(this->action_name_,BT_ROS::msgName<typename ActionType::Goal>());
                 prev_action_name_goal = this->action_name_;
             }
-            goal = goal_policy_.buildMessage(*this);
+            const RosActionNode<ActionType>* rosactione_ptr = dynamic_cast<const RosActionNode<ActionType>*>(this);
+            const BT::TreeNode* tree_node_ptr = dynamic_cast<const BT::TreeNode*>(rosactione_ptr);
+            goal = goal_policy_.buildMessage(*tree_node_ptr);
             return true;
         }
 
@@ -48,7 +50,7 @@ namespace BT
         {
             if(!feedback_policy_.isParserInit() || this->action_name_ != prev_action_name_feedback)
             {
-                feedback_policy_.initParser(this->action_name_,msgName<typename ActionType::Feedback>());
+                feedback_policy_.initParser(this->action_name_,BT_ROS::msgName<typename ActionType::Feedback>());
                 prev_action_name_feedback = this->action_name_;
             }
             feedback_policy_.onNewMessage(std::const_pointer_cast<typename ActionType::Feedback>(feedback), *this, "feedback");
@@ -61,7 +63,7 @@ namespace BT
                 //RCLCPP_INFO(this->logger(), "Action succeeded with result: %d", result->done);
                 if(!result_policy_.isParserInit() || this->action_name_ != prev_action_name_result)
                 {
-                    result_policy_.initParser(this->action_name_,msgName<typename ActionType::Result>());
+                    result_policy_.initParser(this->action_name_,BT_ROS::msgName<typename ActionType::Result>());
                     prev_action_name_result = this->action_name_;
                 }
                 result_policy_.onNewMessage(result, *this, "result");
