@@ -24,6 +24,8 @@
 #include "behaviortree_ros2/bt_utils.hpp"
 
 #include "behaviortree_cpp/loggers/groot2_publisher.h"
+#include "behaviortree_eut_plugins/loggers/bt_zmq_publisher.h"
+
 
 // generated file
 #include "bt_executor_parameters.hpp"
@@ -187,8 +189,10 @@ void TreeExecutionServer::execute(
     // call user defined function after the tree has been created
     onTreeCreated(p_->tree);
     p_->groot_publisher.reset();
-    p_->groot_publisher =
-        std::make_shared<BT::Groot2Publisher>(p_->tree, p_->params.groot2_port);
+    // p_->groot_publisher =
+    //     std::make_shared<BT::Groot2Publisher>(p_->tree, p_->params.groot2_port);
+    BT::DebuggableTree debugTree{std::shared_ptr<BT::Tree>(&(p_->tree)), true, false};
+    BT::PublisherZMQ publisher(debugTree, p_->params.groot2_port);
 
     // Loop until the tree is done or a cancel is requested
     const auto period =
