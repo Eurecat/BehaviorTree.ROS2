@@ -69,7 +69,7 @@ struct JsonSerialization
         {
           
             if(isMsgEmpty<MessageType>()) { return {}; }
-
+            
             return { BT::OutputPort<nlohmann::json>("serialized_" + _base_port_name, "Serialized ROS message ["
                                                         + BT::demangle(typeid(MessageType)) + "]") };
         }
@@ -105,7 +105,6 @@ struct SmartJsonSerialization
         }
         void initParser( std::string topic_name, std::string topic_type)
         {
-            std::cout << "initParser" << topic_type << "\n" << std::flush;
             parser_ = std::make_shared<RosMsgParser::Parser>(topic_name, RosMsgParser::ROSType(topic_type), RosMsgParser::GetMessageDefinition(topic_type));
             parser_init_ = true;
             topic_type_ = topic_type;

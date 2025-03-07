@@ -134,6 +134,7 @@ void LoadPlugin(BT::BehaviorTreeFactory& factory, const std::filesystem::path& f
 void RegisterPlugins(bt_server::Params& params, BT::BehaviorTreeFactory& factory,
                      rclcpp::Node::SharedPtr node)
 {
+  RCLCPP_DEBUG(node->get_logger(), "Registering plugins");
   BT::RosNodeParams ros_params;
   ros_params.nh = node;
   ros_params.server_timeout = std::chrono::milliseconds(params.ros_plugins_timeout);
@@ -153,6 +154,7 @@ void RegisterPlugins(bt_server::Params& params, BT::BehaviorTreeFactory& factory
     {
       if(entry.path().extension() == ".so")
       {
+        RCLCPP_DEBUG(node->get_logger(), "Loading plugin %s", entry.path().filename().c_str());
         LoadPlugin(factory, entry.path(), ros_params);
       }
     }

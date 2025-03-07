@@ -107,7 +107,6 @@ namespace BT_ROS
                 recursive_gen = [&](const RosMsgParser::ROSMessage& _msg, const std::string _prefix)
                 {
                     using namespace RosMsgParser;
-                    //std::cout << "fieldPorts() for msg type " << BT::demangle(typeid(MessageType)) << " size = " << _msg.fields().size() << "\n" << std::flush;
                     for(const ROSField& field : _msg.fields())
                     {
                         // Skip constant fields

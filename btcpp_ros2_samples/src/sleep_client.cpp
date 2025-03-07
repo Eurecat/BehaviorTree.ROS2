@@ -26,12 +26,10 @@ public:
     std::string msg;
     if(getInput("message", msg))
     {
-      std::cout << "PrintValue: " << msg << std::endl;
       return NodeStatus::SUCCESS;
     }
     else
     {
-      std::cout << "PrintValue FAILED " << std::endl;
       return NodeStatus::FAILURE;
     }
   }

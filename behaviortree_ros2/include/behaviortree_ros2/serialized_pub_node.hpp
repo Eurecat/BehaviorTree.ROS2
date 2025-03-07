@@ -17,7 +17,6 @@ namespace BT
 
             static BT::PortsList providedPorts()
             {
-               // std::cout << "ProvidedPorts in SerializedPubNode for " << BT::demangle(typeid(MessageType)) << "\n" << std::flush;
                 PortsList provided_port_list =  RosTopicPubNode<MessageType>::providedPorts();
 
                 const auto& policy_ports = DeserializationPolicy<MessageType>::requiredPorts();

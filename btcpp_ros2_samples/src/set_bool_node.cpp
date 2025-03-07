@@ -3,13 +3,11 @@
 bool SetBoolService::setRequest(Request::SharedPtr& request)
 {
   getInput("value", request->data);
-  std::cout << "setRequest " << std::endl;
   return true;
 }
 
 BT::NodeStatus SetBoolService::onResponseReceived(const Response::SharedPtr& response)
 {
-  std::cout << "onResponseReceived " << std::endl;
   if(response->success)
   {
     RCLCPP_INFO(logger(), "SetBool service succeeded.");

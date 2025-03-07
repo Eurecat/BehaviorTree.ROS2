@@ -13,7 +13,6 @@ namespace BT
         SerializedSubNode(const std::string& name, const NodeConfig& conf, const RosNodeParams& params)
             : RosTopicSubNode<MessageType>(name, conf, params)
         {
-           /* std::cout << "Creating sub for " << BT::demangle(typeid(MessageType)) << " - " << BT_ROS::msgName<MessageType>() << " (vs std_msgs/String)\n" << std::flush;*/
             topic_type_ = BT_ROS::msgName<MessageType>();
         }
         
