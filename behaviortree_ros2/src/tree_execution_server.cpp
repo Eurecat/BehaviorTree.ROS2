@@ -28,7 +28,7 @@
 
 
 // generated file
-#include "bt_executor_parameters.hpp"
+#include "behaviortree_ros2/bt_executor_parameters.hpp"
 namespace
 {
 static const auto kLogger = rclcpp::get_logger("bt_action_server");
