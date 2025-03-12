@@ -13,7 +13,16 @@ namespace BT
     {
         public:
             SerializedServiceNode(const std::string& _name, const BT::NodeConfig& conf, const BT::RosNodeParams& params) :
-                RosServiceNode<ServiceT>(_name, conf, params){}
+                RosServiceNode<ServiceT>(_name, conf, params)
+                {
+                    
+                    if(this->srv_instance_->service_client && !this->srv_instance_->service_client->service_is_ready())
+                    {
+                        // force re-try connection on the first tick
+                        this->service_name_should_be_checked_ = true;
+                        this->service_name_ = "";
+                    }
+                }
 
             ~SerializedServiceNode(){}
                 

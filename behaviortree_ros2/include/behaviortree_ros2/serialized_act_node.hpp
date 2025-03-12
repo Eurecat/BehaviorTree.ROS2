@@ -13,7 +13,15 @@ namespace BT
     {
     public:
         SerializedActionClientNode(const std::string& _name, const BT::NodeConfig& conf, const RosNodeParams& params) :
-            RosActionNode<ActionType>(_name, conf, params) { }
+            RosActionNode<ActionType>(_name, conf, params) 
+            {
+                if(this->client_instance_->action_client && !this->client_instance_->action_client->action_server_is_ready())
+                {
+                    // force re-try connection on the first tick
+                    this->action_name_should_be_checked_ = true;
+                    this->action_name_ = "";
+                }
+            }
 
         //~SerializedActionClientNode(){ halt();}
 
