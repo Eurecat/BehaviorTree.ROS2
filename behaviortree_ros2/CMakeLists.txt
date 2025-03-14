@@ -91,19 +91,19 @@ install(TARGETS
   )
 
 add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_nodemodels.xml
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/libbt_${PROJECT_NAME}_nodemodels.xml
   COMMAND $<TARGET_FILE:bt_ros_plugins_to_xml> 
           $<TARGET_FILE:${PROJECT_NAME}_nodemodels>
-          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_nodemodels.xml
+          ${CMAKE_CURRENT_BINARY_DIR}/libbt_${PROJECT_NAME}_nodemodels.xml
   DEPENDS bt_ros_plugins_to_xml ${PROJECT_NAME}_nodemodels
   COMMENT "Generating XML file from plugin .so"
 )
 
 add_custom_target(generate_xml ALL
-  DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_nodemodels.xml
+  DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/libbt_${PROJECT_NAME}_nodemodels.xml
 )
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_nodemodels.xml
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libbt_${PROJECT_NAME}_nodemodels.xml
         DESTINATION share/${PROJECT_NAME}/${PLUGINS_FOLDER_PATH})
 
 # Register the plugin description file as a resource
@@ -113,6 +113,15 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/plugins_description.xml
 ament_index_register_resource(
   "behavior_tree_plugin"
   CONTENT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/plugins_description.xml"
+)
+
+# Register the palette description file as a resource
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/palettes_description.xml
+               ${CMAKE_CURRENT_BINARY_DIR}/palettes_description.xml COPYONLY)
+
+ament_index_register_resource(
+  "behavior_tree_palette"
+  CONTENT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/palettes_description.xml"
 )
 
 ament_export_include_directories(include)

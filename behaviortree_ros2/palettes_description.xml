@@ -1,0 +1,5 @@
+<description>
+	<palettes name="behaviortree_ros2_nodemodels"
+	    folder_path="bt_plugins"
+	    description="Behavior Tree ROS2 Eurecat node models" />
+</description>
