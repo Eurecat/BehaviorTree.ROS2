@@ -43,17 +43,25 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 target_link_libraries(${PROJECT_NAME}  bt_executor_parameters)
 
-# Build subscriber_test
-add_library(bt_ros_plugin SHARED src/plugin.cpp)
-target_include_directories(bt_ros_plugin PRIVATE
+# Executable to generate xml from .so plugin for "simple" and ros2 based bt plugins .so
+add_executable(bt_ros_plugins_to_xml         src/tools/bt_ros_plugins_to_xml.cpp )
+include_directories(${behaviortree_cpp_INCLUDE_DIRS} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+ament_target_dependencies(bt_ros_plugins_to_xml behaviortree_cpp rclcpp)
+
+# Build btros2 plugin library
+add_library(${PROJECT_NAME}_nodemodels SHARED src/plugin.cpp)
+target_include_directories(${PROJECT_NAME}_nodemodels PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-target_compile_definitions(bt_ros_plugin PRIVATE  BT_PLUGIN_EXPORT )
-ament_target_dependencies(bt_ros_plugin ${THIS_PACKAGE_DEPS})
+target_compile_definitions(${PROJECT_NAME}_nodemodels PRIVATE  BT_PLUGIN_EXPORT )
+ament_target_dependencies(${PROJECT_NAME}_nodemodels ${THIS_PACKAGE_DEPS})
 
 
 ######################################################
 # INSTALL
+
+install(TARGETS bt_ros_plugins_to_xml
+        DESTINATION lib/${PROJECT_NAME} )
 
 install(DIRECTORY include/  DESTINATION include/)
 
@@ -61,18 +69,51 @@ ament_export_targets(${PROJECT_NAME}Targets  HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_DEPS})
 
 install(
-  TARGETS ${PROJECT_NAME} bt_ros_plugin bt_executor_parameters
+  TARGETS ${PROJECT_NAME} bt_executor_parameters
   EXPORT ${PROJECT_NAME}Targets
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME})
 
+# Recover subfolder path for plugins
+execute_process(
+    COMMAND bash -c "xmllint --xpath 'string(//description/plugins/@folder_path)' plugins_description.xml | awk '{print \$1\}'"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    OUTPUT_VARIABLE PLUGINS_FOLDER_PATH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
 install(TARGETS
-  bt_ros_plugin
-  LIBRARY DESTINATION share/${PROJECT_NAME}/bt_plugins
-  ARCHIVE DESTINATION share/${PROJECT_NAME}/bt_plugins
-  RUNTIME DESTINATION share/${PROJECT_NAME}/bt_plugins
+  ${PROJECT_NAME}_nodemodels
+  LIBRARY DESTINATION share/${PROJECT_NAME}/${PLUGINS_FOLDER_PATH}
+  ARCHIVE DESTINATION share/${PROJECT_NAME}/${PLUGINS_FOLDER_PATH}
+  RUNTIME DESTINATION share/${PROJECT_NAME}/${PLUGINS_FOLDER_PATH}
   )
+
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_nodemodels.xml
+  COMMAND $<TARGET_FILE:bt_ros_plugins_to_xml> 
+          $<TARGET_FILE:${PROJECT_NAME}_nodemodels>
+          ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_nodemodels.xml
+  DEPENDS bt_ros_plugins_to_xml ${PROJECT_NAME}_nodemodels
+  COMMENT "Generating XML file from plugin .so"
+)
+
+add_custom_target(generate_xml ALL
+  DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_nodemodels.xml
+)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}_nodemodels.xml
+        DESTINATION share/${PROJECT_NAME}/${PLUGINS_FOLDER_PATH})
+
+# Register the plugin description file as a resource
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/plugins_description.xml
+               ${CMAKE_CURRENT_BINARY_DIR}/plugins_description.xml COPYONLY)
+
+ament_index_register_resource(
+  "behavior_tree_plugin"
+  CONTENT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/plugins_description.xml"
+)
 
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
