@@ -4,13 +4,16 @@
     <BehaviorTree ID="BehaviorTree">
         <Sequence>
             <SetBlackboard output_key="sync_int" value="2000"/>
+            <SetBlackboard output_key="sync_int2" value="2000"/>
             <Repeat num_cycles="-1">
                 <Fallback>
                     <Sequence>
-                        <Sleep msec="${sync_int}"/>
+                        <Sleep msec="$${sync_int}"/>
                         <SetBlackboard output_key="sync_int" value="10000"/>
-                        <Sleep msec="${sync_int}"/>
+                        <SetBlackboard output_key="sync_int2" value="3000"/>
+                        <Sleep msec="$${sync_int2}"/>
                         <SetBlackboard output_key="sync_int" value="5000"/>
+                        <SetBlackboard output_key="sync_int2" value="1000"/>
                     </Sequence>
                     <AlwaysSuccess/>
                 </Fallback>

@@ -4,10 +4,12 @@
     <BehaviorTree ID="BehaviorTree">
         <Sequence>
             <SetBlackboard output_key="sync_int" value="2000"/>
+            <SetBlackboard output_key="sync_int2" value="2000"/>
             <Repeat num_cycles="-1">
                 <Fallback>
                     <Sequence>
-                        <Sleep msec="${sync_int}"/>
+                        <Sleep msec="$${sync_int}"/>
+                        <Sleep msec="$${sync_int2}"/>
                     </Sequence>
                     <AlwaysSuccess/>
                 </Fallback>
