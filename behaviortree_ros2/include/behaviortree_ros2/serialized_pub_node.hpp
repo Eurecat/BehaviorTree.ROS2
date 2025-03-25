@@ -50,9 +50,9 @@ namespace BT
     };
     //Shortcut alias
     template <class MessageType>
-    using Publisher = SerializedPubNode<MessageType, BT_ROS::NoDeserialization>;
+    using Publisher = SerializedPubNode<MessageType, BT_ROS::NoDeserialization>; //Publish<MessageType>
 
     template <class MessageType>
-    using AutomaticPublisher = SerializedPubNode<MessageType, BT_ROS::AutomaticDeserialization>;
+    using AutoDesPublisher = SerializedPubNode<MessageType, BT_ROS::AutomaticDeserialization>; //PublishAuto<MessageType>
     
 }

@@ -2,6 +2,7 @@
 #define SERIALIZATION_POLICIES_HPP
 
 #include "behaviortree_ros2/parser_utils.hpp"
+#include "behaviortree_eut_plugins/utils/deserialize_json.h"
 
 namespace BT_ROS
 
@@ -52,6 +53,74 @@ struct NoSerialization
         }
         bool isParserInit() {return parser_init_;}
     private:
+        bool parser_init_{false};
+};
+
+template <class MessageType>
+struct AutomaticSerialization
+{
+    public:
+        void initParser( std::string topic_name, std::string topic_type)
+        {
+            parser_ = std::make_shared<RosMsgParser::Parser>(topic_name, RosMsgParser::ROSType(topic_type), RosMsgParser::GetMessageDefinition(topic_type));
+            parser_init_ = true;
+            topic_type_ = topic_type;
+        }
+
+        static BT::PortsList requiredPorts(const std::string& _base_port_name = "")
+        {
+            BT::PortsList ports {};
+            if(isMsgEmpty<MessageType>()) { return ports; }
+            const auto& field_ports = fieldPorts<MessageType>();
+            for(const auto& field_port : field_ports)
+            {
+                // Time and duration defaults to ros::Time::now and zero
+                // TODO should we allow users to set this themselves? If so, how would they
+                // write it? Maybe a custom convertFromString()?
+                const auto type_id = field_port.second.type().typeID();
+                if(type_id == RosMsgParser::TIME ||
+                type_id == RosMsgParser::DURATION) { continue; }
+                
+                std::string port_name = _base_port_name.empty() ? field_port.first : _base_port_name + "_" + field_port.first;
+                const auto& port = getTypedPort(field_port.second,BT::PortDirection::OUTPUT, port_name, std::string { "Auto-generated field from " } + BT::demangle(typeid(MessageType)));
+
+                ports.insert(port);
+            }
+            return ports;
+        }
+
+        
+        void onNewMessage(const std::shared_ptr<MessageType>& _message, BT::TreeNode& _tree_node,
+            const std::string& _base_port_name = "")
+        {
+            if(isMsgEmpty<MessageType>()) { return; }
+
+            std::vector<uint8_t> buffer_in = RosMsgParser::BuildMessageBuffer(*(_message.get()), topic_type_);
+            std::string json_text;
+            RosMsgParser::ROS2_Deserializer deserializer_;
+            parser_->deserializeIntoJson(buffer_in, &json_text, &deserializer_, 0, true);
+            nlohmann::json json_parsed = nlohmann::json::parse(json_text);
+
+            const auto& field_ports = fieldPorts<MessageType>();
+            for(const auto& field_port : field_ports)
+            {
+                // Time and duration defaults to ros::Time::now and zero
+                // TODO should we allow users to set this themselves? If so, how would they
+                // write it? Maybe a custom convertFromString()?
+                const auto type_id = field_port.second.type().typeID();
+                if(type_id == RosMsgParser::TIME ||
+                type_id == RosMsgParser::DURATION) { continue; }
+
+                std::string port_name = _base_port_name.empty() ? field_port.first : _base_port_name + "_" + field_port.first;
+                BT::EutUtils::deserializeField(_tree_node, port_name, json_parsed[field_port.first]);
+            }
+        }
+
+        bool isParserInit() {return parser_init_;}
+ 
+    private:
+        std::string topic_type_;
+        std::shared_ptr<RosMsgParser::Parser> parser_;
         bool parser_init_{false};
 };
 

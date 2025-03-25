@@ -20,7 +20,8 @@ namespace BT_ROS
 
             MessageType buildMessage(const BT::TreeNode& _tree_node)
             {
-                if(isMsgEmpty<MessageType>()) { return {}; }
+                MessageType ros_message {};
+                if(isMsgEmpty<MessageType>()) { return ros_message; }
 
                 const auto& expected_message = _tree_node.getInput<MessageType>("input");
                 if(!expected_message) { throw BT::RuntimeError { _tree_node.name() + ": " + expected_message.error() }; }
@@ -44,7 +45,7 @@ namespace BT_ROS
             {
                 BT::PortsList ports {};
                 if(isMsgEmpty<MessageType>()) { return ports; }
-                const auto& field_ports = fieldPorts();
+                const auto& field_ports = fieldPorts<MessageType>();
                 for(const auto& field_port : field_ports)
                 {
                     // Time and duration defaults to ros::Time::now and zero
@@ -67,7 +68,7 @@ namespace BT_ROS
                 MessageType ros_message {};
                 if(isMsgEmpty<MessageType>()) { return ros_message; }
 
-                const auto& field_ports = fieldPorts();
+                const auto& field_ports = fieldPorts<MessageType>();
               
                 try
                 {
@@ -92,59 +93,8 @@ namespace BT_ROS
                 topic_type_ = topic_type;
             }
             bool isParserInit() {return parser_init_;}
-        private:
-            // Matching between node port name and original ros message field
-            using FieldPort = std::pair<std::string, RosMsgParser::ROSField>;
-            static const std::vector<FieldPort>& fieldPorts()
-            {
-                static std::vector<FieldPort> field_ports;
-
-                if(!field_ports.empty()) { return field_ports; }
-
-                // I had to this recursively with a lambda instead of the same function
-                // to be able to detect if the field_ports_ vector was already initialized
-                std::function<void(const RosMsgParser::ROSMessage&, const std::string&)> recursive_gen;
-                recursive_gen = [&](const RosMsgParser::ROSMessage& _msg, const std::string _prefix)
-                {
-                    using namespace RosMsgParser;
-                    for(const ROSField& field : _msg.fields())
-                    {
-                        // Skip constant fields
-                        if(field.isConstant()) { continue; }
-                        
-                        // If the field is not a built-in type, then find the message definition of that type and
-                        // call this function again recursively to extract its built-in fields
-                         if (!field.type().isBuiltin())
-                            {
-                                auto msg_ptr = msgInfo()->msg_library.at(field.type());
-                                recursive_gen(*msg_ptr, _prefix + field.name() + ".");
-                                continue;
-                            }
-
-                        // Rename "ID" and "name" ports to avoid conflict with keywords. Adding "_" in the front
-                        std::string port_name = ( _prefix.empty() && (field.name() == "ID" || field.name() == "name") ) ? "_" + field.name() :
-                                                                                                                        field.name();
-                        
-                        field_ports.emplace_back(_prefix + port_name, field);
-                    }
-                };
-
-                const auto msg_tree_root = msgInfo()->root_msg;
-                recursive_gen(*msg_tree_root, "");
-
-                return field_ports;
-            }
-
-            static const std::shared_ptr<RosMsgParser::MessageSchema>& msgInfo()
-            { 
-                std::string topic_type = msgName<MessageType>();
-                std::shared_ptr<RosMsgParser::Parser> parser;
-                parser = std::make_shared<RosMsgParser::Parser>("root", RosMsgParser::ROSType(topic_type), RosMsgParser::GetMessageDefinition(topic_type));
-                static const auto msg_info = parser->getSchema();
-                return msg_info;
-            };
-
             
+        private:
             nlohmann::json buildJson(const std::vector<FieldPort>& ports,const BT::TreeNode& tree_node) {
                 nlohmann::json result;
                 for (const auto& port : ports) {

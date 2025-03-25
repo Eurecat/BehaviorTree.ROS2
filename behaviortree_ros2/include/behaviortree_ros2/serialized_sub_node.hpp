@@ -78,14 +78,17 @@ namespace BT
 
     //Shortcut alias
     template <class MessageType>
-    using Subscriber = SerializedSubNode<MessageType, BT_ROS::NoSerialization>;
+    using Subscriber = SerializedSubNode<MessageType, BT_ROS::NoSerialization>; // Monitor<MessageType>
 
     template <class MessageType>
-    using SerializedSubscriber = SerializedSubNode<MessageType, BT_ROS::JsonSerialization>;
+    using AutoSerSubscriber = SerializedSubNode<MessageType, BT_ROS::AutomaticSerialization>; // MonitorAuto<MessageType>
 
     template <class MessageType>
-    using SmartSerializedSubscriber = SerializedSubNode<MessageType, BT_ROS::SmartJsonSerialization>;
+    using JsonSerSubscriber = SerializedSubNode<MessageType, BT_ROS::JsonSerialization>; // MonitorJson<MessageType>
 
     template <class MessageType>
-    using SmartTimeEnabledSerializedSubscriber = SerializedSubNode<MessageType, BT_ROS::SmartTimeEnabledJsonSerialization>;
+    using SmartJsonSerSubscriber = SerializedSubNode<MessageType, BT_ROS::SmartJsonSerialization>; // MonitorSmartJson<MessageType>
+
+    template <class MessageType>
+    using SmartTimeEnabledJsonSerSubscriber = SerializedSubNode<MessageType, BT_ROS::SmartTimeEnabledJsonSerialization>; // MonitorSmartTimeJson<MessageType>
 }

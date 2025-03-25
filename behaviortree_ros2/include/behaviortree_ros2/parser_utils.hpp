@@ -24,7 +24,11 @@ namespace BT_ROS
   template <class MessageType>
   inline bool isMsgEmpty()
   {
-      return RosMsgParser::GetMessageDefinition(msgName<MessageType>()).empty();
+    std::string msgDef = RosMsgParser::GetMessageDefinition(msgName<MessageType>());
+    if (msgDef.empty() || msgDef == "\n") {
+      return true;
+    }
+    return false;
   };
 
   using PortData     = std::pair<std::string, BT::PortInfo>;
@@ -57,6 +61,61 @@ namespace BT_ROS
   {
       return generate_port_map.at(_field.type().typeID())(_port_direction, _port_name, _port_description);
   }
+
+  template <class MessageType>
+  static const std::shared_ptr<RosMsgParser::MessageSchema>& msgInfo()
+  { 
+      std::string topic_type = msgName<MessageType>();
+      std::shared_ptr<RosMsgParser::Parser> parser;
+      parser = std::make_shared<RosMsgParser::Parser>("root", RosMsgParser::ROSType(topic_type), RosMsgParser::GetMessageDefinition(topic_type));
+      static const auto msg_info = parser->getSchema();
+      return msg_info;
+  };
+  
+  using FieldPort = std::pair<std::string, RosMsgParser::ROSField>;
+
+  template <class MessageType>
+  static const std::vector<FieldPort>& fieldPorts()
+  {
+      static std::vector<FieldPort> field_ports;
+
+      if(!field_ports.empty()) { return field_ports; }
+
+      // I had to this recursively with a lambda instead of the same function
+      // to be able to detect if the field_ports_ vector was already initialized
+      std::function<void(const RosMsgParser::ROSMessage&, const std::string&)> recursive_gen;
+      recursive_gen = [&](const RosMsgParser::ROSMessage& _msg, const std::string _prefix)
+      {
+          using namespace RosMsgParser;
+          for(const ROSField& field : _msg.fields())
+          {
+              // Skip constant fields
+              if(field.isConstant()) { continue; }
+              
+              // If the field is not a built-in type, then find the message definition of that type and
+              // call this function again recursively to extract its built-in fields
+              if (!field.type().isBuiltin())
+                  {
+                      auto msg_ptr = msgInfo<MessageType>()->msg_library.at(field.type());
+                      recursive_gen(*msg_ptr, _prefix + field.name() + ".");
+                      continue;
+                  }
+
+              // Rename "ID" and "name" ports to avoid conflict with keywords. Adding "_" in the front
+              std::string port_name = ( _prefix.empty() && (field.name() == "ID" || field.name() == "name") ) ? "_" + field.name() :
+                                                                                                              field.name();
+              
+              field_ports.emplace_back(_prefix + port_name, field);
+          }
+      };
+
+      const auto msg_tree_root = msgInfo<MessageType>()->root_msg;
+      recursive_gen(*msg_tree_root, "");
+
+      return field_ports;
+  }
+
+
 }
 
 #endif

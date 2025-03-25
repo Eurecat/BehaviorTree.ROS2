@@ -1,8 +1,4 @@
-#include "behaviortree_ros2/plugins.hpp"
-#include "behaviortree_ros2/serialized_sub_node.hpp"
-#include "behaviortree_ros2/serialized_pub_node.hpp"
-#include "behaviortree_ros2/serialized_srv_node.hpp"
-#include "behaviortree_ros2/serialized_act_node.hpp"
+#include "behaviortree_ros2/behaviortree_ros2.hpp"
 
 #include <std_msgs/msg/empty.hpp>
 #include <std_msgs/msg/bool.hpp>
@@ -20,6 +16,7 @@
 
 #include <std_srvs/srv/empty.hpp>
 #include <std_srvs/srv/set_bool.hpp>
+#include <std_srvs/srv/trigger.hpp>
 
 //TEST!
 #include <std_msgs/msg/int8_multi_array.hpp>
@@ -35,46 +32,49 @@ using namespace BT;
 BT_REGISTER_ROS_NODES(factory, params)
 {
     //PRIMITIVE SUBSCRIBERS
-    factory.registerNodeType<SmartSerializedSubscriber<std_msgs::msg::Empty>>("MonitorStdEmpty",params);
-    factory.registerNodeType<SmartSerializedSubscriber<std_msgs::msg::Bool>>("MonitorStdBool",params);
-    factory.registerNodeType<SmartSerializedSubscriber<std_msgs::msg::Int8>>("MonitorStdChar",params);
-    factory.registerNodeType<SmartSerializedSubscriber<std_msgs::msg::UInt8>>("MonitorStdUChar",params);
-    factory.registerNodeType<SmartSerializedSubscriber<std_msgs::msg::Int16>>("MonitorStdShort",params);
-    factory.registerNodeType<SmartSerializedSubscriber<std_msgs::msg::UInt16>>("MonitorStdUShort",params);
-    factory.registerNodeType<SmartSerializedSubscriber<std_msgs::msg::Int32>>("MonitorStdInt",params);
-    factory.registerNodeType<SmartSerializedSubscriber<std_msgs::msg::UInt32>>("MonitorStdUInt",params);
-    factory.registerNodeType<SmartSerializedSubscriber<std_msgs::msg::Int64>>("MonitorStdLong",params);
-    factory.registerNodeType<SmartSerializedSubscriber<std_msgs::msg::UInt64>>("MonitorStdULong",params);
-    factory.registerNodeType<SmartSerializedSubscriber<std_msgs::msg::Float32>>("MonitorStdFloat",params);
-    factory.registerNodeType<SmartSerializedSubscriber<std_msgs::msg::Float64>>("MonitorStdDouble",params);
-    factory.registerNodeType<SmartSerializedSubscriber<std_msgs::msg::String>>("MonitorStdString",params);
-
-    //PRIMITIVE PUBLISHERS
-    factory.registerNodeType<AutomaticPublisher<std_msgs::msg::Empty>>("PublishStdEmpty",params);
-    factory.registerNodeType<AutomaticPublisher<std_msgs::msg::Bool>>("PublishStdBool",params);
-    factory.registerNodeType<AutomaticPublisher<std_msgs::msg::Int8>>("PublishStdChar",params);
-    factory.registerNodeType<AutomaticPublisher<std_msgs::msg::UInt8>>("PublishStdUChar",params);
-    factory.registerNodeType<AutomaticPublisher<std_msgs::msg::Int16>>("PublishStdShort",params);
-    factory.registerNodeType<AutomaticPublisher<std_msgs::msg::UInt16>>("PublishStdUShort",params);
-    factory.registerNodeType<AutomaticPublisher<std_msgs::msg::Int32>>("PublishStdInt",params);
-    factory.registerNodeType<AutomaticPublisher<std_msgs::msg::UInt32>>("PublishStdUInt",params);
-    factory.registerNodeType<AutomaticPublisher<std_msgs::msg::Int64>>("PublishStdLong",params);   
-    factory.registerNodeType<AutomaticPublisher<std_msgs::msg::UInt64>>("PublishStdULong",params);
-    factory.registerNodeType<AutomaticPublisher<std_msgs::msg::Float32>>("PublishStdFloat",params);
-    factory.registerNodeType<AutomaticPublisher<std_msgs::msg::Float64>>("PublishStdDouble",params);
-    factory.registerNodeType<AutomaticPublisher<std_msgs::msg::String>>("PublishStdString",params);
-
-    // //PRIMITIVE SERVICES
-    factory.registerNodeType<AutomaticServiceClient<std_srvs::srv::Empty>>("CallEmptyService",params);
-    factory.registerNodeType<AutomaticServiceClient<std_srvs::srv::SetBool>>("CallSetBoolService",params);
+    factory.registerNodeType<AutoSerSubscriber<std_msgs::msg::Empty>>("MonitorAutoStdEmpty",params);
+    factory.registerNodeType<AutoSerSubscriber<std_msgs::msg::Bool>>("MonitorAutoStdBool",params);
+    factory.registerNodeType<AutoSerSubscriber<std_msgs::msg::Int8>>("MonitorAutoStdChar",params);
+    factory.registerNodeType<AutoSerSubscriber<std_msgs::msg::UInt8>>("MonitorAutoStdUChar",params);
+    factory.registerNodeType<AutoSerSubscriber<std_msgs::msg::Int16>>("MonitorAutoStdShort",params);
+    factory.registerNodeType<AutoSerSubscriber<std_msgs::msg::UInt16>>("MonitorAutoStdUShort",params);
+    factory.registerNodeType<AutoSerSubscriber<std_msgs::msg::Int32>>("MonitorAutoStdInt",params);
+    factory.registerNodeType<AutoSerSubscriber<std_msgs::msg::UInt32>>("MonitorAutoStdUInt",params);
+    factory.registerNodeType<AutoSerSubscriber<std_msgs::msg::Int64>>("MonitorAutoStdLong",params);
+    factory.registerNodeType<AutoSerSubscriber<std_msgs::msg::UInt64>>("MonitorAutoStdULong",params);
+    factory.registerNodeType<AutoSerSubscriber<std_msgs::msg::Float32>>("MonitorAutoStdFloat",params);
+    factory.registerNodeType<AutoSerSubscriber<std_msgs::msg::Float64>>("MonitorAutoStdDouble",params);
+    factory.registerNodeType<AutoSerSubscriber<std_msgs::msg::String>>("MonitorAutoStdString",params);
     
-    // //TEST ACTIONS
-    factory.registerNodeType<AutomaticSimpleActionClient<btcpp_ros2_interfaces::action::Sleep>>("TestActionSleep",params);
-    factory.registerNodeType<AutomaticSimpleActionClient<btcpp_ros2_interfaces::action::ExecuteTree>>("TestExecuteTree",params);
+    //PRIMITIVE PUBLISHERS
+    factory.registerNodeType<AutoDesPublisher<std_msgs::msg::Empty>>("PublishAutoStdEmpty",params);
+    factory.registerNodeType<AutoDesPublisher<std_msgs::msg::Bool>>("PublishAutoStdBool",params);
+    factory.registerNodeType<AutoDesPublisher<std_msgs::msg::Int8>>("PublishAutoStdChar",params);
+    factory.registerNodeType<AutoDesPublisher<std_msgs::msg::UInt8>>("PublishAutoStdUChar",params);
+    factory.registerNodeType<AutoDesPublisher<std_msgs::msg::Int16>>("PublishAutoStdShort",params);
+    factory.registerNodeType<AutoDesPublisher<std_msgs::msg::UInt16>>("PublishAutoStdUShort",params);
+    factory.registerNodeType<AutoDesPublisher<std_msgs::msg::Int32>>("PublishAutoStdInt",params);
+    factory.registerNodeType<AutoDesPublisher<std_msgs::msg::UInt32>>("PublishAutoStdUInt",params);
+    factory.registerNodeType<AutoDesPublisher<std_msgs::msg::Int64>>("PublishAutoStdLong",params);   
+    factory.registerNodeType<AutoDesPublisher<std_msgs::msg::UInt64>>("PublishAutoStdULong",params);
+    factory.registerNodeType<AutoDesPublisher<std_msgs::msg::Float32>>("PublishAutoStdFloat",params);
+    factory.registerNodeType<AutoDesPublisher<std_msgs::msg::Float64>>("PublishAutoStdDouble",params);
+    factory.registerNodeType<AutoDesPublisher<std_msgs::msg::String>>("PublishAutoStdString",params);
+
+    //PRIMITIVE SERVICES
+    factory.registerNodeType<AutoDesJsonSerServiceClient<std_srvs::srv::Empty>>("ServiceAutoCallJsonEmpty",params);
+    factory.registerNodeType<AutoDesJsonSerServiceClient<std_srvs::srv::SetBool>>("ServiceAutoCallJsonBool",params);
+    factory.registerNodeType<AutoDesJsonSerServiceClient<std_srvs::srv::Trigger>>("ServiceAutoCallJsonTrigger",params);
+
+    //TEST ACTIONS
+    factory.registerNodeType<AutoDesJsonSerActionClient<btcpp_ros2_interfaces::action::Sleep>>("ActionAutoCallJsonSleep",params);
+    factory.registerNodeType<AutoDesJsonSerActionClient<btcpp_ros2_interfaces::action::ExecuteTree>>("ActionAutoCallJsonExecuteTree",params);
+    
     //TEST
-    factory.registerNodeType<AutomaticPublisher<btcpp_ros2_interfaces::msg::NodeStatus>>("PublishNodeStatus",params);
-    factory.registerNodeType<SmartSerializedSubscriber<btcpp_ros2_interfaces::msg::NodeStatus>>("MonitorNodeStatus",params);
-    factory.registerNodeType<AutomaticPublisher<btcpp_ros2_interfaces::msg::CustomMsg>>("PublishCustomMsg",params);
-    factory.registerNodeType<SmartSerializedSubscriber<btcpp_ros2_interfaces::msg::CustomMsg>>("MonitorCustomMsg",params);
-    factory.registerNodeType<AutomaticPublisher<std_msgs::msg::Int8MultiArray>>("PublishStdMultiArray",params);
+    factory.registerNodeType<AutoDesPublisher<btcpp_ros2_interfaces::msg::NodeStatus>>("PublishNodeStatus",params);
+    factory.registerNodeType<AutoDesPublisher<btcpp_ros2_interfaces::msg::CustomMsg>>("PublishCustomMsg",params);
+    factory.registerNodeType<AutoDesPublisher<std_msgs::msg::Int8MultiArray>>("PublishStdMultiArray",params);
+    factory.registerNodeType<SmartJsonSerSubscriber<btcpp_ros2_interfaces::msg::NodeStatus>>("MonitorSmartJsonNodeStatus",params);
+    factory.registerNodeType<SmartJsonSerSubscriber<btcpp_ros2_interfaces::msg::CustomMsg>>("MonitorSmartJsonCustomMsg",params);
+
 };

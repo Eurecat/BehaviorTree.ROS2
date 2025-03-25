@@ -72,18 +72,21 @@ namespace BT
 
     //Shortcut alias
     template <class ServiceT>
-    using ServiceClient = SerializedServiceNode<ServiceT, BT_ROS::NoDeserialization, BT_ROS::NoSerialization>;
+    using ServiceClient = SerializedServiceNode<ServiceT, BT_ROS::NoDeserialization, BT_ROS::NoSerialization>; // ServiceCall<ServiceT>
 
     template <class ServiceT>
-    using AutomaticRequestServiceClient = SerializedServiceNode<ServiceT, BT_ROS::AutomaticDeserialization, BT_ROS::NoSerialization>;
+    using AutoDesServiceClient = SerializedServiceNode<ServiceT, BT_ROS::AutomaticDeserialization, BT_ROS::NoSerialization>; // ServiceAutoCall<ServiceT>
 
     template <class ServiceT>
-    using SerializedResponseServiceClient = SerializedServiceNode<ServiceT, BT_ROS::NoDeserialization, BT_ROS::JsonSerialization>;
+    using JsonSerServiceClient = SerializedServiceNode<ServiceT, BT_ROS::NoDeserialization, BT_ROS::JsonSerialization>; // ServiceCallJson<ServiceT>
 
     template <class ServiceT>
-    using AutomaticServiceClient = SerializedServiceNode<ServiceT, BT_ROS::AutomaticDeserialization, BT_ROS::JsonSerialization>;
+    using AutoDesJsonSerServiceClient = SerializedServiceNode<ServiceT, BT_ROS::AutomaticDeserialization, BT_ROS::JsonSerialization>; // ServiceAutoCallJson<ServiceT>
 
     template <class ServiceT>
-    using AutomaticSmartServiceClient = SerializedServiceNode<ServiceT, BT_ROS::AutomaticDeserialization, BT_ROS::SmartJsonSerialization>;
+    using AutoDesAutoSerServiceClient = SerializedServiceNode<ServiceT, BT_ROS::AutomaticDeserialization, BT_ROS::AutomaticSerialization>; // ServiceAutoCallAuto<ServiceT>
+
+    template <class ServiceT>
+    using AutoDesSmartJsonSerServiceClient = SerializedServiceNode<ServiceT, BT_ROS::AutomaticDeserialization, BT_ROS::SmartJsonSerialization>; // ServiceAutoCallSmartJson<ServiceT>
 }
 

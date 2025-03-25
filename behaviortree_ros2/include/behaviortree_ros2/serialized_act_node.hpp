@@ -1,6 +1,7 @@
 
 #include "behaviortree_ros2/bt_action_node.hpp"
-
+#include "behaviortree_ros2/serialization_policies.hpp"
+#include "behaviortree_ros2/deserialization_policies.hpp"
 namespace BT
 {
     template <class ActionType,  template <class> class GoalDeserializationPolicy,
@@ -38,6 +39,7 @@ namespace BT
             const auto& feedback_ports = FeedbackSerializationPolicy<typename ActionType::Feedback>::requiredPorts("feedback");
             provided_port_list.insert(feedback_ports.cbegin(), feedback_ports.cend());
 
+            provided_port_list.insert( OutputPort<std::string>("goal_state", "Goal Error State") );
             return provided_port_list;
         }
 
@@ -86,6 +88,8 @@ namespace BT
 
         BT::NodeStatus onFailure(ActionNodeErrorCode error) override
         {
+            std::string error_str(toStr(error));
+            this->setOutput("goal_state", error_str);
             RCLCPP_ERROR(this->logger(), "ACTION %s FAILED with error: %s",this->action_name_.c_str(), toStr(error));
             return BT::NodeStatus::FAILURE;
         }
@@ -107,18 +111,22 @@ namespace BT
 
 //Shortcut alias
 template <class ActionType>
-using SimpleActionClient = SerializedActionClientNode<ActionType, BT_ROS::NoDeserialization,
+using ActionClient = SerializedActionClientNode<ActionType, BT_ROS::NoDeserialization,
                                                               BT_ROS::NoSerialization,
-                                                             BT_ROS::NoSerialization>;
+                                                             BT_ROS::NoSerialization>; // ActionCall<ActionType>
 
 template <class ActionType>
-using AutomaticSimpleActionClient = SerializedActionClientNode<ActionType, BT_ROS::AutomaticDeserialization,
+using AutoDesJsonSerActionClient = SerializedActionClientNode<ActionType, BT_ROS::AutomaticDeserialization,
                                                                        BT_ROS::JsonSerialization,
-                                                                       BT_ROS::JsonSerialization>;
-
+                                                                       BT_ROS::JsonSerialization>; // ActionAutoCallJson<ActionType>
 
 template <class ActionType>
-using AutomaticSmartSimpleActionClient = SerializedActionClientNode<ActionType, BT_ROS::AutomaticDeserialization,
+using AutoDesAutoSerActionClient = SerializedActionClientNode<ActionType, BT_ROS::AutomaticDeserialization,
+                                                                        BT_ROS::AutomaticSerialization,
+                                                                        BT_ROS::AutomaticSerialization>; // ActionAutoCallAuto<ActionType>
+
+template <class ActionType>
+using AutoDesSmartJsonSerActionClient = SerializedActionClientNode<ActionType, BT_ROS::AutomaticDeserialization,
                                                                        BT_ROS::SmartJsonSerialization,
-                                                                       BT_ROS::SmartJsonSerialization>;
+                                                                       BT_ROS::SmartJsonSerialization>; // ActionAutoCallSmartJson<ActionType>
 }
