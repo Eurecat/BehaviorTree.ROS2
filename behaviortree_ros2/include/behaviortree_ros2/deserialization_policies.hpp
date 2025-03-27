@@ -45,7 +45,7 @@ namespace BT_ROS
             {
                 BT::PortsList ports {};
                 if(isMsgEmpty<MessageType>()) { return ports; }
-                const auto& field_ports = fieldPorts<MessageType>();
+                const auto& field_ports = fieldPorts<MessageType>({RosMsgParser::ROSType("builtin_interfaces/Time")});
                 for(const auto& field_port : field_ports)
                 {
                     // Time and duration defaults to ros::Time::now and zero
@@ -68,7 +68,7 @@ namespace BT_ROS
                 MessageType ros_message {};
                 if(isMsgEmpty<MessageType>()) { return ros_message; }
 
-                const auto& field_ports = fieldPorts<MessageType>();
+                const auto& field_ports = fieldPorts<MessageType>({RosMsgParser::ROSType("builtin_interfaces/Time")});
               
                 try
                 {
@@ -114,6 +114,7 @@ namespace BT_ROS
                         current = &(*current)[key];
                     }
 
+                    std::cout << "TORM: getPortValueAsJson " << tree_node.name() << " " << port.first << "\n" << std::flush;
                     auto portValue = BT::EutUtils::getPortValueAsJson(tree_node, port.first, BT::PortDirection::INPUT);
 
                     // Check if the Expected contains a valid value or an error

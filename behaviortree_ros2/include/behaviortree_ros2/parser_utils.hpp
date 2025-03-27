@@ -75,10 +75,10 @@ namespace BT_ROS
   using FieldPort = std::pair<std::string, RosMsgParser::ROSField>;
 
   template <class MessageType>
-  static const std::vector<FieldPort>& fieldPorts()
+  static const std::vector<FieldPort>& fieldPorts(const std::unordered_set<RosMsgParser::ROSType>& ignore_types = {})
   {
       static std::vector<FieldPort> field_ports;
-
+      
       if(!field_ports.empty()) { return field_ports; }
 
       // I had to this recursively with a lambda instead of the same function
@@ -91,6 +91,9 @@ namespace BT_ROS
           {
               // Skip constant fields
               if(field.isConstant()) { continue; }
+
+              // Skip ignore types fields
+              if(ignore_types.count(field.type())) { continue; }
               
               // If the field is not a built-in type, then find the message definition of that type and
               // call this function again recursively to extract its built-in fields

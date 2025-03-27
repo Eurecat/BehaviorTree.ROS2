@@ -71,7 +71,7 @@ struct AutomaticSerialization
         {
             BT::PortsList ports {};
             if(isMsgEmpty<MessageType>()) { return ports; }
-            const auto& field_ports = fieldPorts<MessageType>();
+            const auto& field_ports = fieldPorts<MessageType>({RosMsgParser::ROSType("builtin_interfaces/Time")});
             for(const auto& field_port : field_ports)
             {
                 // Time and duration defaults to ros::Time::now and zero
@@ -101,7 +101,7 @@ struct AutomaticSerialization
             parser_->deserializeIntoJson(buffer_in, &json_text, &deserializer_, 0, true);
             nlohmann::json json_parsed = nlohmann::json::parse(json_text);
 
-            const auto& field_ports = fieldPorts<MessageType>();
+            const auto& field_ports = fieldPorts<MessageType>({RosMsgParser::ROSType("builtin_interfaces/Time")});
             for(const auto& field_port : field_ports)
             {
                 // Time and duration defaults to ros::Time::now and zero
