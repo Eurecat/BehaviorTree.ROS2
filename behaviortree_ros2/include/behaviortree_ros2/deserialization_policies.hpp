@@ -114,7 +114,6 @@ namespace BT_ROS
                         current = &(*current)[key];
                     }
 
-                    std::cout << "TORM: getPortValueAsJson " << tree_node.name() << " " << port.first << "\n" << std::flush;
                     auto portValue = BT::EutUtils::getPortValueAsJson(tree_node, port.first, BT::PortDirection::INPUT);
 
                     // Check if the Expected contains a valid value or an error
