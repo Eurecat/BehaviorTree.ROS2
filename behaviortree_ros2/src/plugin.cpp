@@ -45,6 +45,9 @@ BT_REGISTER_ROS_NODES(factory, params)
     factory.registerNodeType<AutoSerSubscriber<std_msgs::msg::Float32>>("MonitorAutoStdFloat",params);
     factory.registerNodeType<AutoSerSubscriber<std_msgs::msg::Float64>>("MonitorAutoStdDouble",params);
     factory.registerNodeType<AutoSerSubscriber<std_msgs::msg::String>>("MonitorAutoStdString",params);
+
+    // Possible variant of PRIMITIVE SUBSCRIBER WITH JSON Serialization
+    factory.registerNodeType<JsonSerSubscriber<std_msgs::msg::Int32>>("MonitorJsonStdInt",params);
     
     //PRIMITIVE PUBLISHERS
     factory.registerNodeType<AutoDesPublisher<std_msgs::msg::Empty>>("PublishAutoStdEmpty",params);
