@@ -18,6 +18,11 @@ set(THIS_PACKAGE_DEPS
     rosx_introspection
     std_msgs
     std_srvs
+    geometry_msgs
+    angles
+    tf2
+    tf2_geometry_msgs
+    tf2_ros
     )
 
 find_package(ament_cmake REQUIRED)

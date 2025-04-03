@@ -1,5 +1,11 @@
 #include "behaviortree_ros2/behaviortree_ros2.hpp"
 
+#include "behaviortree_ros2/actions/ros_log.hpp"
+#include "behaviortree_ros2/actions/GetTransformAnglesNode.hpp"
+#include "behaviortree_ros2/actions/GetTransformDistanceNode.hpp"
+#include "behaviortree_ros2/actions/GetTransformHorizontalDistance.hpp"
+#include "behaviortree_ros2/actions/LookupTransformNode.hpp"
+
 #include <std_msgs/msg/empty.hpp>
 #include <std_msgs/msg/bool.hpp>
 #include <std_msgs/msg/int8.hpp>
@@ -17,20 +23,31 @@
 #include <std_srvs/srv/empty.hpp>
 #include <std_srvs/srv/set_bool.hpp>
 #include <std_srvs/srv/trigger.hpp>
-
-//TEST!
+   
+//TEST
 #include <std_msgs/msg/int8_multi_array.hpp>
 #include "btcpp_ros2_interfaces/action/sleep.hpp"
 #include "btcpp_ros2_interfaces/action/execute_tree.hpp"
 #include "btcpp_ros2_interfaces/msg/custom_msg.hpp"
 
 
-
 using namespace BT;
-
 
 BT_REGISTER_ROS_NODES(factory, params)
 {
+    //LOGS
+    factory.registerNodeType<DebugLog>("DebugLog");
+    factory.registerNodeType<InfoLog>("InfoLog");
+    factory.registerNodeType<WarnLog>("WarnLog");
+    factory.registerNodeType<ErrorLog>("ErrorLog");
+    factory.registerNodeType<FatalLog>("FatalLog");
+        
+    //TF
+    factory.registerNodeType<LookupTransformNode>("LookupTransform");           
+    factory.registerNodeType<GetTransformDistanceNode>("GetTransformDistance"); 
+    factory.registerNodeType<GetTransformAnglesNode>("GetTransformAngles");
+    factory.registerNodeType<GetTransformHorizontalDistanceNode>("GetTransformHorizontalDistance");
+    
     //PRIMITIVE SUBSCRIBERS
     factory.registerNodeType<AutoSerSubscriber<std_msgs::msg::Empty>>("MonitorAutoStdEmpty",params);
     factory.registerNodeType<AutoSerSubscriber<std_msgs::msg::Bool>>("MonitorAutoStdBool",params);
