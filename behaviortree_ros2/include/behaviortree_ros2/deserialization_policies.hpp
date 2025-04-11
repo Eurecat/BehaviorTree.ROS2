@@ -98,14 +98,16 @@ namespace BT_ROS
             nlohmann::json buildJson(const std::vector<FieldPort>& ports,const BT::TreeNode& tree_node) {
                 nlohmann::json result;
                 for (const auto& port : ports) {
-                    
-                    std::string name = port.first;
+
+                    const std::string& full_field_name = port.first;
+                    std::string rel_field_name = port.first;
                     nlohmann::json* current = &result;
+                    
                     // Split the name by '.'
                     size_t pos = 0;
-                    while ((pos = name.find('.')) != std::string::npos) {
-                        std::string key = name.substr(0, pos);
-                        name = name.substr(pos + 1);
+                    while ((pos = rel_field_name.find('.')) != std::string::npos) {
+                        std::string key = rel_field_name.substr(0, pos);
+                        rel_field_name = rel_field_name.substr(pos + 1);
 
                         // Navigate into the nested structure or create it
                         if (!current->contains(key)) {
@@ -113,17 +115,17 @@ namespace BT_ROS
                         }
                         current = &(*current)[key];
                     }
-
-                    auto portValue = BT::EutUtils::getPortValueAsJson(tree_node, port.first, BT::PortDirection::INPUT);
+                    
+                    auto portValue = BT::EutUtils::getPortValueAsJson(tree_node, full_field_name, BT::PortDirection::INPUT);
 
                     // Check if the Expected contains a valid value or an error
                     if (portValue.has_value()) {
                         // Assign the valid JSON value to the current nested structure
-                        (*current)[name] = portValue.value();
+                        (*current)[rel_field_name] = portValue.value();
                     } else {
                         // Handle the error case - for example, log it or assign a default value
-                        std::cerr << "Error: " << portValue.error() << " for port " << name << std::endl;
-                        (*current)[name] = nullptr;  // You could assign a default value, e.g., null or an empty object
+                        std::cerr << "Error: " << portValue.error() << " for port " << rel_field_name << std::endl;
+                        (*current)[rel_field_name] = nullptr;  // You could assign a default value, e.g., null or an empty object
                     }
                 }
                 return result;

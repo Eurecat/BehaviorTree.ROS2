@@ -98,7 +98,7 @@ struct AutomaticSerialization
             std::vector<uint8_t> buffer_in = RosMsgParser::BuildMessageBuffer(*(_message.get()), topic_type_);
             std::string json_text;
             RosMsgParser::ROS2_Deserializer deserializer_;
-            parser_->deserializeIntoJson(buffer_in, &json_text, &deserializer_, 0, true);
+            parser_->deserializeIntoJson(buffer_in, &json_text, &deserializer_, 0, true, true);
             nlohmann::json json_parsed = nlohmann::json::parse(json_text);
 
             const auto& field_ports = fieldPorts<MessageType>({RosMsgParser::ROSType("builtin_interfaces/Time")});
@@ -151,7 +151,7 @@ struct JsonSerialization
             std::vector<uint8_t> buffer_in = RosMsgParser::BuildMessageBuffer(*(_message.get()), topic_type_);
             std::string json_text;
             RosMsgParser::ROS2_Deserializer deserializer_;
-            parser_->deserializeIntoJson(buffer_in, &json_text, &deserializer_, 0, true);
+            parser_->deserializeIntoJson(buffer_in, &json_text, &deserializer_, 0, true, true);
             nlohmann::json json_parsed = nlohmann::json::parse(json_text);
             _tree_node.setOutput("serialized_" + _base_port_name, json_parsed);
         }
@@ -214,7 +214,7 @@ struct SmartJsonSerialization
             std::vector<uint8_t> buffer_in = RosMsgParser::BuildMessageBuffer(*(_message.get()), topic_type_);
             std::string json_text;
             RosMsgParser::ROS2_Deserializer deserializer_;
-            parser_->deserializeIntoJson(buffer_in, &json_text, &deserializer_, 0, true, ignore_fields);
+            parser_->deserializeIntoJson(buffer_in, &json_text, &deserializer_, 0, true, true, ignore_fields);
             nlohmann::json json_parsed = nlohmann::json::parse(json_text);
 
             processMsgPostSerialization(_message, json_parsed, _tree_node);
