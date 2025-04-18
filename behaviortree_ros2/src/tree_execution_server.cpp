@@ -189,9 +189,10 @@ void TreeExecutionServer::execute(
     // call user defined function after the tree has been created
     onTreeCreated(p_->tree);
     p_->groot_publisher.reset();
-    // p_->groot_publisher =
-    //     std::make_shared<BT::Groot2Publisher>(p_->tree, p_->params.groot2_port);
-    BT::DebuggableTree debugTree{std::shared_ptr<BT::Tree>(&(p_->tree)), true, false};
+
+    // Create shared_ptr to p_->tree without deleting capabilities
+    auto non_deleting_tree_ptr = std::shared_ptr<BT::Tree>(&(p_->tree), [](BT::Tree*){ /* do nothing */ });
+    BT::DebuggableTree debugTree{non_deleting_tree_ptr, true, false};
     BT::PublisherZMQ publisher(debugTree, p_->params.groot2_port);
 
     // Loop until the tree is done or a cancel is requested
