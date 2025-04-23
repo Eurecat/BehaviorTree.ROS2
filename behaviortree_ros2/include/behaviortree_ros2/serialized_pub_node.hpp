@@ -36,8 +36,9 @@ namespace BT
                     }
                     msg = deserialization_policy_.buildMessage(*this);
                 }
-                catch(const std::out_of_range&)
+                catch(const BT::RuntimeError& ex)
                 {
+                    RCLCPP_ERROR(this->node_->get_logger(), "BT::RuntimeError: %s", ex.what());
                     return false;
                 }
                 return true;

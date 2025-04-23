@@ -41,13 +41,22 @@ namespace BT
 
             bool setRequest(typename ServiceT::Request::SharedPtr& request) override
             {
-                if(!request_policy_.isParserInit() || this->service_name_ != prev_service_name_req)
+                try
                 {
-                    request_policy_.initParser(this->service_name_,BT_ROS::msgName<typename ServiceT::Request>());
-                    prev_service_name_req = this->service_name_;
+                    if(!request_policy_.isParserInit() || this->service_name_ != prev_service_name_req)
+                    {
+                        request_policy_.initParser(this->service_name_,BT_ROS::msgName<typename ServiceT::Request>());
+                        prev_service_name_req = this->service_name_;
+                    }
+                    auto get_request = request_policy_.buildMessage(*this);
+                    request = std::make_shared<typename ServiceT::Request>(get_request);
                 }
-                auto get_request = request_policy_.buildMessage(*this);
-                request = std::make_shared<typename ServiceT::Request>(get_request);
+                catch(const BT::RuntimeError& ex)
+                {
+                    if(auto node_ptr = this->node_.lock())
+                        RCLCPP_ERROR(node_ptr->get_logger(), "BT::RuntimeError: %s", ex.what());
+                    return false;
+                }
                 return true;
             }
 

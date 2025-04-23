@@ -45,14 +45,23 @@ namespace BT
 
         bool setGoal(typename ActionType::Goal& goal) override
         {
-            if(!goal_policy_.isParserInit() || this->action_name_ != prev_action_name_goal)
+            try
             {
-                goal_policy_.initParser(this->action_name_,BT_ROS::msgName<typename ActionType::Goal>());
-                prev_action_name_goal = this->action_name_;
+                if(!goal_policy_.isParserInit() || this->action_name_ != prev_action_name_goal)
+                {
+                    goal_policy_.initParser(this->action_name_,BT_ROS::msgName<typename ActionType::Goal>());
+                    prev_action_name_goal = this->action_name_;
+                }
+                const RosActionNode<ActionType>* rosactione_ptr = dynamic_cast<const RosActionNode<ActionType>*>(this);
+                const BT::TreeNode* tree_node_ptr = dynamic_cast<const BT::TreeNode*>(rosactione_ptr);
+                goal = goal_policy_.buildMessage(*tree_node_ptr);
             }
-            const RosActionNode<ActionType>* rosactione_ptr = dynamic_cast<const RosActionNode<ActionType>*>(this);
-            const BT::TreeNode* tree_node_ptr = dynamic_cast<const BT::TreeNode*>(rosactione_ptr);
-            goal = goal_policy_.buildMessage(*tree_node_ptr);
+            catch(const BT::RuntimeError& ex)
+            {
+                if(auto node_ptr = this->node_.lock())
+                    RCLCPP_ERROR(node_ptr->get_logger(), "BT::RuntimeError: %s", ex.what());
+                return false;
+            }
             return true;
         }
 

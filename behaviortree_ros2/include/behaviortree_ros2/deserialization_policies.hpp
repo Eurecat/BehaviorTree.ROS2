@@ -83,6 +83,11 @@ namespace BT_ROS
                                                 + ". Non-builtin types automatic serialization is not supported."
                                                 + " Use a different message creation policy." };
                 }
+                catch(const std::invalid_argument& ex)
+                {
+                    throw BT::RuntimeError { _tree_node.name() + ": Invalid argument serialization while trying to serialize message " + BT::demangle(typeid(MessageType))
+                                                + ": " + ex.what() };
+                }
                 return ros_message;
             }
 
