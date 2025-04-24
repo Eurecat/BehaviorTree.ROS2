@@ -16,7 +16,7 @@ namespace BT
                 RosServiceNode<ServiceT>(_name, conf, params)
                 {
                     
-                    if(this->srv_instance_->service_client && !this->srv_instance_->service_client->service_is_ready())
+                    if(!this->srv_instance_ || (this->srv_instance_->service_client && !this->srv_instance_->service_client->service_is_ready()))
                     {
                         // force re-try connection on the first tick
                         this->service_name_should_be_checked_ = true;
