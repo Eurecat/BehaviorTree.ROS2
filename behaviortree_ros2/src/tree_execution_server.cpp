@@ -186,13 +186,31 @@ void TreeExecutionServer::execute(
     p_->tree_name = goal->target_tree;
     p_->payload = goal->payload;
 
+    bool debug_flag = false;
+    if(!p_->payload.empty())
+    {
+      try
+      {
+        auto json_obj = nlohmann::json::parse(p_->payload);
+        if (json_obj.contains("debug") && json_obj["debug"].is_boolean())
+        {
+          debug_flag = json_obj["debug"];
+        }
+      }
+      catch (const nlohmann::json::parse_error& e)
+      {
+        RCLCPP_DEBUG(kLogger, "JSON parsing error: %s", e.what());
+      }
+      // Handle non-JSON payload case
+    }
+
     // call user defined function after the tree has been created
     onTreeCreated(p_->tree);
     p_->groot_publisher.reset();
 
     // Create shared_ptr to p_->tree without deleting capabilities
     auto non_deleting_tree_ptr = std::shared_ptr<BT::Tree>(&(p_->tree), [](BT::Tree*){ /* do nothing */ });
-    BT::DebuggableTree debugTree{non_deleting_tree_ptr, true, false};
+    BT::DebuggableTree debugTree{non_deleting_tree_ptr, true, debug_flag};
     BT::PublisherZMQ publisher(debugTree, p_->params.groot2_port);
 
     // Loop until the tree is done or a cancel is requested
@@ -217,6 +235,12 @@ void TreeExecutionServer::execute(
       }
       RCLCPP_WARN(kLogger, action_result->return_message.c_str());
     };
+
+    if(debugTree.inDebugMode())
+    {
+      RCLCPP_INFO(kLogger, "Debugging mode enabled for tree %s: you should open Groot monitor mode to launch the tree tick and debug it", 
+                  p_->tree_name.c_str());
+    }
 
     while(rclcpp::ok() && status == BT::NodeStatus::RUNNING)
     {
