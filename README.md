@@ -123,7 +123,7 @@ BT_REGISTER_ROS_NODES(factory, params)
     factory.registerNodeType<SmartSerializedSubscriber<std_msgs::msg::Empty>>("MonitorStdEmpty",params);
     
     //PUBLISHERS
-    factory.registerNodeType<AutomaticPublisher<std_msgs::msg::Empty>>("PublishStdEmpty",params);
+    factory.registerNodeType<AutoDesPublisher<std_msgs::msg::Empty>>("PublishStdEmpty",params);
     
     // SERVICE CLIENTS
     factory.registerNodeType<AutomaticServiceClient<std_srvs::srv::Empty>>("CallEmptyService",params);
