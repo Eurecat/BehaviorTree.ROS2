@@ -2,6 +2,7 @@
 
 # Name of the tree to execute
 string target_tree
+BBEntry[] bb_init
 # Optional, implementation-dependent, payload.
 string payload
 ---

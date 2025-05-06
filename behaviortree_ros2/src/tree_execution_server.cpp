@@ -204,6 +204,12 @@ void TreeExecutionServer::execute(
       // Handle non-JSON payload case
     }
 
+    for(const auto& bb_entry : goal->bb_init)
+    {
+      RCLCPP_INFO(kLogger, "Setting blackboard key \"%s\" to \"%s\"", bb_entry.key.c_str(), bb_entry.value.c_str());
+      root_blackboard->set(bb_entry.key, bb_entry.value);
+    }
+
     // call user defined function after the tree has been created
     onTreeCreated(p_->tree);
     p_->groot_publisher.reset();
