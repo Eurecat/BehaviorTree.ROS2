@@ -242,7 +242,7 @@ void TreeExecutionServer::execute(
       RCLCPP_WARN(kLogger, action_result->return_message.c_str());
     };
 
-    if(debugTree.inDebugMode())
+    if(debug_flag && debugTree.isPaused())
     {
       RCLCPP_INFO(kLogger, "Debugging mode enabled for tree %s: you should open Groot monitor mode to launch the tree tick and debug it", 
                   p_->tree_name.c_str());
