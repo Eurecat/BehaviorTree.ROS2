@@ -67,5 +67,5 @@ RUN echo source /opt/ros/humble/setup.bash >> /root/.bashrc
 RUN echo source /eut_bt_ros2_ws/install/setup.bash >> /root/.bashrc
 RUN echo source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash >> /root/.bashrc
 
-CMD ["cd /eut_bt_ros2_ws"]
- 
+#CMD ["cd /eut_bt_ros2_ws"]
+CMD ["/bin/bash"]
