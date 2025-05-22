@@ -51,4 +51,39 @@ else
     git clone -b humble git@gitlab.local.eurecat.org:robotics-automation/groot.git "$docker_depend_dir/groot"
 fi
 
+
+if [ -d "$docker_depend_dir/behavior_tree_eut_plugins/.git" ]; then
+    echo "Repository behavior_tree_eut_plugins exists. Pulling latest changes..."
+    cd $docker_depend_dir/behavior_tree_eut_plugins
+    git pull
+    cd ..
+else
+    rm -rf $docker_depend_dir/behavior_tree_eut_plugins
+    echo "Repository behavior_tree_eut_plugins does not exist. Cloning..."
+    git clone  git@gitlab.local.eurecat.org:robotics-automation/behavior_tree_eut_plugins.git --branch jazzy
+fi
+
+if [ -d "$docker_depend_dir/rosx_introspection/.git" ]; then
+    echo "Repository rosx_introspection exists. Pulling latest changes..."
+    cd "$docker_depend_dir/rosx_introspection"
+    git pull
+    cd ..
+else
+    rm -rf $docker_depend_dir/rosx_introspection
+    echo "Repository rosx_introspection does not exist. Cloning..."
+    git clone https://github.com/eurecat/rosx_introspection.git
+fi
+
+
+if [ -d "$docker_depend_dir/BehaviorTree.CPP/.git" ]; then
+    echo "Repository BehaviorTree.CPP exists. Pulling latest changes..."
+    cd "$docker_depend_dir/BehaviorTree.CPP"
+    git pull
+    cd ..
+else
+    rm -rf $docker_depend_dir/BehaviorTree.CPP
+    echo "Repository BehaviorTree.CPP does not exist. Cloning..."
+    git clone https://github.com/BehaviorTree/BehaviorTree.CPP.git --branch 4.6.2 --single-branch
+fi
+
 cd $EXEC_DIR

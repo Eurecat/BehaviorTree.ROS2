@@ -1,7 +1,7 @@
 #!/bin/bash
 ROS_DISTRO=jazzy
 
-mkdir deps
+mkdir -p deps
 cd deps
 
 set -e
@@ -9,7 +9,6 @@ set -e
 # Valori di default se le variabili non sono passate
 HOST_UID=${HOST_UID:-1000}
 HOST_GID=${HOST_GID:-1000}
-
 
 if [ -d "behavior_tree_eut_plugins/.git" ]; then
     echo "Repository behavior_tree_eut_plugins exists. Pulling latest changes..."
@@ -22,7 +21,6 @@ else
     echo "Repository behavior_tree_eut_plugins does not exist. Cloning..."
     git clone  git@gitlab.local.eurecat.org:robotics-automation/behavior_tree_eut_plugins.git --branch jazzy
 fi
-
 chown -R $HOST_UID:$HOST_GID behavior_tree_eut_plugins
 
 if [ -d "rosx_introspection/.git" ]; then
@@ -36,7 +34,6 @@ else
     echo "Repository rosx_introspection does not exist. Cloning..."
     git clone https://github.com/eurecat/rosx_introspection.git
 fi
-
 chown -R $HOST_UID:$HOST_GID rosx_introspection
 
 if [ -d "BehaviorTree.CPP/.git" ]; then
@@ -50,9 +47,22 @@ else
     echo "Repository BehaviorTree.CPP does not exist. Cloning..."
     git clone https://github.com/BehaviorTree/BehaviorTree.CPP.git --branch 4.6.2 --single-branch
 fi
-
-
 chown -R $HOST_UID:$HOST_GID BehaviorTree.CPP
+
+
+if [ -d "groot/.git" ]; then
+    echo "Repository groot exists. Pulling latest changes..."
+    chown -R 0:0 groot
+    cd groot
+    git pull
+    cd $OLDPWD
+else
+    rm -rf groot
+    echo "Repository groot does not exist. Cloning..."
+    git clone -b humble git@gitlab.local.eurecat.org:robotics-automation/groot.git 
+fi
+chown -R $HOST_UID:$HOST_GID groot
+
 
 ROS_SETUP="source /opt/ros/${ROS_DISTRO}/setup.bash"
 if ! grep -Fxq "$ROS_SETUP" ~/.bashrc; then
