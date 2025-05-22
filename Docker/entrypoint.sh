@@ -1,7 +1,7 @@
 #!/bin/bash
 ROS_DISTRO=jazzy
 
-# Dont clone "unstable" or frequently chagning repositories in the Dockerfile!
+mkdir deps
 cd deps
 
 set -e
@@ -74,7 +74,9 @@ if ! grep -Fxq "$WORKING_DIR" ~/.bashrc; then
   echo "$WORKING_DIR" >> ~/.bashrc
 fi
 
-cd ../../
+cd ../
+chown -R $HOST_UID:$HOST_GID deps
+cd ../
 
 source /opt/ros/${ROS_DISTRO}/setup.bash
 colcon build --symlink-install
