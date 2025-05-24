@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="bt_examples" exec="bt_executor" output="screen">
+    <param from="$(find-pkg-share bt_examples)/config/executor.yaml"/>
+  </node>
+</launch>

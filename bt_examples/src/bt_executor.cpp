@@ -1,19 +1,6 @@
-// Copyright 2024 Marq Rasmussen
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
-// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-// permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright
-// notice and this permission notice shall be included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
-// WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #include <behaviortree_ros2/tree_execution_server.hpp>
 #include <behaviortree_cpp/loggers/bt_cout_logger.h>
-
+#include "rclcpp/rclcpp.hpp"
 #include <std_msgs/msg/float32.hpp>
 
 // Example that shows how to customize TreeExecutionServer.
@@ -22,10 +9,10 @@
 // - add an extra logger, BT::StdCoutLogger
 // - add a subscriber that will continuously update a variable in the global blackboard
 
-class MyActionServer : public BT::TreeExecutionServer
+class ExampleActionServer : public BT::TreeExecutionServer
 {
 public:
-  MyActionServer(const rclcpp::NodeOptions& options) : TreeExecutionServer(options)
+  ExampleActionServer(const rclcpp::NodeOptions& options) : TreeExecutionServer(options)
   {
     // here we assume that the battery voltage is published as a std_msgs::msg::Float32
     sub_ = node()->create_subscription<std_msgs::msg::Float32>(
@@ -63,7 +50,7 @@ int main(int argc, char* argv[])
   rclcpp::init(argc, argv);
 
   rclcpp::NodeOptions options;
-  auto action_server = std::make_shared<MyActionServer>(options);
+  auto action_server = std::make_shared<ExampleActionServer>(options);
 
   // TODO: This workaround is for a bug in MultiThreadedExecutor where it can deadlock when spinning without a timeout.
   // Deadlock is caused when Publishers or Subscribers are dynamically removed as the node is spinning.

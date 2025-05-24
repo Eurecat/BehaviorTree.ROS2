@@ -1,0 +1,13 @@
+bt_action_server:
+  ros__parameters:
+    action_name: "bt_action_server_example" # Optional (defaults to `bt_action_server`)
+    tick_frequency: 100 # Optional (defaults to 100 Hz)
+    groot2_port: 1667 # Optional (defaults to 1667)
+    ros_plugins_timeout: 10000  # Optional (seconds)
+
+    plugins:
+      - bt_examples/bt_plugins
+
+    behavior_trees:
+      - bt_examples/behavior_trees
+      

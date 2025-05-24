@@ -52,17 +52,6 @@ else
 fi
 
 
-if [ -d "$docker_depend_dir/behavior_tree_eut_plugins/.git" ]; then
-    echo "Repository behavior_tree_eut_plugins exists. Pulling latest changes..."
-    cd $docker_depend_dir/behavior_tree_eut_plugins
-    git pull
-    cd ..
-else
-    rm -rf $docker_depend_dir/behavior_tree_eut_plugins
-    echo "Repository behavior_tree_eut_plugins does not exist. Cloning..."
-    git clone  git@gitlab.local.eurecat.org:robotics-automation/behavior_tree_eut_plugins.git --branch jazzy
-fi
-
 if [ -d "$docker_depend_dir/rosx_introspection/.git" ]; then
     echo "Repository rosx_introspection exists. Pulling latest changes..."
     cd "$docker_depend_dir/rosx_introspection"

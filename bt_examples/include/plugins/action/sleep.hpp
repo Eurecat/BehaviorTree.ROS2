@@ -1,5 +1,12 @@
+#pragma once
+
+#ifndef SLEEP
+#define SLEEP
+
+
 #include "behaviortree_ros2/bt_action_node.hpp"
 #include "btcpp_ros2_interfaces/action/sleep.hpp"
+
 
 using namespace BT;
 
@@ -24,3 +31,5 @@ public:
 
   virtual BT::NodeStatus onFailure(ActionNodeErrorCode error) override;
 };
+
+#endif

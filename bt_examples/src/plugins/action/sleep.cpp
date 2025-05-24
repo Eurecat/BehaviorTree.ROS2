@@ -1,5 +1,6 @@
-#include "sleep_action.hpp"
 #include "behaviortree_ros2/plugins.hpp"
+
+#include "sleep.hpp"
 
 bool SleepAction::setGoal(RosActionNode::Goal& goal)
 {
@@ -29,4 +30,4 @@ void SleepAction::onHalt()
 
 // Plugin registration.
 // The class SleepAction will self register with name  "SleepAction".
-CreateRosNodePlugin(SleepAction, "SleepAction");
+//CreateRosNodePlugin(SleepAction, "SleepAction");
