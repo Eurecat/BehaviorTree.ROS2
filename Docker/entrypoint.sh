@@ -1,10 +1,13 @@
 #!/bin/bash
 ROS_DISTRO=jazzy
 
-mkdir -p deps
-cd deps
 
 set -e
+mkdir -p deps
+
+
+
+cd deps
 
 if [ -d "behavior_tree_eut_plugins/.git" ]; then
     echo "Repository behavior_tree_eut_plugins exists. Pulling latest changes..."

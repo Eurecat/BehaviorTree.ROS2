@@ -1,2 +1,4 @@
-.env
-deps
+.deps/BehaviorTree.CPP
+.deps/behavior_tree_eut_plugins
+.deps/groot
+.deps/rosx_introspection

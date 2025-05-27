@@ -24,14 +24,14 @@ RUN chmod +x /entrypoint.sh
 #RUN useradd -m ubuntu
 #RUN mkdir -p /home/ubuntu/eut_bt_ros2_ws/src
 USER ubuntu
-RUN mkdir -p /home/ubuntu/eut_bt_ros2_ws/src
+RUN mkdir -p /home/ubuntu/eut_bt_ros2_ws/src/deps
 WORKDIR /home/ubuntu/eut_bt_ros2_ws/src
+
 
 # Environment variables
 
 # Set up workspace
 #RUN mkdir -p /eut_bt_ros2_ws/src
-WORKDIR /home/ubuntu/eut_bt_ros2_ws/src
 
 # Dont clone "unstable" or frequently chagning repositories in the Dockerfile!
 
