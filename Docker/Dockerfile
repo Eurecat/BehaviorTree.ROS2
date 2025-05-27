@@ -17,16 +17,25 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install libncurses5-dev libncursesw5-
 #Groot dependencies
 RUN apt-get update && apt-get install qtbase5-dev libqt5svg5-dev libzmq3-dev libdw-dev -y
 
+COPY entrypoint.sh /entrypoint.sh
+# Make sure it is executable
+RUN chmod +x /entrypoint.sh
+
+#RUN useradd -m ubuntu
+#RUN mkdir -p /home/ubuntu/eut_bt_ros2_ws/src
+USER ubuntu
+RUN mkdir -p /home/ubuntu/eut_bt_ros2_ws/src
+WORKDIR /home/ubuntu/eut_bt_ros2_ws/src
+
+# Environment variables
+
 # Set up workspace
-RUN mkdir -p /eut_bt_ros2_ws/src
-WORKDIR /eut_bt_ros2_ws/src
+#RUN mkdir -p /eut_bt_ros2_ws/src
+WORKDIR /home/ubuntu/eut_bt_ros2_ws/src
 
 # Dont clone "unstable" or frequently chagning repositories in the Dockerfile!
 
 
-COPY entrypoint.sh /entrypoint.sh
-# Make sure it is executable
-RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
 
