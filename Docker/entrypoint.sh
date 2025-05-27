@@ -5,8 +5,6 @@ ROS_DISTRO=jazzy
 set -e
 mkdir -p deps
 
-
-
 cd deps
 
 if [ -d "behavior_tree_eut_plugins/.git" ]; then

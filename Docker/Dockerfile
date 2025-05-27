@@ -24,7 +24,7 @@ RUN chmod +x /entrypoint.sh
 #RUN useradd -m ubuntu
 #RUN mkdir -p /home/ubuntu/eut_bt_ros2_ws/src
 USER ubuntu
-RUN mkdir -p /home/ubuntu/eut_bt_ros2_ws/src/deps
+RUN mkdir -p /home/ubuntu/eut_bt_ros2_ws/src
 WORKDIR /home/ubuntu/eut_bt_ros2_ws/src
 
 
