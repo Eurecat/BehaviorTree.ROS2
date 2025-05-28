@@ -3,11 +3,9 @@
     <!-- ////////// -->
     <BehaviorTree ID="ExampleTree1">
         <Sequence>
-            <Repeat num_cycles="50">
-                <Delay delay_msec="1000">
-                    <AlwaysSuccess/>
-                </Delay>
-            </Repeat>
+            <Delay delay_msec="1000">
+                <AlwaysSuccess/>
+            </Delay>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->

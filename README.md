@@ -1,3 +1,46 @@
+
+# behaviortree_ros2
+
+## Scope
+This repository contains a ROS 2 layer for wrapping the functionalities of [BehaviorTree.CPP](https://www.behaviortree.dev/) . In particular, it provides a standard way to implement:
+
+-   Behavior Tree Executor with ROS 2 Action interface
+-   Action clients
+-   Service Clients
+-   Topic Subscribers
+-   Topic Publishers
+
+
+
+
+
+
+## Use behaviortree_ros2
+To use this repository you can rely on [Docker](https://www.docker.com/) framework. In the source you will find convenient Dockerfile to compile the image and the docker-compose to transform the image into a container. 
+
+To install the docker framework, you should install docker on your system: [follow this guide](https://docs.docker.com/engine/install/ubuntu/). 
+
+After docker, use the following commands
+
+	$ git@github.com:Eurecat/behaviortree_ros2.git 
+	$ cd behaviortree_ros2
+	$ ./scripts/install.sh
+
+Now the image is correctly compiled and installed in your system. You can run it with the following one	
+
+	$ ./scripts/compose.sh
+
+This last command will setup your workspace. First, it will download the needed dependencies:
+__TODO__: add deps
+
+
+First example
+
+	$ ros2 launch bt_examples executor.launch.xml 
+	$ ros2 action send_goal /bt_action_server_example btcpp_ros2_interfaces/action/ExecuteTree "{target_tree: ExampleTree1}"
+
+
+
 # BehaviorTree.ROS2
 <!-- [![Test](https://github.com/BehaviorTree/BehaviorTree.ROS2/actions/workflows/test.yml/badge.svg)](https://github.com/BehaviorTree/BehaviorTree.ROS2/actions/workflows/test.yml) -->
 
