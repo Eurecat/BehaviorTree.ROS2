@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [ "code-review" ]
 
+  workflow_dispatch:
+    inputs:
+      example_input:
+        description: 'An example input'
+        required: false
+        default: 'default value'
+
 jobs:
   build:
     runs-on: ubuntu-24.04
