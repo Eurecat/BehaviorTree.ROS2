@@ -2,11 +2,13 @@
 <root BTCPP_format="4" main_tree_to_execute="ExampleTree1">
     <!-- ////////// -->
     <BehaviorTree ID="ExampleTree1">
-        <Sequence>
-            <Delay delay_msec="1000">
-                <AlwaysSuccess/>
-            </Delay>
-        </Sequence>
+        <Repeat num_cycles="100">
+            <Sequence>
+                <Delay delay_msec="1000">
+                    <AlwaysSuccess/>
+                </Delay>
+            </Sequence>
+        </Repeat>
     </BehaviorTree>
     <!-- ////////// -->
     <TreeNodesModel>

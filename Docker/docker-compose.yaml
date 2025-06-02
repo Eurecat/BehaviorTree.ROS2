@@ -15,8 +15,7 @@ services:
       - ./.vscode:/home/ubuntu/eut_bt_ros2_ws/.vscode
       - ../behaviortree_ros2:/home/ubuntu/eut_bt_ros2_ws/src/behaviortree_ros2
       - ../btcpp_ros2_interfaces:/home/ubuntu/eut_bt_ros2_ws/src/btcpp_ros2_interfaces
-      - ../bt_examples:/home/ubuntu/eut_bt_ros2_ws/src/bt_examples
-      #- ../.deps:/home/ubuntu/eut_bt_ros2_ws/src/deps
+      - ../bt_examples:/home/ubuntu/eut_bt_ros2_ws/src/bt_examples      
     tty: true
     stdin_open: true
     environment:

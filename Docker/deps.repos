@@ -1,13 +1,14 @@
 repositories:
   behavior_tree_eut_plugins:
     type: git
-    url: git@gitlab.local.eurecat.org:robotics-automation/behavior_tree_eut_plugins.git
+    url: git@github.com:Eurecat/behaviortree_eut_plugins.git
     version: jazzy
 
   rosx_introspection:
     type: git
     url: https://github.com/eurecat/rosx_introspection.git
-    version: main  # Adjust if needed
+    version: master  # Adjust if needed
+
 
   BehaviorTree.CPP:
     type: git
@@ -16,5 +17,5 @@ repositories:
 
   groot:
     type: git
-    url: git@gitlab.local.eurecat.org:robotics-automation/groot.git
-    version: humble
+    url: git@github.com:haru-project/Groot.git
+    version: jazzy
