@@ -50,7 +50,7 @@ jobs:
       - name: setup the ws
         shell: bash
         run: |
-          echo “source /opt/ros/jazzy/setup.bash” >> ~/.bashrc
+          echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
           source ~/.bashrc          
           cd ros2_ws
           colcon build
