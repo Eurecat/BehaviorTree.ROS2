@@ -19,11 +19,7 @@ jobs:
     container:
       image: osrf/ros:jazzy-desktop-full
       options: --user root  # Needed for installing additional dependencies with apt
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          path: ros2_ws/src/
-
+    steps:      
       - name: Fix ROS 2 apt keys
         run: |
           rm /etc/apt/sources.list.d/ros2-latest.list && rm /usr/share/keyrings/ros2-latest-archive-keyring.gpg
@@ -44,8 +40,9 @@ jobs:
 
       - name: download dependencies
         run: |
-          ls
-          cd ros2_ws/src
+          ls        
+          mkdir -p ~/ros2_ws/src
+          cd ~/ros2_ws/src
           pwd
           git clone https://github.com/eurecat/rosx_introspection.git -b master                    
           git clone https://x-access-token:${{ secrets.GH_PAT }}@github.com/Eurecat/behaviortree_eut_plugins.git -b jazzy
@@ -57,7 +54,7 @@ jobs:
           pwd
           echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
           source ~/.bashrc          
-          cd ..
+          cd ~/ros2_ws
           ls
           colcon build
           source install/setup.bash
