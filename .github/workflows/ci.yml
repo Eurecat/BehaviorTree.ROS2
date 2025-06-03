@@ -38,3 +38,7 @@ jobs:
           echo "35441f3092fd05773a3c397fab38661bec466584c7a1f1c05366579997cb5fe7 /tmp/ros2-apt-source.deb" | sha256sum --strict --check
           apt-get update 
           apt-get install /tmp/ros2-apt-source.deb 
+
+          rm -f /tmp/ros2-apt-source.deb
+          rm -rf /var/lib/apt/lists/*
+          
