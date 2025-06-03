@@ -17,7 +17,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: ros:jazzy
+      image: osrf/ros:jazzy-desktop-full
       options: --user root  # Needed for installing additional dependencies with apt
     steps:
       - uses: actions/checkout@v3
