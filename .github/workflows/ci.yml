@@ -45,7 +45,7 @@ jobs:
       - name: download dependencies
         run: |
           git clone https://github.com/eurecat/rosx_introspection.git -b master                    
-          git clone https://x-access-token:${{ secrets.GH_PAT }}@github.com:Eurecat/behaviortree_eut_plugins.git -b jazzy
+          git clone https://x-access-token:${{ secrets.GH_PAT }}@github.com/Eurecat/behaviortree_eut_plugins.git -b jazzy
           git clone https://github.com/BehaviorTree/BehaviorTree.CPP.git -b 4.6.2
       - name: Install dependencies
         run: |
