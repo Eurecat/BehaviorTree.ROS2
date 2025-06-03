@@ -39,15 +39,23 @@ jobs:
           rm -rf /var/lib/apt/lists/*
 
       - name: download dependencies
-        run: |
-          ls        
+        run: |          
           mkdir -p ~/ros2_ws/src
-          cd ~/ros2_ws/src
-          pwd
+          cd ~/ros2_ws/src          
           git clone https://github.com/eurecat/rosx_introspection.git -b master                    
           git clone https://x-access-token:${{ secrets.GH_PAT }}@github.com/Eurecat/behaviortree_eut_plugins.git -b jazzy
           git clone https://github.com/BehaviorTree/BehaviorTree.CPP.git -b 4.6.2
-          ls
+          apt-get update && sudo apt-get upgrade -y
+          DEBIAN_FRONTEND=noninteractive apt-get install software-properties-common -y
+          DEBIAN_FRONTEND=noninteractive apt-get install ros-dev-tools python3-colcon-common-extensions -y
+          DEBIAN_FRONTEND=noninteractive apt-get install ros-jazzy-angles ros-jazzy-tf2 ros-jazzy-tf2-ros ros-jazzy-tf2-geometry-msgs -y
+          DEBIAN_FRONTEND=noninteractive apt-get install libboost-filesystem1.83-dev -y
+          DEBIAN_FRONTEND=noninteractive apt-get install ros-jazzy-generate-parameter-library -y
+          apt-get install libboost-dev libyaml-dev -y
+          apt-get install terminator -y
+          DEBIAN_FRONTEND=noninteractive apt-get install libzmq3-dev libsqlite3-dev -y
+          DEBIAN_FRONTEND=noninteractive apt-get install libncurses5-dev libncursesw5-dev -y
+          apt-get install qtbase5-dev libqt5svg5-dev libdw-dev -y
       - name: setup the ws
         shell: bash
         run: |
