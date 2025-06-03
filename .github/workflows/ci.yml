@@ -50,6 +50,7 @@ jobs:
 
       - name: Build the workspace
         run: |
+          source /opt/ros/jazzy/setup.bash
           cd ros2_ws
           colcon build
           
