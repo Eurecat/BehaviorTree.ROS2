@@ -48,6 +48,7 @@ jobs:
           git clone https://x-access-token:${{ secrets.GH_PAT }}@github.com/Eurecat/behaviortree_eut_plugins.git -b jazzy
           git clone https://github.com/BehaviorTree/BehaviorTree.CPP.git -b 4.6.2
       - name: setup the ws
+        run: |
           echo “source /opt/ros/jazzy/setup.bash” >> ~/.bashrc
           source ~/.bashrc          
           cd ros2_ws
