@@ -47,6 +47,9 @@ jobs:
           git clone https://github.com/eurecat/rosx_introspection.git -b master                    
           git clone https://x-access-token:${{ secrets.GH_PAT }}@github.com/Eurecat/behaviortree_eut_plugins.git -b jazzy
           git clone https://github.com/BehaviorTree/BehaviorTree.CPP.git -b 4.6.2
+          ls
+          cd ros2_ws
+          ls
       - name: setup the ws
         shell: bash
         run: |
@@ -55,6 +58,11 @@ jobs:
           cd ros2_ws
           colcon build
           source install/setup.bash
+          ls
+          cd src
+          ls
+          cd ros2_ws
+          ls
       - name: Build the workspace
         shell: bash
         run: |
