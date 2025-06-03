@@ -58,8 +58,7 @@ jobs:
       - name: Build the workspace
         shell: bash
         run: |
-          source ~/.bashrc          
-          source install/setup.bash        
-          cd ros2_ws
+          cd ros2_ws          
+          source install/setup.bash                  
           colcon build
           
