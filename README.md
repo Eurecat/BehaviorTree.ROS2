@@ -1,3 +1,5 @@
+[![build](https://github.com/Eurecat/behaviortree_ros2/actions/workflows/build.yml/badge.svg)](https://github.com/Eurecat/behaviortree_ros2/actions/workflows/build.yml)
+
 
 # behaviortree_ros2
 
