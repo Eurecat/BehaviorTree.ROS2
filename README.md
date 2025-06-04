@@ -60,7 +60,6 @@ Our main goals are:
 - to minimize the amount of boilerplate.
 - to make asynchronous Actions non-blocking.
 
-<<<<<<< HEAD
 It uses [behaviortree_eut_plugins](https://ice.eurecat.org/gitlab/robotics-automation/behavior_tree_eut_plugins) for augmenting its original [public version](https://github.com/BehaviorTree/BehaviorTree.ROS2.git) with custom serialization and deserialization policies, providing out of the box json one, essentially adding the following plugins templates to be used with a one-liner:
 
 Plugin Template | Deserialization Policy | Serialization Policy | Extra Pre/Post processing 
@@ -149,9 +148,6 @@ Note that you can specialize some functions for specific MessageType `T` in the 
 # Examples
 
 # Further Documentation
-=======
-# Documentation
->>>>>>> btros2-fork/humble
 
 - [ROS Behavior Wrappers](behaviortree_ros2/ros_behavior_wrappers.md)
 - [TreeExecutionServer](behaviortree_ros2/tree_execution_server.md)
@@ -160,15 +156,9 @@ Note that you can specialize some functions for specific MessageType `T` in the 
 Note that this library is compatible **only** with:
 
 - **BT.CPP** 4.6 or newer.
-<<<<<<< HEAD
 - **ROS2** Humble or Jazzy.
 
 Additionally, check **plugins.hpp** and **plugins.cpp** to see how to learn how to
-=======
-- **ROS2** Humble or newer.
-
-Additionally, check **plugins.hpp** to see how to learn how to
->>>>>>> btros2-fork/humble
 wrap your Nodes into plugins that can be loaded at run-time.
 
 

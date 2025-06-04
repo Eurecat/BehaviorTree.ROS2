@@ -546,7 +546,6 @@ inline void RosActionNode<T>::cancelGoal()
 
   auto& action_client = client_instance_->action_client;
 
-<<<<<<< HEAD
   try
   {
     auto future_result = action_client->async_get_result(goal_handle_);
@@ -572,23 +571,6 @@ inline void RosActionNode<T>::cancelGoal()
   }
   catch(const std::exception& ex) {
     RCLCPP_ERROR(logger(), "Exception while canceling goal: %s", ex.what());
-=======
-  auto future_result = action_client->async_get_result(goal_handle_);
-  auto future_cancel = action_client->async_cancel_goal(goal_handle_);
-
-  constexpr auto SUCCESS = rclcpp::FutureReturnCode::SUCCESS;
-
-  if(executor.spin_until_future_complete(future_cancel, server_timeout_) != SUCCESS)
-  {
-    RCLCPP_ERROR(logger(), "Failed to cancel action server for [%s]",
-                 action_name_.c_str());
-  }
-
-  if(executor.spin_until_future_complete(future_result, server_timeout_) != SUCCESS)
-  {
-    RCLCPP_ERROR(logger(), "Failed to get result call failed :( for [%s]",
-                 action_name_.c_str());
->>>>>>> btros2-fork/humble
   }
 }
 
