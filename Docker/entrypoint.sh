@@ -1,5 +1,5 @@
 #!/bin/bash
-ROS_DISTRO=jazzy
+ROS_DISTRO=humble
 
 
 set -e

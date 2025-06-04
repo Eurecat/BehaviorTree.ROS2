@@ -6,7 +6,7 @@ services:
     network_mode: host 
     #runtime: nvidia
     user: ubuntu
-    image: eut_bt_ros2:jazzy
+    image: eut_bt_ros2:humble
     privileged: true
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw

@@ -1,10 +1,11 @@
-FROM osrf/ros:jazzy-desktop-full
+FROM osrf/ros:humble-desktop-full
 
 
 RUN apt-get update && apt-get upgrade -y
 RUN DEBIAN_FRONTEND=noninteractive apt-get install software-properties-common ros-dev-tools python3-colcon-common-extensions -y 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install ros-${ROS_DISTRO}-angles ros-${ROS_DISTRO}-tf2 ros-${ROS_DISTRO}-tf2-ros ros-${ROS_DISTRO}-tf2-geometry-msgs
-RUN DEBIAN_FRONTEND=noninteractive apt-get install libboost-filesystem1.83-dev
+#RUN DEBIAN_FRONTEND=noninteractive apt-get install libboost-filesystem1.83-dev
+RUN apt install rapidjson-dev
 # BT.ROS2 related deps
 RUN DEBIAN_FRONTEND=noninteractive apt-get install ros-${ROS_DISTRO}-generate-parameter-library -y
 # Boost & yaml-cpp
@@ -22,6 +23,7 @@ COPY deps.repos /deps.repos
 # Make sure it is executable
 RUN chmod +x /entrypoint.sh
 
+RUN useradd -m ubuntu    
 USER ubuntu
 RUN mkdir -p /home/ubuntu/eut_bt_ros2_ws/src
 WORKDIR /home/ubuntu/eut_bt_ros2_ws/src
