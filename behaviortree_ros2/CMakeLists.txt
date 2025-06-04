@@ -4,14 +4,18 @@ project(behaviortree_ros2)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+<<<<<<< HEAD
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_compile_options(-fPIC)
 
+=======
+>>>>>>> btros2-fork/humble
 set(THIS_PACKAGE_DEPS
     rclcpp
     rclcpp_action
     ament_index_cpp
     behaviortree_cpp
+<<<<<<< HEAD
     behaviortree_eut_plugins
     btcpp_ros2_interfaces
     generate_parameter_library
@@ -23,6 +27,10 @@ set(THIS_PACKAGE_DEPS
     tf2
     tf2_geometry_msgs
     tf2_ros
+=======
+    btcpp_ros2_interfaces
+    generate_parameter_library
+>>>>>>> btros2-fork/humble
     )
 
 find_package(ament_cmake REQUIRED)
@@ -31,6 +39,10 @@ foreach(PACKAGE ${THIS_PACKAGE_DEPS})
     find_package(${PACKAGE} REQUIRED )
 endforeach()
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> btros2-fork/humble
 generate_parameter_library(
     bt_executor_parameters
     src/bt_executor_parameters.yaml)
@@ -48,6 +60,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 target_link_libraries(${PROJECT_NAME}  bt_executor_parameters)
 
+<<<<<<< HEAD
 # Executable to generate xml from .so plugin for "simple" and ros2 based bt plugins .so
 add_executable(bt_ros_plugins_to_xml         src/tools/bt_ros_plugins_to_xml.cpp )
 include_directories(${behaviortree_cpp_INCLUDE_DIRS} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -61,13 +74,18 @@ target_include_directories(${PROJECT_NAME}_nodemodels PRIVATE
 target_compile_definitions(${PROJECT_NAME}_nodemodels PRIVATE  BT_PLUGIN_EXPORT )
 ament_target_dependencies(${PROJECT_NAME}_nodemodels ${THIS_PACKAGE_DEPS})
 
+=======
+>>>>>>> btros2-fork/humble
 
 ######################################################
 # INSTALL
 
+<<<<<<< HEAD
 install(TARGETS bt_ros_plugins_to_xml
         DESTINATION lib/${PROJECT_NAME} )
 
+=======
+>>>>>>> btros2-fork/humble
 install(DIRECTORY include/  DESTINATION include/)
 
 ament_export_targets(${PROJECT_NAME}Targets  HAS_LIBRARY_TARGET)
@@ -80,6 +98,7 @@ install(
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME})
 
+<<<<<<< HEAD
 # Recover subfolder path for plugins
 execute_process(
     COMMAND bash -c "xmllint --xpath 'string(//description/plugins/@folder_path)' plugins_description.xml | awk '{print \$1\}'"
@@ -129,6 +148,8 @@ ament_index_register_resource(
   CONTENT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/palettes_description.xml"
 )
 
+=======
+>>>>>>> btros2-fork/humble
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
 

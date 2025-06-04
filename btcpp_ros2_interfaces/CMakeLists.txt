@@ -9,7 +9,10 @@ find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(btcpp_ros2_interfaces
     "msg/NodeStatus.msg"
+<<<<<<< HEAD
     "msg/CustomMsg.msg"
+=======
+>>>>>>> btros2-fork/humble
     "action/ExecuteTree.action"
     "action/Sleep.action")
 
