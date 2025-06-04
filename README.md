@@ -1,4 +1,3 @@
-Humble
 [![build](https://github.com/Eurecat/BehaviorTree.ROS2/actions/workflows/build.yml/badge.svg)](https://github.com/Eurecat/BehaviorTree.ROS2/actions/workflows/build.yml)
 
 # behaviortree_ros2
