@@ -1,5 +1,4 @@
-[![build](https://github.com/Eurecat/behaviortree_ros2/actions/workflows/build.yml/badge.svg)](https://github.com/Eurecat/behaviortree_ros2/actions/workflows/build.yml)
-
+[![build](https://github.com/Eurecat/BehaviorTree.ROS2/actions/workflows/build.yml/badge.svg)](https://github.com/Eurecat/BehaviorTree.ROS2/actions/workflows/build.yml) - Humble
 
 # behaviortree_ros2
 
