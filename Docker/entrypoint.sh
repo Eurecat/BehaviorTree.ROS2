@@ -8,6 +8,7 @@ mkdir -p deps
 cd deps
 
 vcs import . < /deps.repos
+vcs pull .
 
 ROS_SETUP="source /opt/ros/${ROS_DISTRO}/setup.bash"
 if ! grep -Fxq "$ROS_SETUP" ~/.bashrc; then
