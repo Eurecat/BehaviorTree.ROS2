@@ -2,9 +2,9 @@ name: build
 
 on: 
   push:
-    branches: [ "jazzy" ]
+    branches: [ "humble" ]
   pull_request:
-    branches: [ "jazzy" ]
+    branches: [ "humble" ]
 
   workflow_dispatch:
     inputs:
@@ -17,7 +17,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: osrf/ros:jazzy-desktop-full
+      image: osrf/ros:humble-desktop-full
       options: --user root  # Needed for installing additional dependencies with apt
     steps:      
       - name: Fix ROS 2 apt keys
@@ -48,9 +48,9 @@ jobs:
           apt-get update && sudo apt-get upgrade -y
           DEBIAN_FRONTEND=noninteractive apt-get install software-properties-common -y
           DEBIAN_FRONTEND=noninteractive apt-get install ros-dev-tools python3-colcon-common-extensions -y
-          DEBIAN_FRONTEND=noninteractive apt-get install ros-jazzy-angles ros-jazzy-tf2 ros-jazzy-tf2-ros ros-jazzy-tf2-geometry-msgs -y
+          DEBIAN_FRONTEND=noninteractive apt-get install ros-humble-angles ros-humble-tf2 ros-humble-tf2-ros ros-humble-tf2-geometry-msgs -y
           DEBIAN_FRONTEND=noninteractive apt-get install libboost-filesystem1.83-dev -y
-          DEBIAN_FRONTEND=noninteractive apt-get install ros-jazzy-generate-parameter-library -y
+          DEBIAN_FRONTEND=noninteractive apt-get install ros-humble-generate-parameter-library -y
           apt-get install libboost-dev libyaml-dev -y
           apt-get install terminator -y
           DEBIAN_FRONTEND=noninteractive apt-get install libzmq3-dev libsqlite3-dev -y
@@ -60,7 +60,7 @@ jobs:
         shell: bash
         run: |
           pwd
-          echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
+          echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
           source ~/.bashrc          
           cd ~/ros2_ws
           ls
@@ -72,7 +72,7 @@ jobs:
         shell: bash
         run: |    
           cd ~/ros2_ws/src
-          git clone https://x-access-token:${{ secrets.GH_PAT }}@github.com/Eurecat/behaviortree_ros2.git -b jazzy
+          git clone https://x-access-token:${{ secrets.GH_PAT }}@github.com/Eurecat/behaviortree_ros2.git -b humble
           
           cd ~/ros2_ws
           source ~/ros2_ws/install/setup.bash                  
