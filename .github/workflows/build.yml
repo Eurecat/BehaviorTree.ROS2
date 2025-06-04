@@ -50,6 +50,7 @@ jobs:
           DEBIAN_FRONTEND=noninteractive apt-get install ros-dev-tools python3-colcon-common-extensions -y
           DEBIAN_FRONTEND=noninteractive apt-get install ros-humble-angles ros-humble-tf2 ros-humble-tf2-ros ros-humble-tf2-geometry-msgs -y
           apt install rapidjson-dev
+          apt-get update
           apt-get install ros-humble-generate-parameter-library -y
           
           apt-get install libboost-dev libyaml-dev -y
