@@ -1,1 +1,1 @@
-docker exec -it eut_bt_ros2  bash
+docker exec -it --user user eut_bt_ros2  bash

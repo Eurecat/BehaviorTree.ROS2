@@ -5,17 +5,19 @@ services:
     container_name: "eut_bt_ros2"
     network_mode: host 
     #runtime: nvidia
-    user: ubuntu
+    #user: ubuntu
+    user: root
     image: eut_bt_ros2:jazzy
     privileged: true
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ~/.ssh:/home/ubuntu/.ssh:ro
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ~/.ssh:/home/user/.ssh
+      - ~/.ssh:/home/user/.ssh
       - ~/.xauth_docker/share/:/tmp/xauth/
-      - ./.vscode:/home/ubuntu/eut_bt_ros2_ws/.vscode
-      - ../behaviortree_ros2:/home/ubuntu/eut_bt_ros2_ws/src/behaviortree_ros2
-      - ../btcpp_ros2_interfaces:/home/ubuntu/eut_bt_ros2_ws/src/btcpp_ros2_interfaces
-      - ../bt_examples:/home/ubuntu/eut_bt_ros2_ws/src/bt_examples      
+      - ./.vscode:/home/user/eut_bt_ros2_ws/.vscode
+      - ../behaviortree_ros2:/home/user/eut_bt_ros2_ws/src/behaviortree_ros2
+      - ../btcpp_ros2_interfaces:/home/user/eut_bt_ros2_ws/src/btcpp_ros2_interfaces
+      - ../bt_examples:/home/user/eut_bt_ros2_ws/src/bt_examples      
     tty: true
     stdin_open: true
     environment:
@@ -23,6 +25,9 @@ services:
       - DISPLAY=$DISPLAY
       - QT_X11_NO_MITSHM=1
       - XAUTHORITY=/tmp/xauth/.docker.xauth   
+      - UID=${UID}
+      - GID=${GID}
+      - UNAME=${NAME}
     devices:
       - /dev/dri:/dev/dri
       - /dev/snd:/dev/snd
