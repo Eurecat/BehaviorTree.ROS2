@@ -53,6 +53,11 @@ add_executable(bt_ros_plugins_to_xml         src/tools/bt_ros_plugins_to_xml.cpp
 include_directories(${behaviortree_cpp_INCLUDE_DIRS} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 ament_target_dependencies(bt_ros_plugins_to_xml behaviortree_cpp rclcpp)
 
+
+add_executable(tree_execution_client src/tools/client/tree_execution_client.cpp)
+ament_target_dependencies(tree_execution_client ${THIS_PACKAGE_DEPS})
+ament_target_dependencies(tree_execution_client behaviortree_cpp rclcpp)
+
 # Build btros2 plugin library
 add_library(${PROJECT_NAME}_nodemodels SHARED src/plugin.cpp)
 target_include_directories(${PROJECT_NAME}_nodemodels PRIVATE
@@ -67,6 +72,11 @@ ament_target_dependencies(${PROJECT_NAME}_nodemodels ${THIS_PACKAGE_DEPS})
 
 install(TARGETS bt_ros_plugins_to_xml
         DESTINATION lib/${PROJECT_NAME} )
+
+install(TARGETS tree_execution_client
+        DESTINATION lib/${PROJECT_NAME} )
+
+
 
 install(DIRECTORY include/  DESTINATION include/)
 
