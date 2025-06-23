@@ -2,7 +2,7 @@
 <root BTCPP_format="4" main_tree_to_execute="ExampleTree1">
     <!-- ////////// -->
     <BehaviorTree ID="ExampleTree1">
-        <Repeat num_cycles="100">
+        <Repeat num_cycles="10">
             <Sequence>
                 <Delay delay_msec="1000">
                     <AlwaysSuccess/>
