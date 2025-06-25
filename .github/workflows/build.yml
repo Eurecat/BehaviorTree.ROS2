@@ -77,8 +77,8 @@ jobs:
           cd ~/ros2_ws
           source ~/ros2_ws/install/setup.bash                  
           colcon build --symlink-install
-          colcon test --packages-select behaviortree_ros2
-          colcon test-result --verbose 
+          colcon test --packages-select behaviortree_ros2 --event-handlers console_direct+
+          colcon test-result --verbose  
 
 
 
