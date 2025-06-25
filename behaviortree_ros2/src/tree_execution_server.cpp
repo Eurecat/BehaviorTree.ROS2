@@ -134,7 +134,7 @@ TreeExecutionServer::handle_goal(const rclcpp_action::GoalUUID& /* uuid */,
   if(!onGoalReceived(goal->target_tree, goal->payload))
   {
     return rclcpp_action::GoalResponse::REJECT;
-  }
+  } // is this function useful? 
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
 
@@ -178,13 +178,23 @@ void TreeExecutionServer::execute(
 
   // This blackboard will be owned by "MainTree". It parent is p_->global_blackboard
   auto root_blackboard = BT::Blackboard::create(p_->global_blackboard);
-
-  p_->tree = p_->factory.createTree(goal->target_tree, root_blackboard);
-  p_->tree_name = goal->target_tree;
-  p_->payload = goal->payload;
-
-  // call user defined function after the tree has been created
+  try {
+    RCLCPP_INFO(kLogger, "Creating tree: %s", goal->target_tree.c_str());
+    p_->tree = p_->factory.createTree(goal->target_tree, root_blackboard);
+  } catch (const std::runtime_error& e) {
+    RCLCPP_ERROR(rclcpp::get_logger("bt_executor"), "Failed to create tree: %s", e.what());    
+    status = BT::NodeStatus::FAILURE;
+    action_result->node_status = ConvertNodeStatus(status);
+    action_result->return_message = std::string("Failed to create tree: ") + e.what();
+    goal_handle->abort(action_result);
+    return;
+  } // Abort the execution if the tree creation fails since the tree is not loaded
+  
+  p_->tree_name = goal->target_tree;  
+  p_->payload = goal->payload;  
   onTreeCreated(p_->tree);
+
+
   p_->groot_publisher.reset();
   BT::DebuggableTree debugTree{std::shared_ptr<BT::Tree>(&p_->tree, [](BT::Tree*) {}), true, false};
   BT::PublisherZMQ publisher(debugTree, p_->params.groot2_port);

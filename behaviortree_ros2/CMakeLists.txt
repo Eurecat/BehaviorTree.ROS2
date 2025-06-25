@@ -23,7 +23,7 @@ set(THIS_PACKAGE_DEPS
     tf2
     tf2_geometry_msgs
     tf2_ros
-    )
+)
 
 find_package(ament_cmake REQUIRED)
 
@@ -51,10 +51,11 @@ target_link_libraries(${PROJECT_NAME}  bt_executor_parameters)
 # Executable to generate xml from .so plugin for "simple" and ros2 based bt plugins .so
 add_executable(bt_ros_plugins_to_xml         src/tools/bt_ros_plugins_to_xml.cpp )
 include_directories(${behaviortree_cpp_INCLUDE_DIRS} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 ament_target_dependencies(bt_ros_plugins_to_xml behaviortree_cpp rclcpp)
 
 
-add_executable(tree_execution_client src/tools/client/tree_execution_client.cpp)
+add_executable(tree_execution_client src/tools/client/main.cpp src/tools/client/tree_execution_client.cpp)
 ament_target_dependencies(tree_execution_client ${THIS_PACKAGE_DEPS})
 ament_target_dependencies(tree_execution_client behaviortree_cpp rclcpp)
 
@@ -141,5 +142,20 @@ ament_index_register_resource(
 
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
+
+
+if(BUILD_TESTING)
+  
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(bt_ros2_tests test/bt_ros2_tests.cpp src/tools/client/tree_execution_client.cpp)
+  target_include_directories(bt_ros2_tests PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+  )
+  ament_target_dependencies(bt_ros2_tests ${THIS_PACKAGE_DEPS})
+  ament_target_dependencies(bt_ros2_tests behaviortree_cpp rclcpp)
+
+
+endif()
 
 ament_package()

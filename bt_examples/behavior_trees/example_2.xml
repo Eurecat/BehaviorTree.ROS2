@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<root BTCPP_format="4" main_tree_to_execute="ExampleTree1">
+    <!-- ////////// -->
+    <BehaviorTree ID="ExampleTree1">
+        <Repeat num_cycles="10">
+            <Sequence>
+                <Delay delay_msec="1000">
+                    <AlwaysSuccess/>
+                </Delay>
+            </Sequence>
+        </Repeat>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <TreeNodesModel>
+        <SubTree ID="ExampleTree1" description=""/>
+    </TreeNodesModel>
+    <!-- ////////// -->
+</root>

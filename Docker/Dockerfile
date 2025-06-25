@@ -4,6 +4,8 @@ FROM osrf/ros:jazzy-desktop-full
 RUN apt-get update && apt-get upgrade -y
 RUN DEBIAN_FRONTEND=noninteractive apt-get install software-properties-common ros-dev-tools python3-colcon-common-extensions -y 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install ros-${ROS_DISTRO}-angles ros-${ROS_DISTRO}-tf2 ros-${ROS_DISTRO}-tf2-ros ros-${ROS_DISTRO}-tf2-geometry-msgs
+RUN DEBIAN_FRONTEND=noninteractive apt-get install ros-${ROS_DISTRO}-launch-testing -y
+RUN DEBIAN_FRONTEND=noninteractive apt-get install gedit -y
 RUN DEBIAN_FRONTEND=noninteractive apt-get install libboost-filesystem1.83-dev
 # BT.ROS2 related deps
 RUN DEBIAN_FRONTEND=noninteractive apt-get install ros-${ROS_DISTRO}-generate-parameter-library -y
