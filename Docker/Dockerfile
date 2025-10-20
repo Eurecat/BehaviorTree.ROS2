@@ -20,6 +20,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install libncurses5-dev libncursesw5-
 RUN apt-get update && apt-get install qtbase5-dev libqt5svg5-dev libzmq3-dev libdw-dev -y
 RUN apt-get update && apt-get install -y gosu  
 
+
 COPY entrypoint.sh /entrypoint.sh
 COPY deps.repos /deps.repos
 # Make sure it is executable

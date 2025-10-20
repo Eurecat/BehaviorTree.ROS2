@@ -3,6 +3,8 @@
 
 #include "behaviortree_ros2/parser_utils.hpp"
 #include "behaviortree_eut_plugins/utils/deserialize_json.h"
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 namespace BT_ROS
 
@@ -89,30 +91,57 @@ struct AutomaticSerialization
             return ports;
         }
 
-        
-        void onNewMessage(const std::shared_ptr<MessageType>& _message, BT::TreeNode& _tree_node,
-            const std::string& _base_port_name = "")
+        // Helper to extract nested fields "header.frame_id" [header][frame_id]
+        nlohmann::json getNestedValue(const nlohmann::json& j, const std::string& dotted_key)
+        {
+            std::istringstream iss(dotted_key);
+            std::string token;
+            const nlohmann::json* current = &j;
+            while (std::getline(iss, token, '.'))
+            {
+                if (!current->contains(token))
+                    throw std::runtime_error("Missing key: " + token + " in " + dotted_key);
+                current = &((*current)[token]);
+            }
+
+            return *current;
+        }
+
+        void onNewMessage( const std::shared_ptr<MessageType>& _message, BT::TreeNode& _tree_node, const std::string& _base_port_name = "")
         {
             if(isMsgEmpty<MessageType>()) { return; }
-
+        
             std::vector<uint8_t> buffer_in = RosMsgParser::BuildMessageBuffer(*(_message.get()), topic_type_);
             std::string json_text;
             RosMsgParser::ROS2_Deserializer deserializer_;
             parser_->deserializeIntoJson(buffer_in, &json_text, &deserializer_, 0, true, true);
             nlohmann::json json_parsed = nlohmann::json::parse(json_text);
-
+        
             const auto& field_ports = fieldPorts<MessageType>({RosMsgParser::ROSType("builtin_interfaces/Time")});
+        
             for(const auto& field_port : field_ports)
             {
-                // Time and duration defaults to ros::Time::now and zero
-                // TODO should we allow users to set this themselves? If so, how would they
-                // write it? Maybe a custom convertFromString()?
                 const auto type_id = field_port.second.type().typeID();
-                if(type_id == RosMsgParser::TIME ||
-                type_id == RosMsgParser::DURATION) { continue; }
-
-                std::string port_name = _base_port_name.empty() ? field_port.first : _base_port_name + "_" + field_port.first;
-                BT::EutUtils::deserializeField(_tree_node, port_name, json_parsed[field_port.first]);
+                if(type_id == RosMsgParser::TIME || type_id == RosMsgParser::DURATION)
+                    continue;
+        
+                std::string port_name = _base_port_name.empty() 
+                    ? field_port.first 
+                    : _base_port_name + "_" + field_port.first;
+        
+                try
+                {
+                    nlohmann::json value = getNestedValue(json_parsed, field_port.first);
+        
+                    BT::EutUtils::deserializeField(_tree_node, port_name, value);
+        
+                }
+                catch(const std::exception& e)
+                {
+                    std::cerr << "Warning: could not deserialize field " << field_port.first 
+                              << ": " << e.what() << std::endl;
+                }
+        
             }
         }
 
@@ -249,3 +278,4 @@ struct CustomSerialization
 } // namespace BT_ROS
 
 #endif
+
