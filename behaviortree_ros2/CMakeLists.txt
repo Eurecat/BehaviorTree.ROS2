@@ -17,13 +17,14 @@ set(THIS_PACKAGE_DEPS
     generate_parameter_library
     rosx_introspection
     std_msgs
+    geometry_msgs
     std_srvs
     geometry_msgs
     angles
     tf2
     tf2_geometry_msgs
     tf2_ros
-    )
+)
 
 find_package(ament_cmake REQUIRED)
 
