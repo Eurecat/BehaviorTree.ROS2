@@ -55,7 +55,7 @@ include_directories(${behaviortree_cpp_INCLUDE_DIRS} PRIVATE ${CMAKE_CURRENT_SOU
 ament_target_dependencies(bt_ros_plugins_to_xml behaviortree_cpp rclcpp)
 
 # Build btros2 plugin library
-add_library(${PROJECT_NAME}_nodemodels SHARED src/plugin.cpp)
+add_library(${PROJECT_NAME}_nodemodels SHARED src/plugin.cpp) # src/navigation.cpp
 target_include_directories(${PROJECT_NAME}_nodemodels PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )

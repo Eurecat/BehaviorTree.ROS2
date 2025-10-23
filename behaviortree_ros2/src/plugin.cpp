@@ -31,63 +31,223 @@
 #include "btcpp_ros2_interfaces/action/execute_tree.hpp"
 #include "btcpp_ros2_interfaces/msg/custom_msg.hpp"
 
-// Simple Action that updates an instance of Position2D in the blackboard
-class SayHi : public BT::StatefulActionNode
+/*
+
+class GetNavigationStatus : public BT::SyncActionNode
 {
 public:
-  SayHi(const std::string& name, const BT::NodeConfig& config)
-    : BT::StatefulActionNode(name, config)
-  {}
+GetNavigationStatus(const std::string& name, const BT::NodeConfig& config)
+      : BT::SyncActionNode(name, config) {}
 
   static BT::PortsList providedPorts()
   {
-    return { BT::InputPort<std::string>("person_name") };
+    return {
+      BT::InputPort<std::string>("navigation_status"),
+      BT::OutputPort<std::string>("status")
+    };
+  }
+
+  BT::NodeStatus tick() override
+  {
+    std::string s;
+
+    if (!getInput("navigation_status", s) )
+    {
+      std::cerr << "[GetNavigationStatus] Missing one or more input values!" << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    // Set outputs on the blackboard
+    
+    std::string status = "";
+    size_t pos = s.find('-');  // trova la posizione del '-'
+    if (pos != std::string::npos) {
+        std::string first = s.substr(0, pos);       // "room"
+        status = s.substr(pos + 1);     // "complete"        
+    }
+
+    setOutput("status", status);
+
+    return BT::NodeStatus::SUCCESS;
+    
+  }
+};
+
+*/
+// Custom ROS2-related nodes creation (todo: put into a separate library)
+class CheckPoseReached : public BT::StatefulActionNode
+{
+public:
+  CheckPoseReached(const std::string& name, const BT::NodeConfig& config)
+    : BT::StatefulActionNode(name, config) {}
+
+  static BT::PortsList providedPorts()
+  {
+    return {
+      // Target pose
+      BT::InputPort<double>("d_x"),
+      BT::InputPort<double>("d_y"),
+      BT::InputPort<double>("d_z"),
+      BT::InputPort<double>("d_qx"),
+      BT::InputPort<double>("d_qy"),
+      BT::InputPort<double>("d_qz"),
+      BT::InputPort<double>("d_qw"),
+      // Current pose
+      BT::InputPort<double>("x"),
+      BT::InputPort<double>("y"),
+      BT::InputPort<double>("z"),
+      BT::InputPort<double>("qx"),
+      BT::InputPort<double>("qy"),
+      BT::InputPort<double>("qz"),
+      BT::InputPort<double>("qw"),
+      // Thresholds
+      BT::InputPort<double>("pos_tolerance", 0.05, "Position tolerance in meters"),
+      BT::InputPort<double>("ang_tolerance", 0.1, "Orientation tolerance in radians")
+    };
   }
 
   BT::NodeStatus onStart() override
   {
-    const auto name = getInput<std::string>("person_name");
-    if(!name)
+    // Read all inputs
+    if (!getPoseInputs(target_, "d_x", "d_y", "d_z", "d_qx", "d_qy", "d_qz", "d_qw")) {
+      std::cerr << "[CheckPoseReached] Missing target pose input!" << std::endl;
       return BT::NodeStatus::FAILURE;
+    }
 
-    person_name_ = name.value();
-    counter_ = 0;
+    if (!getPoseInputs(current_, "x", "y", "z",
+                       "qx", "qy", "qz", "qw")) {
+      std::cerr << "[CheckPoseReached] Missing current pose input!" << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
 
-    std::cout << "Starting to say hi to " << person_name_ << "..." << std::endl;
+    getInput("pos_tolerance", pos_tol_);
+    getInput("ang_tolerance", ang_tol_);
+
+    std::cout << "[CheckPoseReached] Checking if pose is reached..." << std::endl;
     return BT::NodeStatus::RUNNING;
   }
 
   BT::NodeStatus onRunning() override
   {
-    if (counter_ < 3)
+    // Compute position difference
+    double dx = target_.x - current_.x;
+    double dy = target_.y - current_.y;
+    double dz = target_.z - current_.z;
+    double dist = std::sqrt(dx*dx + dy*dy + dz*dz);
+
+    // Compute orientation difference (using quaternion dot product)
+    double dot = target_.qx * current_.qx + target_.qy * current_.qy +
+                 target_.qz * current_.qz + target_.qw * current_.qw;
+    double angle_diff = 2 * std::acos(std::abs(dot));
+
+    if (dist < pos_tol_ && angle_diff < ang_tol_)
     {
-      std::cout << "Hi " << person_name_ << "! (" << counter_+1 << "/3)" << std::endl;
-      counter_++;
-      return BT::NodeStatus::RUNNING;
+      std::cout << "[CheckPoseReached] Target reached! dist=" << dist
+                << ", angle=" << angle_diff << std::endl;
+      return BT::NodeStatus::SUCCESS;
     }
     else
     {
-      std::cout << "Finished saying hi to " << person_name_ << "!" << std::endl;
-      return BT::NodeStatus::SUCCESS;
+      std::cout << "[CheckPoseReached] Not yet reached. dist=" << dist
+                << ", angle=" << angle_diff << std::endl;
+      return BT::NodeStatus::FAILURE;
     }
   }
 
   void onHalted() override
   {
-    std::cout << "SayHi halted." << std::endl;
+    std::cout << "[CheckPoseReached] Halted." << std::endl;
   }
 
 private:
-  std::string person_name_;
-  int counter_ = 0;
+  struct Pose {
+    double x, y, z;
+    double qx, qy, qz, qw;
+  } target_, current_;
+
+  double pos_tol_ = 0.05;
+  double ang_tol_ = 0.1;
+
+  bool getPoseInputs(Pose& pose,
+                     const std::string& x_key, const std::string& y_key, const std::string& z_key,
+                     const std::string& qx_key, const std::string& qy_key,
+                     const std::string& qz_key, const std::string& qw_key)
+  {
+    return getInput(x_key, pose.x) &&
+           getInput(y_key, pose.y) &&
+           getInput(z_key, pose.z) &&
+           getInput(qx_key, pose.qx) &&
+           getInput(qy_key, pose.qy) &&
+           getInput(qz_key, pose.qz) &&
+           getInput(qw_key, pose.qw);
+  }
+};
+
+
+
+
+class SetPoseGoal : public BT::SyncActionNode
+{
+public:
+  SetPoseGoal(const std::string& name, const BT::NodeConfig& config)
+      : BT::SyncActionNode(name, config) {}
+
+  static BT::PortsList providedPorts()
+  {
+    return {
+      // Input pose parameters
+      BT::InputPort<double>("x"),
+      BT::InputPort<double>("y"),
+      BT::InputPort<double>("z"),
+      BT::InputPort<double>("qx"),
+      BT::InputPort<double>("qy"),
+      BT::InputPort<double>("qz"),
+      BT::InputPort<double>("qw"),
+
+      // Output ports to blackboard
+      BT::OutputPort<double>("d_x"),
+      BT::OutputPort<double>("d_y"),
+      BT::OutputPort<double>("d_z"),
+      BT::OutputPort<double>("d_qx"),
+      BT::OutputPort<double>("d_qy"),
+      BT::OutputPort<double>("d_qz"),
+      BT::OutputPort<double>("d_qw")
+    };
+  }
+
+  BT::NodeStatus tick() override
+  {
+    double x, y, z, qx, qy, qz, qw;
+
+    if (!getInput("x", x) || !getInput("y", y) || !getInput("z", z) ||
+        !getInput("qx", qx) || !getInput("qy", qy) ||
+        !getInput("qz", qz) || !getInput("qw", qw))
+    {
+      std::cerr << "[SetPoseGoal] Missing one or more input values!" << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    // Set outputs on the blackboard
+    setOutput("d_x", x);
+    setOutput("d_y", y);
+    setOutput("d_z", z);
+    setOutput("d_qx", qx);
+    setOutput("d_qy", qy);
+    setOutput("d_qz", qz);
+    setOutput("d_qw", qw);
+
+    return BT::NodeStatus::SUCCESS;
+  }
 };
 
 using namespace BT;
 
 BT_REGISTER_ROS_NODES(factory, params)
 {
-
-    factory.registerNodeType<SayHi>("SayHi");
+ 
+    //factory.registerNodeType<GetNavigationStatus>("GetNavigationStatus");
+    factory.registerNodeType<SetPoseGoal>("SetPoseGoal");
+    factory.registerNodeType<CheckPoseReached>("CheckPoseReached");
 
     //LOGS
     factory.registerNodeType<DebugLog>("DebugLog");
