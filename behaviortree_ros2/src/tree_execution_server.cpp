@@ -46,7 +46,9 @@ struct TreeExecutionServer::Pimpl
   bt_server::Params params;
 
   BT::BehaviorTreeFactory factory;
-  std::shared_ptr<BT::Groot2Publisher> groot_publisher;
+  std::shared_ptr<BT::Groot2Publisher> groot2_publisher;
+  std::shared_ptr<BT::DebuggableTree> debug_tree{nullptr};
+  std::shared_ptr<BT::PublisherZMQ> eut_groot_publisher{nullptr};
 
   std::string tree_name;
   std::string payload;
@@ -194,10 +196,20 @@ void TreeExecutionServer::execute(
   p_->payload = goal->payload;  
   onTreeCreated(p_->tree);
 
-
-  p_->groot_publisher.reset();
-  BT::DebuggableTree debugTree{std::shared_ptr<BT::Tree>(&p_->tree, [](BT::Tree*) {}), true, false};
-  BT::PublisherZMQ publisher(debugTree, p_->params.groot2_port);
+  
+  if(p_->params.use_groot2)
+  {
+    p_->groot2_publisher.reset();
+    p_->groot2_publisher =
+          std::make_shared<BT::Groot2Publisher>(p_->tree, p_->params.groot2_port);
+  }
+  else
+  {
+    p_->debug_tree.reset();
+    p_->eut_groot_publisher.reset();
+    p_->debug_tree = std::make_shared<BT::DebuggableTree>(std::shared_ptr<BT::Tree>(&p_->tree, [](BT::Tree*) {}), true, true);
+    p_->eut_groot_publisher = std::make_shared<BT::PublisherZMQ>(*(p_->debug_tree), 16, p_->params.zmq_pub_port, p_->params.zmq_srv_port);
+  }
 
   // Loop until the tree is done or a cancel is requested
   const auto period = std::chrono::milliseconds(static_cast<int>(1000.0 / p_->params.tick_frequency));
