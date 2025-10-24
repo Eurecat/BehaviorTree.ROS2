@@ -207,7 +207,7 @@ void TreeExecutionServer::execute(
   {
     p_->debug_tree.reset();
     p_->eut_groot_publisher.reset();
-    p_->debug_tree = std::make_shared<BT::DebuggableTree>(std::shared_ptr<BT::Tree>(&p_->tree, [](BT::Tree*) {}), true, true);
+    p_->debug_tree = std::make_shared<BT::DebuggableTree>(std::shared_ptr<BT::Tree>(&p_->tree, [](BT::Tree*) {}), true, false);
     p_->eut_groot_publisher = std::make_shared<BT::PublisherZMQ>(*(p_->debug_tree), 16, p_->params.zmq_pub_port, p_->params.zmq_srv_port);
   }
 

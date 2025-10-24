@@ -32,7 +32,7 @@ namespace BT
         
         bool latchLastMessage() const override
         {
-            return consume_msgs_;
+            return !consume_msgs_;
         }
         void fetchSubscriberValues()
         {

@@ -181,6 +181,7 @@ inline RosTopicSubNode<T>::SubscriberInstance::SubscriberInstance(
     broadcaster(msg);
   };
   subscriber = node->create_subscription<T>(topic_name, 1, callback, option);
+  callback_group_executor.spin_some(std::chrono::milliseconds(0));
 }
 
 template <class T>
