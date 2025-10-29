@@ -39,7 +39,11 @@ namespace BT
             const auto& feedback_ports = FeedbackSerializationPolicy<typename ActionType::Feedback>::requiredPorts("feedback");
             provided_port_list.insert(feedback_ports.cbegin(), feedback_ports.cend());
 
-            provided_port_list.insert( OutputPort<std::string>("goal_state", "Goal Error State") );
+            if(false)
+            {
+                // TODO Should be added as optional
+                provided_port_list.insert( OutputPort<std::string>("goal_state", "Goal Error State") );
+            }
             return provided_port_list;
         }
 
@@ -97,8 +101,12 @@ namespace BT
 
         BT::NodeStatus onFailure(ActionNodeErrorCode error) override
         {
-            std::string error_str(toStr(error));
-            this->setOutput("goal_state", error_str);
+            if(false)
+            {
+                // Should be added as optional
+                std::string error_str(toStr(error));
+                this->setOutput("goal_state", error_str);
+            }
             RCLCPP_ERROR(this->logger(), "ACTION %s FAILED with error: %s",this->action_name_.c_str(), toStr(error));
             return BT::NodeStatus::FAILURE;
         }
