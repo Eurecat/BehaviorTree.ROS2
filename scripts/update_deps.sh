@@ -38,19 +38,8 @@ if [ -d "$docker_depend_dir/behavior_tree_eut_plugins/.git" ]; then
     cd $OLDPWD
 else
     echo "Repository behavior_tree_eut_plugins does not exist. Cloning..."
-    git clone -b humble git@gitlab.local.eurecat.org:robotics-automation/behavior_tree_eut_plugins.git "$docker_depend_dir/behavior_tree_eut_plugins"
+    git clone -b jazzy git@gitlab.local.eurecat.org:robotics-automation/behavior_tree_eut_plugins.git "$docker_depend_dir/behavior_tree_eut_plugins"
 fi
-
-if [ -d "$docker_depend_dir/groot/.git" ]; then
-    echo "Repository groot exists. Pulling latest changes..."
-    cd "$docker_depend_dir/groot"
-    git pull
-    cd $OLDPWD
-else
-    echo "Repository groot does not exist. Cloning..."
-    git clone -b humble git@gitlab.local.eurecat.org:robotics-automation/groot.git "$docker_depend_dir/groot"
-fi
-
 
 if [ -d "$docker_depend_dir/rosx_introspection/.git" ]; then
     echo "Repository rosx_introspection exists. Pulling latest changes..."
