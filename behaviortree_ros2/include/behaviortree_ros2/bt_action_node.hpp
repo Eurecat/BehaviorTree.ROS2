@@ -230,6 +230,8 @@ private:
   rclcpp::Time time_goal_sent_;
   NodeStatus on_feedback_state_change_;
   bool goal_received_;
+  // When the server holding the running goal was last seen missing; zero while it is there.
+  rclcpp::Time server_missing_since_{ 0, 0, RCL_ROS_TIME };
   WrappedResult result_;
 
   bool createClient(const std::string& action_name);
@@ -382,6 +384,7 @@ inline NodeStatus RosActionNode<T>::tick()
     setStatus(NodeStatus::RUNNING);
 
     goal_received_ = false;
+    server_missing_since_ = rclcpp::Time(0, 0, now().get_clock_type());
     future_goal_handle_ = {};
     on_feedback_state_change_ = NodeStatus::RUNNING;
     result_ = {};
@@ -477,6 +480,28 @@ inline NodeStatus RosActionNode<T>::tick()
           return CheckStatus(onFailure(GOAL_REJECTED_BY_SERVER));
         }
       }
+    }
+
+    // The server holding the goal is gone (it crashed or was restarted): its result can never
+    // arrive, and without this the node stayed RUNNING for ever, so a tree that starts the
+    // action only when it is not already running never started it again. Missing for longer
+    // than server_timeout, to ride out a discovery hiccup, counts as gone.
+    if(!client_instance_->action_client->action_server_is_ready())
+    {
+      if(server_missing_since_.nanoseconds() == 0)
+      {
+        server_missing_since_ = now();
+      }
+      else if((now() - server_missing_since_) >
+              rclcpp::Duration::from_seconds(double(server_timeout_.count()) / 1000))
+      {
+        goal_handle_.reset();
+        return CheckStatus(onFailure(SERVER_UNREACHABLE));
+      }
+    }
+    else
+    {
+      server_missing_since_ = rclcpp::Time(0, 0, now().get_clock_type());
     }
 
     // SECOND case: onFeedback requested a stop
