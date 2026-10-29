@@ -14,6 +14,21 @@ bt_server:
       bounds<>: [1, 1000]
     }
   }
+  enable_bt_viewer: {
+    type: bool,
+    default_value: false,
+    read_only: true,
+    description: "Enable the optional Groot2 protocol-2 terminal viewer endpoint",
+  }
+  bt_viewer_port: {
+    type: int,
+    default_value: 1800,
+    read_only: true,
+    description: "Groot2 request port; also reserves the following port",
+    validation: {
+      bounds<>: [1, 65534]
+    }
+  }
   groot2_port: {
     type: int,
     default_value: 1667,

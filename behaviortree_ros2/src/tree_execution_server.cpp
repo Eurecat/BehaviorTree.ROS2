@@ -46,7 +46,6 @@ struct TreeExecutionServer::Pimpl
   bt_server::Params params;
 
   BT::BehaviorTreeFactory factory;
-  std::shared_ptr<BT::Groot2Publisher> groot_publisher;
 
   std::string tree_name;
   std::string payload;
@@ -212,12 +211,35 @@ void TreeExecutionServer::execute(
 
     // call user defined function after the tree has been created
     onTreeCreated(p_->tree);
-    p_->groot_publisher.reset();
 
     // Create shared_ptr to p_->tree without deleting capabilities
     auto non_deleting_tree_ptr = std::shared_ptr<BT::Tree>(&(p_->tree), [](BT::Tree*){ /* do nothing */ });
     BT::DebuggableTree debugTree{non_deleting_tree_ptr, true, debug_flag};
     BT::PublisherZMQ publisher(debugTree, p_->params.groot2_port);
+
+    // Optional protocol-2 endpoint, independent of the existing Eurecat debugger.
+    // Scope ensures destruction before the next goal replaces p_->tree.
+    std::unique_ptr<BT::Groot2Publisher> viewer_publisher;
+    if(p_->params.enable_bt_viewer)
+    {
+      const auto port = p_->params.bt_viewer_port;
+      // The legacy publisher above uses its default ports 1666 and 1667.
+      if(port <= 1667 && port + 1 >= 1666)
+      {
+        RCLCPP_WARN(kLogger, "BT viewer ports overlap legacy debugger; viewer disabled");
+      }
+      else
+      {
+        try
+        {
+          viewer_publisher = std::make_unique<BT::Groot2Publisher>(p_->tree, port);
+        }
+        catch(const std::exception& ex)
+        {
+          RCLCPP_WARN(kLogger, "BT viewer unavailable: %s", ex.what());
+        }
+      }
+    }
 
     // Loop until the tree is done or a cancel is requested
     const auto period =
