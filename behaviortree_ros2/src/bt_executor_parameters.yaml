@@ -33,9 +33,9 @@ bt_server:
     type: int,
     default_value: 1667,
     read_only: true,
-    description: "Server port value to publish Groot2 messages on",
+    description: "Server port of the legacy debugger; its publisher uses groot2_port - 1",
     validation: {
-      bounds<>: [1, 49151]
+      bounds<>: [2, 49151]
     }
   }
   plugins: {
