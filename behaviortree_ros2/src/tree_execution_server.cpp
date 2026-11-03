@@ -215,7 +215,11 @@ void TreeExecutionServer::execute(
     // Create shared_ptr to p_->tree without deleting capabilities
     auto non_deleting_tree_ptr = std::shared_ptr<BT::Tree>(&(p_->tree), [](BT::Tree*){ /* do nothing */ });
     BT::DebuggableTree debugTree{non_deleting_tree_ptr, true, debug_flag};
-    BT::PublisherZMQ publisher(debugTree, p_->params.groot2_port);
+    // The second argument of PublisherZMQ is the message rate, so the ports are passed explicitly: groot2_port is the
+    // server port and groot2_port - 1 the publisher port (1666 and 1667 by default). Two executors on one host need
+    // different values.
+    const auto groot2_port = static_cast<unsigned>(p_->params.groot2_port);
+    BT::PublisherZMQ publisher(debugTree, 25, groot2_port - 1, groot2_port);
 
     // Optional protocol-2 endpoint, independent of the existing Eurecat debugger.
     // Scope ensures destruction before the next goal replaces p_->tree.
@@ -223,8 +227,8 @@ void TreeExecutionServer::execute(
     if(p_->params.enable_bt_viewer)
     {
       const auto port = p_->params.bt_viewer_port;
-      // The legacy publisher above uses its default ports 1666 and 1667.
-      if(port <= 1667 && port + 1 >= 1666)
+      // The legacy publisher above uses groot2_port - 1 and groot2_port.
+      if(port <= p_->params.groot2_port && port + 1 >= p_->params.groot2_port - 1)
       {
         RCLCPP_WARN(kLogger, "BT viewer ports overlap legacy debugger; viewer disabled");
       }
